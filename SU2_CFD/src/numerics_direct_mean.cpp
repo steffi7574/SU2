@@ -942,6 +942,7 @@ CUpwHLLC_Flow::CUpwHLLC_Flow(unsigned short val_nDim, unsigned short val_nVar, C
   Velocity_i        = new su2double [nDim];
   Velocity_j        = new su2double [nDim];
   RoeVelocity       = new su2double [nDim];  
+  GridVel           = new su2double [nDim];
   
 }
 
@@ -957,6 +958,7 @@ CUpwHLLC_Flow::~CUpwHLLC_Flow(void) {
   delete [] Velocity_i;
   delete [] Velocity_j;
   delete [] RoeVelocity;
+  delete [] GridVel;
   
 }
 
@@ -975,81 +977,82 @@ void CUpwHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jac
   for (iDim = 0; iDim < nDim; iDim++)
     UnitNormal[iDim] = Normal[iDim] / Area;
 
-  sq_vel_i = 0.0;
-  sq_vel_j = 0.0;
+  /*-- Fluid velocity at node i,j ---*/  
 
   for (iDim = 0; iDim < nDim; iDim++) {
     Velocity_i[iDim]  = V_i[iDim+1];
     Velocity_j[iDim]  = V_j[iDim+1];
-    
-    sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
-    sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
   }
 
   /*--- Primitive variables at point i ---*/
 
-  Pressure_i = fabs( V_i[nDim+1] );
-  Density_i  = fabs( V_i[nDim+2] );
-  Enthalpy_i = fabs( V_i[nDim+3] );
+  Pressure_i = V_i[nDim+1];
+  Density_i  = V_i[nDim+2];
+  Enthalpy_i = V_i[nDim+3];
 
   /*--- Primitive variables at point j ---*/
   
-  Pressure_j = fabs( V_j[nDim+1] );
-  Density_j  = fabs( V_j[nDim+2] );
-  Enthalpy_j = fabs( V_j[nDim+3] );
+  Pressure_j = V_j[nDim+1];
+  Density_j  = V_j[nDim+2];
+  Enthalpy_j = V_j[nDim+3];
 
 
-  /*--- Projected Grid Velocity ---*/
+  sq_vel_i = 0.0;
+  sq_vel_j = 0.0;
 
-su2double AbsoluteVel2_i, AbsoluteVel2_j;
-su2double GridVel[3];
-
-  if (grid_movement) {
-	AbsoluteVel2_i = sq_vel_i;
-	AbsoluteVel2_j = sq_vel_j;
-	sq_vel_i = 0;
-	sq_vel_j = 0;
-	
-	for (iDim = 0; iDim < nDim; iDim++){
-
-		GridVel[iDim] = 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
-
-		Velocity_i[iDim] -= GridVel[iDim];
-		Velocity_j[iDim] -= GridVel[iDim];
-
-		sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
-		sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
-	}
-
-	Enthalpy_i += 0.5 * (sq_vel_i - AbsoluteVel2_i);
-	Enthalpy_j += 0.5 * (sq_vel_j - AbsoluteVel2_j);
-  }  
+  for (iDim = 0; iDim < nDim; iDim++) {
+    sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
+    sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
+  }
 
   Energy_i     = Enthalpy_i - Pressure_i / Density_i;
-  SoundSpeed_i = sqrt( (Enthalpy_i - 0.5 * sq_vel_i) * Gamma_Minus_One );
-  
   Energy_j     = Enthalpy_j - Pressure_j / Density_j;
+
+  SoundSpeed_i = sqrt( (Enthalpy_i - 0.5 * sq_vel_i) * Gamma_Minus_One );
   SoundSpeed_j = sqrt( (Enthalpy_j - 0.5 * sq_vel_j) * Gamma_Minus_One );
    
   /*--- Projected velocities ---*/
   
-  ProjVelocity_i = 0.0; 
-  ProjVelocity_j = 0.0;
+  ProjVelocity_i = 0; 
+  ProjVelocity_j = 0;
 
   for (iDim = 0; iDim < nDim; iDim++) {
     ProjVelocity_i += Velocity_i[iDim] * UnitNormal[iDim];
     ProjVelocity_j += Velocity_j[iDim] * UnitNormal[iDim];
   }
+
+  /*--- Projected Grid Velocity ---*/
+
+  ProjInterfaceVel = 0;
+
+  if (grid_movement) {
+	sq_InterfaceVelocity = 0;
+	ProjInterfaceVel = 0;
+
+	for (iDim = 0; iDim < nDim; iDim++){
+
+		GridVel[iDim] = 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
+
+		sq_InterfaceVelocity += GridVel[iDim] * GridVel[iDim];
+		ProjInterfaceVel += GridVel[iDim]*UnitNormal[iDim];
+	}
+
+	SoundSpeed_i -= ProjInterfaceVel;
+  	SoundSpeed_j += ProjInterfaceVel;
+
+        ProjVelocity_i -= ProjInterfaceVel; 
+        ProjVelocity_j -= ProjInterfaceVel;
+  }  
   
   /*--- Roe's averaging ---*/
 
-  Rrho = 1/( sqrt(Density_i) + sqrt(Density_j) );
+  Rrho = ( sqrt(Density_i) + sqrt(Density_j) );
 
   sq_velRoe        = 0.0;
   RoeProjVelocity  = 0.0;
 
   for (iDim = 0; iDim < nDim; iDim++){
-    RoeVelocity[iDim] = ( Velocity_i[iDim] * sqrt(Density_i) + Velocity_j[iDim] * sqrt(Density_j) ) * Rrho;
+    RoeVelocity[iDim] = ( Velocity_i[iDim] * sqrt(Density_i) + Velocity_j[iDim] * sqrt(Density_j) ) / Rrho;
     sq_velRoe        +=  RoeVelocity[iDim] * RoeVelocity[iDim];
     RoeProjVelocity  +=  RoeVelocity[iDim] * UnitNormal[iDim];
   } 
@@ -1057,18 +1060,18 @@ su2double GridVel[3];
   /*--- Mean Roe variables iPoint and jPoint ---*/
     
   RoeDensity = sqrt( Density_i * Density_j );
-  RoeEnthalpy = ( sqrt(Density_j) * Enthalpy_j + sqrt(Density_i) * Enthalpy_i)/(sqrt(Density_j) + sqrt(Density_i) );
+  RoeEnthalpy = ( sqrt(Density_j) * Enthalpy_j + sqrt(Density_i) * Enthalpy_i) / Rrho;
 
   /*--- Roe-averaged speed of sound ---*/
 
-  RoeSoundSpeed2 = Gamma_Minus_One * ( RoeEnthalpy - 0.5 * sq_velRoe );
-  RoeSoundSpeed  = sqrt( fabs(RoeSoundSpeed2) );
+  //RoeSoundSpeed2 = Gamma_Minus_One * ( RoeEnthalpy - 0.5 * sq_velRoe );
+  RoeSoundSpeed  = sqrt( Gamma_Minus_One * ( RoeEnthalpy - 0.5 * sq_velRoe  ) );
 
 
   /*--- Speed of sound at L and R ---*/
   
-  sL = min( RoeProjVelocity - RoeSoundSpeed, ProjVelocity_i - SoundSpeed_i );
-  sR = max( RoeProjVelocity + RoeSoundSpeed, ProjVelocity_j + SoundSpeed_j );
+  sL = min( RoeProjVelocity - RoeSoundSpeed, ProjVelocity_i - SoundSpeed_i);
+  sR = max( RoeProjVelocity + RoeSoundSpeed, ProjVelocity_j + SoundSpeed_j);
   
   /*--- speed of contact surface ---*/
 
@@ -1080,7 +1083,7 @@ su2double GridVel[3];
   pStar = Density_j * ( ProjVelocity_j - sR ) * ( ProjVelocity_j - sM ) + Pressure_j;
 
 
-if (sM >= 0.0) {
+if (sM > 0.0) {
 
 	if (sL > 0.0){
 
@@ -1089,7 +1092,7 @@ if (sM >= 0.0) {
 		val_residual[0] = Density_i * ProjVelocity_i;
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = Density_i * Velocity_i[iDim] * ProjVelocity_i + Pressure_i * UnitNormal[iDim];
-		val_residual[nVar-1] = ( Energy_i * Density_i + Pressure_i ) * ProjVelocity_i;
+		val_residual[nVar-1] = Enthalpy_i * Density_i * ProjVelocity_i;
 	}
 	else{
 
@@ -1106,7 +1109,7 @@ if (sM >= 0.0) {
 		val_residual[0] = sM * IntermediateState[0];
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = sM * IntermediateState[iDim+1] + pStar * UnitNormal[iDim];
-		val_residual[nVar-1] = sM * ( IntermediateState[nVar-1] + pStar );
+		val_residual[nVar-1] = sM * ( IntermediateState[nVar-1] + pStar ) + pStar*ProjInterfaceVel;
 	}
   }
   else {
@@ -1118,7 +1121,7 @@ if (sM >= 0.0) {
 		val_residual[0] = Density_j * ProjVelocity_j;	
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = Density_j * Velocity_j[iDim] * ProjVelocity_j + Pressure_j * UnitNormal[iDim];
-		val_residual[nVar-1] = ( Energy_j * Density_j + Pressure_j ) * ProjVelocity_j;
+		val_residual[nVar-1] = Enthalpy_j * Density_j * ProjVelocity_j;
 	}
 	else{
 
@@ -1135,7 +1138,7 @@ if (sM >= 0.0) {
 		val_residual[0] = sM * IntermediateState[0];
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = sM * IntermediateState[iDim+1] + pStar * UnitNormal[iDim];
-		val_residual[nVar-1] = sM * (IntermediateState[nVar-1] + pStar );
+		val_residual[nVar-1] = sM * (IntermediateState[nVar-1] + pStar ) + pStar*ProjInterfaceVel;
 	}
   }
 
@@ -1425,11 +1428,13 @@ if (sM >= 0.0) {
 
 
 	/*--- Jacobians of the inviscid flux, scale = 0.5 because val_residual ~ 0.5*(fc_i+fc_j)*Normal ---*/
+	
+	Area *= kappa;	
 
 	for (iVar = 0; iVar < nVar; iVar++) {
 		for (jVar = 0; jVar < nVar; jVar++){
-			val_Jacobian_i[iVar][jVar] *=   kappa * Area;
-			val_Jacobian_j[iVar][jVar] *= - kappa * Area;
+			val_Jacobian_i[iVar][jVar] *=   Area;
+			val_Jacobian_j[iVar][jVar] *= - Area;
 		}
 	}
 
@@ -1453,7 +1458,8 @@ CUpwGeneralHLLC_Flow::CUpwGeneralHLLC_Flow(unsigned short val_nDim, unsigned sho
 
   Velocity_i        = new su2double [nDim];
   Velocity_j        = new su2double [nDim];
-  RoeVelocity       = new su2double [nDim];  
+  RoeVelocity       = new su2double [nDim];
+  GridVel           = new su2double [nDim];  
 }
 
 CUpwGeneralHLLC_Flow::~CUpwGeneralHLLC_Flow(void) {
@@ -1468,6 +1474,7 @@ CUpwGeneralHLLC_Flow::~CUpwGeneralHLLC_Flow(void) {
   delete [] Velocity_i;
   delete [] Velocity_j;
   delete [] RoeVelocity;
+  delete [] GridVel;
 }
 
 void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config) {
@@ -1485,15 +1492,11 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
   for (iDim = 0; iDim < nDim; iDim++)
     UnitNormal[iDim] = Normal[iDim] / Area;
 
-  sq_vel_i = 0.0;
-  sq_vel_j = 0.0;
+  /*-- Fluid velocity at node i,j ---*/
 
   for (iDim = 0; iDim < nDim; iDim++) {
     Velocity_i[iDim]  = V_i[iDim+1];
     Velocity_j[iDim]  = V_j[iDim+1];
-    
-    sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
-    sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
   }
 
   /*--- Primitive variables at point i ---*/
@@ -1509,32 +1512,13 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
   Enthalpy_j = fabs( V_j[nDim+3] );
 
 
-  /*--- Projected Grid Velocity ---*/
+  sq_vel_i = 0.0;
+  sq_vel_j = 0.0;
 
-su2double AbsoluteVel2_i, AbsoluteVel2_j;
-su2double GridVel[3];
-
-  if (grid_movement) {
-	AbsoluteVel2_i = sq_vel_i;
-	AbsoluteVel2_j = sq_vel_j;
-	sq_vel_i = 0;
-	sq_vel_j = 0;
-	
-	for (iDim = 0; iDim < nDim; iDim++){
-
-		GridVel[iDim] = 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
-
-		Velocity_i[iDim] -= GridVel[iDim];
-		Velocity_j[iDim] -= GridVel[iDim];
-
-		sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
-		sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
-	}
-
-	Enthalpy_i += 0.5 * (sq_vel_i - AbsoluteVel2_i);
-	Enthalpy_j += 0.5 * (sq_vel_j - AbsoluteVel2_j);
-  }  
-
+  for (iDim = 0; iDim < nDim; iDim++) {
+    sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
+    sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
+  }
 
   Energy_i         = Enthalpy_i - Pressure_i / Density_i;
   StaticEnthalpy_i = Enthalpy_i - 0.5 * sq_vel_i;
@@ -1563,15 +1547,39 @@ su2double GridVel[3];
     ProjVelocity_j += Velocity_j[iDim] * UnitNormal[iDim];
   }
   
+
+  /*--- Projected Grid Velocity ---*/
+
+  ProjInterfaceVel = 0;
+
+  if (grid_movement) {
+	sq_InterfaceVelocity = 0;
+	ProjInterfaceVel = 0;
+
+	for (iDim = 0; iDim < nDim; iDim++){
+
+		GridVel[iDim] = 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
+
+		sq_InterfaceVelocity += GridVel[iDim] * GridVel[iDim];
+		ProjInterfaceVel += GridVel[iDim]*UnitNormal[iDim];
+	}
+
+	SoundSpeed_i -= ProjInterfaceVel;
+  	SoundSpeed_j += ProjInterfaceVel;
+
+        ProjVelocity_i -= ProjInterfaceVel; 
+        ProjVelocity_j -= ProjInterfaceVel;
+  }  
+
   /*--- Roe's averaging ---*/
 
-  Rrho = 1/( sqrt(Density_i) + sqrt(Density_j) );
+  Rrho = ( sqrt(Density_i) + sqrt(Density_j) );
 
   sq_velRoe        = 0.0;
   RoeProjVelocity  = 0.0;
 
   for (iDim = 0; iDim < nDim; iDim++){
-    RoeVelocity[iDim] = ( Velocity_i[iDim] * sqrt(Density_i) + Velocity_j[iDim] * sqrt(Density_j) ) * Rrho;
+    RoeVelocity[iDim] = ( Velocity_i[iDim] * sqrt(Density_i) + Velocity_j[iDim] * sqrt(Density_j) ) / Rrho;
     sq_velRoe        +=  RoeVelocity[iDim] * RoeVelocity[iDim];
     RoeProjVelocity  +=  RoeVelocity[iDim] * UnitNormal[iDim];
   } 
@@ -1581,7 +1589,7 @@ su2double GridVel[3];
   RoeKappa = 0.5 * ( Kappa_i + Kappa_j );
   RoeChi   = 0.5 * ( Chi_i + Chi_j );
   RoeDensity = sqrt( Density_i * Density_j );
-  RoeEnthalpy = ( sqrt(Density_j) * Enthalpy_j + sqrt(Density_i) * Enthalpy_i)/(sqrt(Density_j) + sqrt(Density_i) );
+  RoeEnthalpy = ( sqrt(Density_j) * Enthalpy_j + sqrt(Density_i) * Enthalpy_i) / Rrho;
 
   VinokurMontagne();
 
@@ -1605,7 +1613,7 @@ su2double GridVel[3];
   pStar = Density_j * ( ProjVelocity_j - sR ) * ( ProjVelocity_j - sM ) + Pressure_j;
 
 
-if (sM >= 0.0) {
+if (sM > 0.0) {
 
 	if (sL > 0.0){
 
@@ -1614,7 +1622,7 @@ if (sM >= 0.0) {
 		val_residual[0] = Density_i * ProjVelocity_i;
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = Density_i * Velocity_i[iDim] * ProjVelocity_i + Pressure_i * UnitNormal[iDim];
-		val_residual[nVar-1] = ( Energy_i * Density_i + Pressure_i ) * ProjVelocity_i;
+		val_residual[nVar-1] = Enthalpy_i * Density_i * ProjVelocity_i;
 	}
 	else{
 
@@ -1643,7 +1651,7 @@ if (sM >= 0.0) {
 		val_residual[0] = Density_j * ProjVelocity_j;
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = Density_j * Velocity_j[iDim] * ProjVelocity_j + Pressure_j * UnitNormal[iDim];
-		val_residual[nVar-1] = ( Energy_j * Density_j + Pressure_j ) * ProjVelocity_j;
+		val_residual[nVar-1] = Enthalpy_j * Density_j * ProjVelocity_j;
 	}
 	else{
 
@@ -1966,10 +1974,12 @@ if (sM >= 0.0) {
 
 	/*--- Jacobians of the inviscid flux, scale = 0.5 because val_residual ~ 0.5*(fc_i+fc_j)*Normal ---*/
 
+	Area *= kappa;
+	
 	for (iVar = 0; iVar < nVar; iVar++) {
 		for (jVar = 0; jVar < nVar; jVar++){
-			val_Jacobian_i[iVar][jVar] *=   kappa * Area;
-			val_Jacobian_j[iVar][jVar] *= - kappa * Area;
+			val_Jacobian_i[iVar][jVar] *=   Area;
+			val_Jacobian_j[iVar][jVar] *= - Area;
 		}
 	}
 
