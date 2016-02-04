@@ -1027,7 +1027,6 @@ void CUpwHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jac
 
   if (grid_movement) {
 	sq_InterfaceVelocity = 0;
-	ProjInterfaceVel = 0;
 
 	for (iDim = 0; iDim < nDim; iDim++){
 
@@ -1501,15 +1500,15 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
 
   /*--- Primitive variables at point i ---*/
 
-  Pressure_i = fabs( V_i[nDim+1] );
-  Density_i  = fabs( V_i[nDim+2] );
-  Enthalpy_i = fabs( V_i[nDim+3] );
+  Pressure_i = V_i[nDim+1];
+  Density_i  = V_i[nDim+2];
+  Enthalpy_i = V_i[nDim+3];
 
   /*--- Primitive variables at point j ---*/
   
-  Pressure_j = fabs( V_j[nDim+1] );
-  Density_j  = fabs( V_j[nDim+2] );
-  Enthalpy_j = fabs( V_j[nDim+3] );
+  Pressure_j = V_j[nDim+1];
+  Density_j  = V_j[nDim+2];
+  Enthalpy_j = V_j[nDim+3];
 
 
   sq_vel_i = 0.0;
@@ -1554,7 +1553,6 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
 
   if (grid_movement) {
 	sq_InterfaceVelocity = 0;
-	ProjInterfaceVel = 0;
 
 	for (iDim = 0; iDim < nDim; iDim++){
 
@@ -1595,8 +1593,8 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
 
   /*--- Roe-averaged speed of sound ---*/
 
-  RoeSoundSpeed2 = RoeChi + RoeKappa * ( RoeEnthalpy - 0.5 * sq_velRoe );
-  RoeSoundSpeed  = sqrt( fabs(RoeSoundSpeed2) );
+  //RoeSoundSpeed2 = RoeChi + RoeKappa * ( RoeEnthalpy - 0.5 * sq_velRoe );
+  RoeSoundSpeed  = sqrt( RoeChi + RoeKappa * ( RoeEnthalpy - 0.5 * sq_velRoe ) );
 
   /*--- Speed of sound at L and R ---*/
   
@@ -1639,7 +1637,7 @@ if (sM > 0.0) {
 		val_residual[0] = sM * IntermediateState[0];
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = sM * IntermediateState[iDim+1] + pStar * UnitNormal[iDim];
-		val_residual[nVar-1] = sM * ( IntermediateState[nVar-1] + pStar );
+		val_residual[nVar-1] = sM * ( IntermediateState[nVar-1] + pStar )  + pStar*ProjInterfaceVel;
 	}
   }
   else {
@@ -1668,7 +1666,7 @@ if (sM > 0.0) {
 		val_residual[0] = sM * IntermediateState[0];
 		for (iDim = 0; iDim < nDim; iDim++)
 			val_residual[iDim+1] = sM * IntermediateState[iDim+1] + pStar * UnitNormal[iDim];
-		val_residual[nVar-1] = sM * (IntermediateState[nVar-1] + pStar );
+		val_residual[nVar-1] = sM * (IntermediateState[nVar-1] + pStar )  + pStar*ProjInterfaceVel;
 	}
   }
 

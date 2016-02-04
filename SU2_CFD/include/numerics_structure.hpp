@@ -2005,9 +2005,9 @@ public:
 
 /*!
  * \class CUpwHLLC_Flow
- * \brief Class for solving an approximate Riemann AUSM.
+ * \brief Class for solving an approximate Riemann HLLC.
  * \ingroup ConvDiscr
- * \author G. Gori
+ * \author G. Gori, Politecnico di Milano
  * \version 4.0.2 "Cardinal"
  */
 class CUpwHLLC_Flow : public CNumerics {
@@ -2056,7 +2056,7 @@ public:
 
 /*!
  * \class CUpwGeneralHLLC_Flow
- * \brief Class for solving an approximate Riemann AUSM.
+ * \brief Class for solving an approximate Riemann HLLC.
  * \ingroup ConvDiscr
  * \author G. Gori, Politecnico di Milano
  * \version 4.0.2 "Cardinal"
