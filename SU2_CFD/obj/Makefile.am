@@ -69,6 +69,7 @@ su2_cfd_sources = \
   ../include/variable_structure.inl \
   ../include/transfer_structure.hpp \
   ../include/transfer_structure.inl \
+  ../include/braid_structure.hpp \
   ../src/definition_structure.cpp \
   ../src/fluid_model.cpp \
   ../src/fluid_model_pig.cpp \
@@ -130,7 +131,8 @@ su2_cfd_sources = \
   ../src/variable_direct_wave.cpp \
   ../src/variable_fem_elasticity.cpp \
   ../src/variable_structure.cpp \
-  ../src/variable_template.cpp
+  ../src/variable_template.cpp \
+  ../src/braid_wrapper.cpp
 
 su2_cfd_cxx_flags =
 su2_cfd_ldadd =

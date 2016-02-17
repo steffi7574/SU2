@@ -137,6 +137,12 @@ AC_ARG_ENABLE(normal,
     AS_HELP_STRING([--disable-normal], [build executables with normal datatype (default = yes)]),
     [build_NORMAL=$enableval], [build_NORMAL="yes"])
 
+AC_ARG_WITH(xbraid-lib,
+   	AS_HELP_STRING([--with-xbraid-lib[=ARG]], [XBraid library directory, ARG = path to libbraid.a]),
+	[with_xbraid_lib=$withval], [with_xbraid_lib="no"])
+AC_ARG_WITH(xbraid-include,
+   	AS_HELP_STRING([--with-xbraid-include[=ARG]], [XBraid include directory, ARG = path to braid.hpp]),
+	[with_xbraid_include=$withval], [with_xbraid_include="no"])
 # Check for the old  MPI option so that we can throw an error
 AC_ARG_WITH(MPI,
 AS_HELP_STRING(),
@@ -497,6 +503,44 @@ fi
 AC_SUBST([LAPACK_CXX])
 AC_SUBST([LAPACK_LD])
 
+##########################
+
+# check for lib
+xbraidlib=libbraid.a
+xbraidheader=braid.hpp
+have_xbraid="no"
+
+if test "$with_xbraid_lib" != "no"
+then
+  	AC_CHECK_FILE([$with_xbraid_lib/$xbraidlib],[have_xbraid="yes"],[have_xbraid="no"])
+	if test "$have_xbraid" == "no"
+	then
+		AC_MSG_ERROR([xbraid requested but library file not found.])
+	fi
+fi
+
+# check for header
+if test "$have_xbraid" != "no"
+then
+	if test "$with_xbraid_include" != "no"
+	then
+		AC_CHECK_FILE([$with_xbraid_include/$xbraidheader],[have_xbraid='yes'],[have_xbraid='no'])
+		if test "$have_xbraid" == "no"
+		then
+			AC_MSG_ERROR([xbraid requested but header file not found.])
+		fi
+	else
+		have_xbraid="no"
+	fi
+fi
+
+if test "$have_xbraid" != "no"
+then
+	CXXFLAGS="$CXXFLAGS -DHAVE_XBRAID -I"$with_xbraid_include
+	LDFLAGS="$LDFLAGS $with_xbraid_lib"/$xbraidlib
+fi
+
+##########################
 ###########################
 # Determine what versions of the code to build
 
