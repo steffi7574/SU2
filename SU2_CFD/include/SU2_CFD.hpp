@@ -48,5 +48,6 @@
 #include "../include/definition_structure.hpp"
 #include "../include/iteration_structure.hpp"
 #include "../include/transfer_structure.hpp"
+#include "../include/braid_structure.hpp"
 
 using namespace std;

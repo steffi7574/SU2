@@ -10,12 +10,28 @@
 
 #include <braid.hpp>
 
-
 /*!
  * \brief XBraid structure that holds additional information needed to carry out an unseady simulation step.
  */
 typedef struct _braid_App_struct
 {
+  su2double tstart;     /* Begin of Time integration */
+  su2double tstop;      /* End of Time integration */
+  int ntime;            /* Number of time steps */
+
+  CDriver *driver;
+  CIteration **iteration_container;
+  COutput *output;
+  CIntegration ***integration_container;
+  CGeometry ***geometry_container;
+  CSolver ****solver_container;
+  CNumerics *****numerics_container;
+  CConfig **config_container;
+  CSurfaceMovement **surface_movement;
+  CVolumetricMovement **grid_movement;
+  CFreeFormDefBox*** FFDBox;
+  CInterpolator ***interpolator_container;
+  CTransfer ***transfer_container;
 
 } my_App;
 
@@ -24,6 +40,7 @@ typedef struct _braid_App_struct
   */
 typedef struct _braid_Vector_struct
 {
+  CVariable** node;	    /*!< \brief Vector which defines the flow variables for each problem. */
 
 } my_Vector;
 
