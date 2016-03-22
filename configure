@@ -647,6 +647,10 @@ REVERSE_LIBS
 REVERSE_CXX
 DIRECTDIFF_LIBS
 DIRECTDIFF_CXX
+XBRAID_LD
+XBRAID_CXX
+BUILD_XBRAID_FALSE
+BUILD_XBRAID_TRUE
 LAPACK_LD
 LAPACK_CXX
 BUILD_LAPACK_FALSE
@@ -6926,9 +6930,30 @@ fi
 
 if test "$have_xbraid" != "no"
 then
-	CXXFLAGS="$CXXFLAGS -DHAVE_XBRAID -I"$with_xbraid_include
-	LDFLAGS="$LDFLAGS $with_xbraid_lib"/$xbraidlib
+ if true; then
+  BUILD_XBRAID_TRUE=
+  BUILD_XBRAID_FALSE='#'
+else
+  BUILD_XBRAID_TRUE='#'
+  BUILD_XBRAID_FALSE=
 fi
+
+XBRAID_CXX="-DHAVE_XBRAID -I"$with_xbraid_lib""
+XBRAID_LD="$with_xbraid_lib"/$xbraidlib
+else
+ if false; then
+  BUILD_XBRAID_TRUE=
+  BUILD_XBRAID_FALSE='#'
+else
+  BUILD_XBRAID_TRUE='#'
+  BUILD_XBRAID_FALSE=
+fi
+
+XBRAID_CXX=
+XBRAID_LD=
+fi
+
+
 
 ##########################
 ###########################
@@ -7419,6 +7444,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_LAPACK_TRUE}" && test -z "${BUILD_LAPACK_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_LAPACK\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_XBRAID_TRUE}" && test -z "${BUILD_XBRAID_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_XBRAID\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_XBRAID_TRUE}" && test -z "${BUILD_XBRAID_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_XBRAID\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_NORMAL_TRUE}" && test -z "${BUILD_NORMAL_FALSE}"; then

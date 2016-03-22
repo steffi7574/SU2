@@ -146,6 +146,11 @@ su2_cfd_cxx_flags += @CGNS_CXX@
 su2_cfd_ldadd += @CGNS_LD@
 # endif
 
+# if BUILD_XBRAID
+su2_cfd_cxx_flags += @XBRAID_CXX@
+su2_cfd_ldadd += @XBRAID_LD@
+# endif
+
 # if BUILD_MUTATIONPP
 su2_cfd_cxx_flags += @MUTATIONPP_CXX@
 su2_cfd_ldadd += @MUTATIONPP_LD@

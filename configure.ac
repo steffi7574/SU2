@@ -536,9 +536,16 @@ fi
 
 if test "$have_xbraid" != "no"
 then
-	CXXFLAGS="$CXXFLAGS -DHAVE_XBRAID -I"$with_xbraid_include
-	LDFLAGS="$LDFLAGS $with_xbraid_lib"/$xbraidlib
+AM_CONDITIONAL(BUILD_XBRAID,true)
+XBRAID_CXX="-DHAVE_XBRAID -I"$with_xbraid_lib""
+XBRAID_LD="$with_xbraid_lib"/$xbraidlib
+else
+AM_CONDITIONAL(BUILD_XBRAID,false)
+XBRAID_CXX=
+XBRAID_LD=
 fi
+AC_SUBST([XBRAID_CXX])
+AC_SUBST([XBRAID_LD])
 
 ##########################
 ###########################
