@@ -9,6 +9,19 @@
 #pragma once
 
 #include <braid.hpp>
+#include "../../Common/include/mpi_structure.hpp"
+#include "driver_structure.hpp"
+#include "iteration_structure.hpp"
+#include "solver_structure.hpp"
+#include "integration_structure.hpp"
+#include "output_structure.hpp"
+#include "numerics_structure.hpp"
+#include "transfer_structure.hpp"
+#include "../../Common/include/geometry_structure.hpp"
+#include "../../Common/include/grid_movement_structure.hpp"
+#include "../../Common/include/config_structure.hpp"
+#include "../../Common/include/interpolation_structure.hpp"
+
 
 /*!
  * \brief XBraid structure that holds additional information needed to carry out an unseady simulation step.
@@ -34,6 +47,8 @@ typedef struct _braid_App_struct
   CTransfer ***transfer_container;
 
 } my_App;
+
+
 
 /*!
  * \brief XBraid structure that defines a state vector at a certain time value and any information related to this vector which is needed to evolve the vector to the next time value, like mesh information.
