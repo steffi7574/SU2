@@ -53,7 +53,7 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   nVar = direct_solver->GetnVar();
   nDim = geometry->GetnDim();
@@ -325,7 +325,7 @@ void CDiscAdjSolver::RegisterObj_Func(CConfig *config){
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
   /*--- Here we can add new (scalar) objective functions ---*/
@@ -384,7 +384,7 @@ void CDiscAdjSolver::RegisterObj_Func(CConfig *config){
 void CDiscAdjSolver::SetAdj_ObjFunc(CGeometry *geometry, CConfig *config){
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
   if (rank == MASTER_NODE){
@@ -479,10 +479,10 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
     Local_Sens_Press = SU2_TYPE::GetDerivative(Pressure);
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&Local_Sens_Mach,  &Total_Sens_Mach,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&Local_Sens_AoA,   &Total_Sens_AoA,   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&Local_Sens_Temp,  &Total_Sens_Temp,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&Local_Sens_Press, &Total_Sens_Press, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&Local_Sens_Mach,  &Total_Sens_Mach,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&Local_Sens_AoA,   &Total_Sens_AoA,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&Local_Sens_Temp,  &Total_Sens_Temp,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&Local_Sens_Press, &Total_Sens_Press, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
 #else
     Total_Sens_Mach  = Local_Sens_Mach;
     Total_Sens_AoA   = Local_Sens_AoA;
@@ -598,7 +598,7 @@ void CDiscAdjSolver::SetSurface_Sensitivity(CGeometry *geometry, CConfig *config
   }
 
 #ifdef HAVE_MPI
-  SU2_MPI::Allreduce(&Total_Sens_Geo_local,&Total_Sens_Geo,1,MPI_DOUBLE,MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&Total_Sens_Geo_local,&Total_Sens_Geo,1,MPI_DOUBLE,MPI_SUM, SU2_MPI::comm);
 #else
   Total_Sens_Geo = Total_Sens_Geo_local;
 #endif

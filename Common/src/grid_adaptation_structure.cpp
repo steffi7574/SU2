@@ -124,7 +124,7 @@ void CGridAdaptation::GetFlowSolution(CGeometry *geometry, CConfig *config) {
 	char *cstr = new char [mesh_filename.size()+1];
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	strcpy (cstr, mesh_filename.c_str());
@@ -166,7 +166,7 @@ void CGridAdaptation::GetFlowResidual(CGeometry *geometry, CConfig *config) {
 	char *cstr = new char [mesh_filename.size()+1];
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	strcpy (cstr, mesh_filename.c_str());
@@ -206,7 +206,7 @@ void CGridAdaptation::GetAdjSolution(CGeometry *geometry, CConfig *config) {
 	ifstream restart_file;
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
   /*--- Get the adjoint solution file name ---*/
@@ -247,7 +247,7 @@ void CGridAdaptation::GetAdjResidual(CGeometry *geometry, CConfig *config) {
 	ifstream restart_file;
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	char buffer[50], cstr[MAX_STRING_SIZE];

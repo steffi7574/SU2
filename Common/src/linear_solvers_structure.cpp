@@ -89,8 +89,8 @@ void CSysSolve::ModGramSchmidt(int i, vector<vector<su2double> > & Hsbg, vector<
 
 #ifdef HAVE_MPI
   int size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_size(SU2_MPI::comm, &size);
 #endif
   
   /*--- Parameter for reorthonormalization ---*/
@@ -118,7 +118,7 @@ void CSysSolve::ModGramSchmidt(int i, vector<vector<su2double> > & Hsbg, vector<
   /*--- Convergence criteria ---*/
   
   sbuf_conv[0] = Convergence;
-  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::comm);
   
   /*-- Compute global convergence criteria in the master node --*/
   
@@ -128,7 +128,7 @@ void CSysSolve::ModGramSchmidt(int i, vector<vector<su2double> > & Hsbg, vector<
     else sbuf_conv[0] = 0;
   }
   
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::comm);
   
   if (sbuf_conv[0] == 1) Convergence = true;
   else Convergence = false;
@@ -144,7 +144,7 @@ void CSysSolve::ModGramSchmidt(int i, vector<vector<su2double> > & Hsbg, vector<
 #ifndef HAVE_MPI
 		exit(EXIT_DIVERGENCE);
 #else
-    MPI_Abort(MPI_COMM_WORLD,1);
+    MPI_Abort(SU2_MPI::comm,1);
 #endif
   }
   
@@ -183,7 +183,7 @@ void CSysSolve::ModGramSchmidt(int i, vector<vector<su2double> > & Hsbg, vector<
 //#ifndef HAVE_MPI
 //    exit(EXIT_DIVERGENCE);
 //#else
-//    MPI_Abort(MPI_COMM_WORLD,1);
+//    MPI_Abort(SU2_MPI::comm,1);
 //    MPI_Finalize();
 //#endif
 //    
@@ -214,7 +214,7 @@ unsigned long CSysSolve::CG_LinSolver(const CSysVector & b, CSysVector & x, CMat
 int rank = 0;
 
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Check the subspace size ---*/
@@ -223,7 +223,7 @@ int rank = 0;
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-	MPI_Abort(MPI_COMM_WORLD,1);
+	MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }
@@ -320,7 +320,7 @@ unsigned long CSysSolve::FGMRES_LinSolver(const CSysVector & b, CSysVector & x, 
 int rank = 0;
 
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*---  Check the subspace size ---*/
@@ -330,7 +330,7 @@ int rank = 0;
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-	MPI_Abort(MPI_COMM_WORLD,1);
+	MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }
@@ -342,7 +342,7 @@ int rank = 0;
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-	MPI_Abort(MPI_COMM_WORLD,1);
+	MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }
@@ -474,7 +474,7 @@ unsigned long CSysSolve::BCGSTAB_LinSolver(const CSysVector & b, CSysVector & x,
 	
   int rank = 0;
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Check the subspace size ---*/
@@ -484,7 +484,7 @@ unsigned long CSysSolve::BCGSTAB_LinSolver(const CSysVector & b, CSysVector & x,
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-	MPI_Abort(MPI_COMM_WORLD,1);
+	MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }

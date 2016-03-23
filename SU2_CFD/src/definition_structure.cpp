@@ -55,7 +55,7 @@ unsigned short GetnZone(string val_mesh_filename, unsigned short val_format, CCo
 #ifndef HAVE_MPI
         exit(EXIT_FAILURE);
 #else
-        MPI_Abort(MPI_COMM_WORLD,1);
+        MPI_Abort(SU2_MPI::comm,1);
         MPI_Finalize();
 #endif
       }
@@ -201,7 +201,7 @@ void Driver_Preprocessing(CDriver **driver,
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- fsi implementations will use, as of now, BGS implentation. More to come. ---*/
@@ -258,7 +258,7 @@ void Geometrical_Preprocessing(CGeometry ***geometry, CConfig **config, unsigned
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   for (iZone = 0; iZone < val_nZone; iZone++) {
@@ -404,8 +404,8 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
   int size = SINGLE_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_size(SU2_MPI::comm, &size);
 #endif
   
   nPointTotal = geometry->GetnPoint();
@@ -481,7 +481,7 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
     Profile_File.close();
   }
 #ifdef HAVE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(SU2_MPI::comm);
 #endif
   
   /*--- Loop through the map and write the results to the file ---*/
@@ -493,7 +493,7 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
       Profile_File.close();
     }
 #ifdef HAVE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(SU2_MPI::comm);
 #endif
   }
   

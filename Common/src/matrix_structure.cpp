@@ -730,7 +730,7 @@ void CSysMatrix::SendReceive_Solution(CSysVector & x, CGeometry *geometry, CConf
       /*--- Send/Receive information using Sendrecv ---*/
       
       SU2_MPI::Sendrecv(Buffer_Send, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -818,7 +818,7 @@ void CSysMatrix::SendReceive_SolutionTransposed(CSysVector & x, CGeometry *geome
       /*--- Send/Receive information using Sendrecv ---*/
 
       SU2_MPI::Sendrecv(Buffer_Send, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
 
 #else
 
@@ -1100,7 +1100,7 @@ unsigned long CSysMatrix::Jacobi_Smoother(const CSysVector & b, CSysVector & x, 
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*---  Check the number of iterations requested ---*/
@@ -1110,7 +1110,7 @@ unsigned long CSysMatrix::Jacobi_Smoother(const CSysVector & b, CSysVector & x, 
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Abort(MPI_COMM_WORLD,1);
+    MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }
@@ -1351,7 +1351,7 @@ unsigned long CSysMatrix::ILU0_Smoother(const CSysVector & b, CSysVector & x, CM
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*---  Check the number of iterations requested ---*/
@@ -1361,7 +1361,7 @@ unsigned long CSysMatrix::ILU0_Smoother(const CSysVector & b, CSysVector & x, CM
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Abort(MPI_COMM_WORLD,1);
+    MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }
@@ -1542,7 +1542,7 @@ unsigned long CSysMatrix::LU_SGS_Smoother(const CSysVector & b, CSysVector & x, 
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*---  Check the number of iterations requested ---*/
@@ -1552,7 +1552,7 @@ unsigned long CSysMatrix::LU_SGS_Smoother(const CSysVector & b, CSysVector & x, 
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Abort(MPI_COMM_WORLD,1);
+    MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }
@@ -1817,8 +1817,8 @@ unsigned short CSysMatrix::BuildLineletPreconditioner(CGeometry *geometry, CConf
   Global_nPoints = Local_nPoints;
   Global_nLineLets = Local_nLineLets;
 #else
-  SU2_MPI::Allreduce(&Local_nPoints, &Global_nPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&Local_nLineLets, &Global_nLineLets, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&Local_nPoints, &Global_nPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&Local_nLineLets, &Global_nLineLets, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
 #endif
   
   MeanPoints = SU2_TYPE::Int(su2double(Global_nPoints)/su2double(Global_nLineLets));
@@ -1863,8 +1863,8 @@ void CSysMatrix::ComputeLineletPreconditioner(const CSysVector & vec, CSysVector
   int size = SINGLE_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_size(SU2_MPI::comm, &size);
 #endif
   
   if (size == SINGLE_NODE) {
@@ -1964,7 +1964,7 @@ void CSysMatrix::ComputeLineletPreconditioner(const CSysVector & vec, CSysVector
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Abort(MPI_COMM_WORLD,1);
+    MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
     

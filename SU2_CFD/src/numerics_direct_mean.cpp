@@ -4400,7 +4400,7 @@ void CSourceWindGust::ComputeResidual(su2double *val_residual, su2double **val_J
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-	MPI_Abort(MPI_COMM_WORLD,1);
+	MPI_Abort(SU2_MPI::comm,1);
 	MPI_Finalize();
 #endif
     

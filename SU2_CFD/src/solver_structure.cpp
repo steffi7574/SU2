@@ -189,8 +189,8 @@ void CSolver::SetResidual_RMS(CGeometry *geometry, CConfig *config) {
 #else
   
   int nProcessor, iProcessor, rank;
-  MPI_Comm_size(MPI_COMM_WORLD, &nProcessor);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
   
   su2double *sbuf_residual, *rbuf_residual, *sbuf_coord, *rbuf_coord, *Coord;
   unsigned long *sbuf_point, *rbuf_point, Local_nPointDomain, Global_nPointDomain;
@@ -205,8 +205,8 @@ void CSolver::SetResidual_RMS(CGeometry *geometry, CConfig *config) {
   Local_nPointDomain = geometry->GetnPointDomain();
   
   
-  SU2_MPI::Allreduce(sbuf_residual, rbuf_residual, nVar, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(sbuf_residual, rbuf_residual, nVar, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
   
   
   for (iVar = 0; iVar < nVar; iVar++) {
@@ -216,7 +216,7 @@ void CSolver::SetResidual_RMS(CGeometry *geometry, CConfig *config) {
       if (rank == MASTER_NODE)
         cout << "\n !!! Error: SU2 has diverged. Now exiting... !!! \n" << endl;
       
-      MPI_Abort(MPI_COMM_WORLD,1);
+      MPI_Abort(SU2_MPI::comm,1);
       
     }
     
@@ -244,9 +244,9 @@ void CSolver::SetResidual_RMS(CGeometry *geometry, CConfig *config) {
       sbuf_coord[iVar*nDim+iDim] = Coord[iDim];
   }
   
-  SU2_MPI::Allgather(sbuf_residual, nVar, MPI_DOUBLE, rbuf_residual, nVar, MPI_DOUBLE, MPI_COMM_WORLD);
-  SU2_MPI::Allgather(sbuf_point, nVar, MPI_UNSIGNED_LONG, rbuf_point, nVar, MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
-  SU2_MPI::Allgather(sbuf_coord, nVar*nDim, MPI_DOUBLE, rbuf_coord, nVar*nDim, MPI_DOUBLE, MPI_COMM_WORLD);
+  SU2_MPI::Allgather(sbuf_residual, nVar, MPI_DOUBLE, rbuf_residual, nVar, MPI_DOUBLE, SU2_MPI::comm);
+  SU2_MPI::Allgather(sbuf_point, nVar, MPI_UNSIGNED_LONG, rbuf_point, nVar, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+  SU2_MPI::Allgather(sbuf_coord, nVar*nDim, MPI_DOUBLE, rbuf_coord, nVar*nDim, MPI_DOUBLE, SU2_MPI::comm);
 
   for (iVar = 0; iVar < nVar; iVar++) {
     for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
@@ -1609,7 +1609,7 @@ void CSolver::Restart_OldGeometry(CGeometry *geometry, CConfig *config) {
 
 	int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	/*--- Multizone problems require the number of the zone to be appended. ---*/
@@ -1690,7 +1690,7 @@ void CSolver::Restart_OldGeometry(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
 	rbuf_NotMatching = sbuf_NotMatching;
 #else
-	SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MPI_COMM_WORLD);
+	SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm);
 #endif
 
 	if (rbuf_NotMatching != 0) {
@@ -1701,8 +1701,8 @@ void CSolver::Restart_OldGeometry(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
 		exit(EXIT_FAILURE);
 #else
-		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Abort(MPI_COMM_WORLD,1);
+		MPI_Barrier(SU2_MPI::comm);
+		MPI_Abort(SU2_MPI::comm,1);
 		MPI_Finalize();
 #endif
 	}
@@ -1794,7 +1794,7 @@ void CSolver::Restart_OldGeometry(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
 		rbuf_NotMatching = sbuf_NotMatching;
 #else
-		SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MPI_COMM_WORLD);
+		SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm);
 #endif
 
 		if (rbuf_NotMatching != 0) {
@@ -1805,8 +1805,8 @@ void CSolver::Restart_OldGeometry(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
 			exit(EXIT_FAILURE);
 #else
-			MPI_Barrier(MPI_COMM_WORLD);
-			MPI_Abort(MPI_COMM_WORLD,1);
+			MPI_Barrier(SU2_MPI::comm);
+			MPI_Abort(SU2_MPI::comm,1);
 			MPI_Finalize();
 #endif
 		}
@@ -1833,7 +1833,7 @@ CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config, unsigned 
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   unsigned long iPoint, index, iPoint_Global;
@@ -1897,7 +1897,7 @@ CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config, unsigned 
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Abort(MPI_COMM_WORLD,1);
+    MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
     
@@ -2037,7 +2037,7 @@ void CBaselineSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
       /*--- Send/Receive information using Sendrecv ---*/
       
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                   Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -2154,7 +2154,7 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Restart the solution from file information ---*/
@@ -2268,7 +2268,7 @@ void CBaselineSolver::LoadRestart_FSI(CGeometry *geometry, CSolver ***solver, CC
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
   /*--- Restart the solution from file information ---*/

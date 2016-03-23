@@ -40,7 +40,7 @@ CPoissonSolver::CPoissonSolver(CGeometry *geometry, CConfig *config) : CSolver()
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
 	nDim =          geometry->GetnDim();

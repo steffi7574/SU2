@@ -50,4 +50,6 @@
 #include "../include/transfer_structure.hpp"
 #include "../include/braid_structure.hpp"
 
+#include "braid.hpp"
+
 using namespace std;

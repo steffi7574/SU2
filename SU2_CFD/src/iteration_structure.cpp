@@ -136,7 +136,7 @@ void CMeanFlowIteration::Iterate(COutput *output,
   unsigned long ExtIter = config_container[val_iZone]->GetExtIter();
 #ifdef HAVE_MPI
   int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Set the value of the internal iteration ---*/
@@ -329,7 +329,7 @@ void CMeanFlowIteration::SetWind_GustField(CConfig *config_container, CGeometry 
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   if (rank == MASTER_NODE)
@@ -389,7 +389,7 @@ void CMeanFlowIteration::SetWind_GustField(CConfig *config_container, CGeometry 
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Abort(MPI_COMM_WORLD,1);
+    MPI_Abort(SU2_MPI::comm,1);
     MPI_Finalize();
 #endif
   }
@@ -923,7 +923,7 @@ void CFEM_StructuralAnalysis::Iterate(COutput *output,
 
 	int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	su2double loadIncrement;
@@ -1231,7 +1231,7 @@ void CAdjMeanFlowIteration::Preprocess(COutput *output,
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- For the unsteady adjoint, load a new direct solution from a restart file. ---*/
@@ -1462,7 +1462,7 @@ void CDiscAdjMeanFlowIteration::Preprocess(COutput *output,
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   if (ExtIter == 0){
     if (config_container[val_iZone]->GetGrid_Movement()) {
@@ -1766,7 +1766,7 @@ void FEM_StructuralIteration(COutput *output, CIntegration ***integration_contai
 
 	int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 
@@ -2272,7 +2272,7 @@ void SetGrid_Movement(CGeometry **geometry_container, CSurfaceMovement *surface_
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Perform mesh movement depending on specified type ---*/

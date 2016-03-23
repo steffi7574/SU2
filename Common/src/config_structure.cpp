@@ -35,7 +35,7 @@ CConfig::CConfig(char case_filename[MAX_STRING_SIZE], unsigned short val_softwar
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
   /*--- Initialize pointers to Null---*/
@@ -1351,7 +1351,7 @@ void CConfig::SetConfig_Parsing(char case_filename[MAX_STRING_SIZE]) {
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Read the configuration file ---*/
@@ -1449,7 +1449,7 @@ bool CConfig::SetRunTime_Parsing(char case_filename[MAX_STRING_SIZE]) {
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Read the configuration file ---*/
@@ -1541,7 +1541,7 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
   
 #ifdef HAVE_MPI
   int size = SINGLE_NODE;
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_size(SU2_MPI::comm, &size);
 #endif
   
 #ifndef HAVE_TECIO
@@ -2574,7 +2574,7 @@ void CConfig::SetMarkers(unsigned short val_software) {
   
 #ifdef HAVE_MPI
   if (val_software != SU2_MSH)
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_size(SU2_MPI::comm, &size);
 #endif
 
   /*--- Compute the total number of markers in the config file ---*/

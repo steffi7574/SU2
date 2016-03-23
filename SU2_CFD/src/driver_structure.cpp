@@ -50,7 +50,7 @@ CDriver::CDriver(CIteration **iteration_container,
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Store the number of zones for the problem (class data member). ---*/
@@ -1077,7 +1077,7 @@ void CDriver::Iteration_Preprocessing(CIteration **iteration_container, CConfig 
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Initial print to console for this zone. ---*/
@@ -1157,7 +1157,7 @@ void CDriver::Interface_Preprocessing(CTransfer ***transfer_container, CInterpol
 
 
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	/*--- Coupling between zones (limited to two zones at the moment) ---*/
@@ -1475,7 +1475,7 @@ void CSpectralDriver::SetTimeSpectral(CGeometry ***geometry_container, CSolver *
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   unsigned short iVar, jZone, kZone, iMGlevel;
@@ -1926,7 +1926,7 @@ void CFSIDriver::Run(CIteration **iteration_container,
 
 	int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	 /*--- If there is a restart, we need to get the old geometry from the fluid field ---*/
@@ -2069,7 +2069,7 @@ void CFSIDriver::Predict_Displacements(COutput *output, CIntegration ***integrat
 
 #ifdef HAVE_MPI
 	int rank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	solver_container[donorZone][MESH_0][FEA_SOL]->PredictStruct_Displacement(geometry_container[donorZone], config_container[donorZone],
@@ -2096,7 +2096,7 @@ void CFSIDriver::Transfer_Displacements(COutput *output, CIntegration ***integra
 
 #ifdef HAVE_MPI
 	int rank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	bool MatchingMesh = config_container[targetZone]->GetMatchingMesh();
@@ -2171,7 +2171,7 @@ void CFSIDriver::Transfer_Tractions(COutput *output, CIntegration ***integration
 
 #ifdef HAVE_MPI
 	int rank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	bool MatchingMesh = config_container[donorZone]->GetMatchingMesh();
@@ -2240,7 +2240,7 @@ void CFSIDriver::Relaxation_Displacements(COutput *output, CGeometry ***geometry
 
 #ifdef HAVE_MPI
 	int rank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
 
 	/*-------------------- Aitken's relaxation ------------------------*/

@@ -421,8 +421,8 @@ void COutput::SetTecplotASCII_LowMemory(CConfig *config, CGeometry *geometry, CS
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
   int size = SINGLE_NODE;
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   unsigned long iElem, iPoint;

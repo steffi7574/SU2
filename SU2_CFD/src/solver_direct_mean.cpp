@@ -113,7 +113,7 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config, unsigned short 
   unsigned short nMarkerTurboPerf = config->Get_nMarkerTurboPerf();
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Array initialization ---*/
@@ -661,7 +661,7 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config, unsigned short 
 #ifndef HAVE_MPI
     rbuf_NotMatching = sbuf_NotMatching;
 #else
-    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm);
 #endif
     
     if (rbuf_NotMatching != 0) {
@@ -672,8 +672,8 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config, unsigned short 
 #ifndef HAVE_MPI
       exit(EXIT_FAILURE);
 #else
-      MPI_Barrier(MPI_COMM_WORLD);
-      MPI_Abort(MPI_COMM_WORLD,1);
+      MPI_Barrier(SU2_MPI::comm);
+      MPI_Abort(SU2_MPI::comm,1);
       MPI_Finalize();
 #endif
     }
@@ -733,7 +733,7 @@ CEulerSolver::CEulerSolver(CGeometry *geometry, CConfig *config, unsigned short 
     
     if (config->GetConsole_Output_Verb() == VERB_HIGH) {
 #ifdef HAVE_MPI
-      SU2_MPI::Reduce(&counter_local, &counter_global, 1, MPI_UNSIGNED_LONG, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
+      SU2_MPI::Reduce(&counter_local, &counter_global, 1, MPI_UNSIGNED_LONG, MPI_SUM, MASTER_NODE, SU2_MPI::comm);
 #else
       counter_global = counter_local;
 #endif
@@ -914,7 +914,7 @@ void CEulerSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1031,7 +1031,7 @@ void CEulerSolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *config) {
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1147,7 +1147,7 @@ void CEulerSolver::Set_MPI_Undivided_Laplacian(CGeometry *geometry, CConfig *con
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_Undivided_Laplacian, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_Undivided_Laplacian, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Undivided_Laplacian, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1265,9 +1265,9 @@ void CEulerSolver::Set_MPI_MaxEigenvalue(CGeometry *geometry, CConfig *config) {
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_Lambda, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_Lambda, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Lambda, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       SU2_MPI::Sendrecv(Buffer_Send_Neighbor, nBufferS_Vector, MPI_UNSIGNED_SHORT, send_to, 1,
-                        Buffer_Receive_Neighbor, nBufferR_Vector, MPI_UNSIGNED_SHORT, receive_from, 1, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Neighbor, nBufferR_Vector, MPI_UNSIGNED_SHORT, receive_from, 1, SU2_MPI::comm, &status);
       
 #else
       
@@ -1341,7 +1341,7 @@ void CEulerSolver::Set_MPI_Dissipation_Switch(CGeometry *geometry, CConfig *conf
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_Lambda, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_Lambda, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Lambda, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1418,7 +1418,7 @@ void CEulerSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *confi
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_Gradient, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1538,7 +1538,7 @@ void CEulerSolver::Set_MPI_Solution_Limiter(CGeometry *geometry, CConfig *config
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_Limit, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_Limit, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Limit, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1662,7 +1662,7 @@ void CEulerSolver::Set_MPI_Primitive_Gradient(CGeometry *geometry, CConfig *conf
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_Gradient, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1782,7 +1782,7 @@ void CEulerSolver::Set_MPI_Primitive_Limiter(CGeometry *geometry, CConfig *confi
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_Limit, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_Limit, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_Limit, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
       
 #else
       
@@ -1904,7 +1904,7 @@ void CEulerSolver::Set_MPI_Primitive_Limiter(CGeometry *geometry, CConfig *confi
 //
 //      /*--- Send/Receive information using Sendrecv ---*/
 //      SU2_MPI::Sendrecv(Buffer_Send_Gradient, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-//                   Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+//                   Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
 //
 //#else
 //
@@ -2022,7 +2022,7 @@ void CEulerSolver::Set_MPI_Primitive_Limiter(CGeometry *geometry, CConfig *confi
 //
 //      /*--- Send/Receive information using Sendrecv ---*/
 //      SU2_MPI::Sendrecv(Buffer_Send_Limit, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-//                   Buffer_Receive_Limit, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+//                   Buffer_Receive_Limit, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
 //
 //#else
 //
@@ -2084,7 +2084,7 @@ void CEulerSolver::SetNondimensionalization(CGeometry *geometry, CConfig *config
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Local variables ---*/
@@ -3122,7 +3122,7 @@ void CEulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container
   
 #ifdef HAVE_MPI
   int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   unsigned long ExtIter = config->GetExtIter();
@@ -3202,7 +3202,7 @@ void CEulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container
   if (config->GetConsole_Output_Verb() == VERB_HIGH) {
 #ifdef HAVE_MPI
     unsigned long MyErrorCounter = ErrorCounter; ErrorCounter = 0;
-    SU2_MPI::Allreduce(&MyErrorCounter, &ErrorCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&MyErrorCounter, &ErrorCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
 #endif
     if (iMesh == MESH_0) config->SetNonphysical_Points(ErrorCounter);
   }
@@ -3428,13 +3428,13 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 #ifdef HAVE_MPI
     su2double rbuf_time, sbuf_time;
     sbuf_time = Min_Delta_Time;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Min_Delta_Time = rbuf_time;
     
     sbuf_time = Max_Delta_Time;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MAX, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MAX, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Max_Delta_Time = rbuf_time;
 #endif
   }
@@ -3445,8 +3445,8 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 #ifdef HAVE_MPI
     su2double rbuf_time, sbuf_time;
     sbuf_time = Global_Delta_Time;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Global_Delta_Time = rbuf_time;
 #endif
     for (iPoint = 0; iPoint < nPointDomain; iPoint++){
@@ -3473,8 +3473,8 @@ void CEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 #ifdef HAVE_MPI
     su2double rbuf_time, sbuf_time;
     sbuf_time = Global_Delta_UnstTimeND;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Global_Delta_UnstTimeND = rbuf_time;
 #endif
     config->SetDelta_UnstTimeND(Global_Delta_UnstTimeND);
@@ -3782,7 +3782,7 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
   
   if (config->GetConsole_Output_Verb() == VERB_HIGH) {
 #ifdef HAVE_MPI
-    MPI_Reduce(&counter_local, &counter_global, 1, MPI_UNSIGNED_LONG, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
+    MPI_Reduce(&counter_local, &counter_global, 1, MPI_UNSIGNED_LONG, MPI_SUM, MASTER_NODE, SU2_MPI::comm);
 #else
     counter_global = counter_local;
 #endif
@@ -4532,20 +4532,20 @@ void CEulerSolver::Inviscid_Forces(CGeometry *geometry, CConfig *config) {
   AllBound_CMerit_Inv = 0.0;
   MyAllBound_CNearFieldOF_Inv = AllBound_CNearFieldOF_Inv; AllBound_CNearFieldOF_Inv = 0.0;
   
-  SU2_MPI::Allreduce(&MyAllBound_CDrag_Inv, &AllBound_CDrag_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CLift_Inv, &AllBound_CLift_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CSideForce_Inv, &AllBound_CSideForce_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&MyAllBound_CDrag_Inv, &AllBound_CDrag_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CLift_Inv, &AllBound_CLift_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CSideForce_Inv, &AllBound_CSideForce_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   AllBound_CEff_Inv = AllBound_CLift_Inv / (AllBound_CDrag_Inv + EPS);
-  SU2_MPI::Allreduce(&MyAllBound_CMx_Inv, &AllBound_CMx_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CMy_Inv, &AllBound_CMy_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CMz_Inv, &AllBound_CMz_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CFx_Inv, &AllBound_CFx_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CFy_Inv, &AllBound_CFy_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CFz_Inv, &AllBound_CFz_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CT_Inv, &AllBound_CT_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CQ_Inv, &AllBound_CQ_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&MyAllBound_CMx_Inv, &AllBound_CMx_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CMy_Inv, &AllBound_CMy_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CMz_Inv, &AllBound_CMz_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CFx_Inv, &AllBound_CFx_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CFy_Inv, &AllBound_CFy_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CFz_Inv, &AllBound_CFz_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CT_Inv, &AllBound_CT_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CQ_Inv, &AllBound_CQ_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   AllBound_CMerit_Inv = AllBound_CT_Inv / (AllBound_CQ_Inv + EPS);
-  SU2_MPI::Allreduce(&MyAllBound_CNearFieldOF_Inv, &AllBound_CNearFieldOF_Inv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&MyAllBound_CNearFieldOF_Inv, &AllBound_CNearFieldOF_Inv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
   /*--- Add the forces on the surfaces using all the nodes ---*/
   
@@ -4584,17 +4584,17 @@ void CEulerSolver::Inviscid_Forces(CGeometry *geometry, CConfig *config) {
     Surface_CMz_Inv[iMarker_Monitoring]        = 0.0;
   }
   
-  SU2_MPI::Allreduce(MySurface_CLift_Inv, Surface_CLift_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CDrag_Inv, Surface_CDrag_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CSideForce_Inv, Surface_CSideForce_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(MySurface_CLift_Inv, Surface_CLift_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CDrag_Inv, Surface_CDrag_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CSideForce_Inv, Surface_CSideForce_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++)
     Surface_CEff_Inv[iMarker_Monitoring] = Surface_CLift_Inv[iMarker_Monitoring] / (Surface_CDrag_Inv[iMarker_Monitoring] + EPS);
-  SU2_MPI::Allreduce(MySurface_CFx_Inv, Surface_CFx_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CFy_Inv, Surface_CFy_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CFz_Inv, Surface_CFz_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CMx_Inv, Surface_CMx_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CMy_Inv, Surface_CMy_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CMz_Inv, Surface_CMz_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(MySurface_CFx_Inv, Surface_CFx_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CFy_Inv, Surface_CFy_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CFz_Inv, Surface_CFz_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CMx_Inv, Surface_CMx_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CMy_Inv, Surface_CMy_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CMz_Inv, Surface_CMz_Inv, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
   delete [] MySurface_CLift_Inv; delete [] MySurface_CDrag_Inv; delete [] MySurface_CSideForce_Inv;
   delete [] MySurface_CEff_Inv;  delete [] MySurface_CFx_Inv;   delete [] MySurface_CFy_Inv;
@@ -5697,7 +5697,7 @@ void CEulerSolver::GetEngine_Properties(CGeometry *geometry, CConfig *config, un
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Compute the numerical fan face Mach number, and the total area of the inflow ---*/
@@ -5956,20 +5956,20 @@ void CEulerSolver::GetEngine_Properties(CGeometry *geometry, CConfig *config, un
   
 #ifdef HAVE_MPI
   
-  SU2_MPI::Allreduce(Inflow_MassFlow_Local, Inflow_MassFlow_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Inflow_Mach_Local, Inflow_Mach_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Inflow_Pressure_Local, Inflow_Pressure_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Inflow_Area_Local, Inflow_Area_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(Inflow_MassFlow_Local, Inflow_MassFlow_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Inflow_Mach_Local, Inflow_Mach_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Inflow_Pressure_Local, Inflow_Pressure_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Inflow_Area_Local, Inflow_Area_Total, nMarker_EngineInflow, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
-  SU2_MPI::Allreduce(Bleed_MassFlow_Local, Bleed_MassFlow_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Bleed_Temperature_Local, Bleed_Temperature_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Bleed_Pressure_Local, Bleed_Pressure_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Bleed_Area_Local, Bleed_Area_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(Bleed_MassFlow_Local, Bleed_MassFlow_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Bleed_Temperature_Local, Bleed_Temperature_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Bleed_Pressure_Local, Bleed_Pressure_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Bleed_Area_Local, Bleed_Area_Total, nMarker_EngineBleed, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
-  SU2_MPI::Allreduce(Exhaust_MassFlow_Local, Exhaust_MassFlow_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Exhaust_Temperature_Local, Exhaust_Temperature_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Exhaust_Pressure_Local, Exhaust_Pressure_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Exhaust_Area_Local, Exhaust_Area_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(Exhaust_MassFlow_Local, Exhaust_MassFlow_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Exhaust_Temperature_Local, Exhaust_Temperature_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Exhaust_Pressure_Local, Exhaust_Pressure_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Exhaust_Area_Local, Exhaust_Area_Total, nMarker_EngineExhaust, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
 #else
   
@@ -6209,7 +6209,7 @@ void CEulerSolver::GetActuatorDisk_Properties(CGeometry *geometry, CConfig *conf
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   su2double *Inlet_MassFlow = new su2double [config->GetnMarker_All()];
@@ -6397,15 +6397,15 @@ void CEulerSolver::GetActuatorDisk_Properties(CGeometry *geometry, CConfig *conf
   
 #ifdef HAVE_MPI
   
-  SU2_MPI::Allreduce(Inlet_MassFlow_Local, Inlet_MassFlow_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Inlet_Temperature_Local, Inlet_Temperature_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Inlet_Pressure_Local, Inlet_Pressure_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Inlet_Area_Local, Inlet_Area_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(Inlet_MassFlow_Local, Inlet_MassFlow_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Inlet_Temperature_Local, Inlet_Temperature_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Inlet_Pressure_Local, Inlet_Pressure_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Inlet_Area_Local, Inlet_Area_Total, nMarker_ActDiskInlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
-  SU2_MPI::Allreduce(Outlet_MassFlow_Local, Outlet_MassFlow_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Outlet_Temperature_Local, Outlet_Temperature_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Outlet_Pressure_Local, Outlet_Pressure_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(Outlet_Area_Local, Outlet_Area_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(Outlet_MassFlow_Local, Outlet_MassFlow_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Outlet_Temperature_Local, Outlet_Temperature_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Outlet_Pressure_Local, Outlet_Pressure_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(Outlet_Area_Local, Outlet_Area_Total, nMarker_ActDiskOutlet, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
 #else
   
@@ -6536,7 +6536,7 @@ void CEulerSolver::SetFarfield_AoA(CGeometry *geometry, CSolver **solver_contain
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Only the fine mesh level should check the convergence criteria ---*/
@@ -10162,7 +10162,7 @@ void CEulerSolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_c
   MPI_Status status;
   //MPI_Status send_stat[1], recv_stat[1];
   //MPI_Request send_req[1], recv_req[1];
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
   
   bool compute;
   su2double *Buffer_Send_V = new su2double [nPrimVar];
@@ -10201,9 +10201,9 @@ void CEulerSolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_c
               for (iVar = 0; iVar < nPrimVar; iVar++)
                 Buffer_Send_V[iVar] = node[iPoint]->GetPrimitive(iVar);
               
-              SU2_MPI::Bsend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, MPI_COMM_WORLD);
+              SU2_MPI::Bsend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, SU2_MPI::comm);
               
-              //          SU2_MPI::Isend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, MPI_COMM_WORLD, &send_req[0]);
+              //          SU2_MPI::Isend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, SU2_MPI::comm, &send_req[0]);
               
               //          /*--- Wait for this set of non-blocking comm. to complete ---*/
               //
@@ -10236,9 +10236,9 @@ void CEulerSolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_c
             
             if (jProcessor != rank) {
               
-              SU2_MPI::Recv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, MPI_COMM_WORLD, &status);
+              SU2_MPI::Recv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, SU2_MPI::comm, &status);
               
-              //         SU2_MPI::Irecv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, MPI_COMM_WORLD, &recv_req[0]);
+              //         SU2_MPI::Irecv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, SU2_MPI::comm, &recv_req[0]);
               
               /*--- Wait for the this set of non-blocking recv's to complete ---*/
               
@@ -10283,7 +10283,7 @@ void CEulerSolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_c
     }
   }
   
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(SU2_MPI::comm);
   
   delete[] Buffer_Send_V;
   delete[] Buffer_Receive_V;
@@ -10366,7 +10366,7 @@ void CEulerSolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_c
   MPI_Status status;
   //MPI_Status send_stat[1], recv_stat[1];
   //MPI_Request send_req[1], recv_req[1];
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
   
   bool compute;
   su2double *Buffer_Send_V    = new su2double [nPrimVar];
@@ -10405,9 +10405,9 @@ void CEulerSolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_c
               for (iVar = 0; iVar < nPrimVar; iVar++)
                 Buffer_Send_V[iVar] = node[iPoint]->GetPrimitive(iVar);
               
-              SU2_MPI::Bsend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, MPI_COMM_WORLD);
+              SU2_MPI::Bsend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, SU2_MPI::comm);
               
-              //          SU2_MPI::Isend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, MPI_COMM_WORLD, &send_req[0]);
+              //          SU2_MPI::Isend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, SU2_MPI::comm, &send_req[0]);
               
               //          /*--- Wait for this set of non-blocking comm. to complete ---*/
               //
@@ -10440,9 +10440,9 @@ void CEulerSolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_c
             
             if (jProcessor != rank) {
               
-              SU2_MPI::Recv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, MPI_COMM_WORLD, &status);
+              SU2_MPI::Recv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, SU2_MPI::comm, &status);
               
-              //         SU2_MPI::Irecv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, MPI_COMM_WORLD, &recv_req[0]);
+              //         SU2_MPI::Irecv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, SU2_MPI::comm, &recv_req[0]);
               
               /*--- Wait for the this set of non-blocking recv's to complete ---*/
               
@@ -10487,7 +10487,7 @@ void CEulerSolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_c
     }
   }
   
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(SU2_MPI::comm);
   
   delete[] Buffer_Send_V;
   delete[] Buffer_Receive_V;
@@ -10535,7 +10535,7 @@ void CEulerSolver::BC_ActDisk_Boundary(CGeometry *geometry, CSolver **solver_con
     MPI_Status status;
     //MPI_Status send_stat[1], recv_stat[1];
     //MPI_Request send_req[1], recv_req[1];
-    MPI_Comm_rank(MPI_COMM_WORLD, &iProcessor);
+    MPI_Comm_rank(SU2_MPI::comm, &iProcessor);
 #endif
     
     /*--- Identify the points that should be sended in a MPI implementation.
@@ -10568,9 +10568,9 @@ void CEulerSolver::BC_ActDisk_Boundary(CGeometry *geometry, CSolver **solver_con
               for (iVar = 0; iVar < nPrimVar; iVar++)
                 Buffer_Send_V[iVar] = node[iPoint]->GetPrimitive(iVar);
               
-              SU2_MPI::Bsend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, MPI_COMM_WORLD);
+              SU2_MPI::Bsend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, SU2_MPI::comm);
               
-              //              SU2_MPI::Isend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, MPI_COMM_WORLD, &send_req[0]);
+              //              SU2_MPI::Isend(Buffer_Send_V, nPrimVar, MPI_DOUBLE, jProcessor, iPoint, SU2_MPI::comm, &send_req[0]);
               //              SU2_MPI::Waitall(1, send_req, send_stat);
               
             }
@@ -10614,9 +10614,9 @@ void CEulerSolver::BC_ActDisk_Boundary(CGeometry *geometry, CSolver **solver_con
             if ((int)jProcessor != iProcessor) {
 #ifdef HAVE_MPI
               
-              SU2_MPI::Recv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, MPI_COMM_WORLD, &status);
+              SU2_MPI::Recv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, SU2_MPI::comm, &status);
               
-              //              SU2_MPI::Irecv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, MPI_COMM_WORLD, &recv_req[0]);
+              //              SU2_MPI::Irecv(Buffer_Receive_V, nPrimVar, MPI_DOUBLE, jProcessor, jPoint, SU2_MPI::comm, &recv_req[0]);
               //              SU2_MPI::Waitall(1, send_req, send_stat);
               
 #endif
@@ -10850,7 +10850,7 @@ void CEulerSolver::BC_ActDisk_Boundary(CGeometry *geometry, CSolver **solver_con
     
 #ifdef HAVE_MPI
     
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(SU2_MPI::comm);
     
 #endif
     
@@ -11124,8 +11124,8 @@ void CEulerSolver::SetFlow_Displacement(CGeometry **flow_geometry, CVolumetricMo
     int rank = MASTER_NODE;
     int size = SINGLE_NODE;
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(SU2_MPI::comm, &rank);
+    MPI_Comm_size(SU2_MPI::comm, &size);
 
     unsigned long nLocalVertexStruct = 0, nLocalVertexFlow = 0;
 
@@ -11221,14 +11221,14 @@ void CEulerSolver::SetFlow_Displacement(CGeometry **flow_geometry, CVolumetricMo
 		if (rank == MASTER_NODE) Buffer_Recv_nVertexFlow = new unsigned long[size];  // Allocate memory to receive how many vertices are on each rank on the fluid side
 
 		/*--- We receive MaxLocalVertexFEA as the maximum number of vertices in one single processor on the structural side---*/
-		SU2_MPI::Allreduce(&nLocalVertexStruct, &MaxLocalVertexStruct, 1, MPI_UNSIGNED_LONG, MPI_MAX, MPI_COMM_WORLD);
+		SU2_MPI::Allreduce(&nLocalVertexStruct, &MaxLocalVertexStruct, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
 		/*--- We receive MaxLocalVertexFlow as the maximum number of vertices in one single processor on the fluid side ---*/
-		SU2_MPI::Allreduce(&nLocalVertexFlow, &MaxLocalVertexFlow, 1, MPI_UNSIGNED_LONG, MPI_MAX, MPI_COMM_WORLD);
+		SU2_MPI::Allreduce(&nLocalVertexFlow, &MaxLocalVertexFlow, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
 
 		/*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the structural side ---*/
-		SU2_MPI::Gather(&Buffer_Send_nVertexStruct, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexStruct, 1, MPI_UNSIGNED_LONG, MASTER_NODE, MPI_COMM_WORLD);
+		SU2_MPI::Gather(&Buffer_Send_nVertexStruct, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexStruct, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
 		/*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the fluid side ---*/
-		SU2_MPI::Gather(&Buffer_Send_nVertexFlow, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexFlow, 1, MPI_UNSIGNED_LONG, MASTER_NODE, MPI_COMM_WORLD);
+		SU2_MPI::Gather(&Buffer_Send_nVertexFlow, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexFlow, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
 
 		/*--- We will be gathering the structural coordinates into the master node ---*/
 		/*--- Then we will distribute them using a scatter operation into the appropriate fluid processor ---*/
@@ -11312,8 +11312,8 @@ void CEulerSolver::SetFlow_Displacement(CGeometry **flow_geometry, CVolumetricMo
 		}
 
 		/*--- Once all the messages have been sent, we gather them all into the MASTER_NODE ---*/
-		SU2_MPI::Gather(Buffer_Send_StructCoord, nBuffer_StructCoord, MPI_DOUBLE, Buffer_Recv_StructCoord, nBuffer_StructCoord, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
-		SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, MPI_COMM_WORLD);
+		SU2_MPI::Gather(Buffer_Send_StructCoord, nBuffer_StructCoord, MPI_DOUBLE, Buffer_Recv_StructCoord, nBuffer_StructCoord, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
+		SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
 
 		/*--- Counter to determine where in the array we have to set the information ---*/
 		long *Counter_Processor_Flow = NULL;
@@ -11392,8 +11392,8 @@ void CEulerSolver::SetFlow_Displacement(CGeometry **flow_geometry, CVolumetricMo
 		}
 
 		/*--- Once all the messages have been prepared, we scatter them all from the MASTER_NODE ---*/
-		SU2_MPI::Scatter(Buffer_Send_FlowNewCoord, nBuffer_FlowNewCoord, MPI_DOUBLE, Buffer_Recv_FlowNewCoord, nBuffer_FlowNewCoord, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
-		SU2_MPI::Scatter(Buffer_Send_SetIndex, nBuffer_SetIndex, MPI_LONG, Buffer_Recv_SetIndex, nBuffer_SetIndex, MPI_LONG, MASTER_NODE, MPI_COMM_WORLD);
+		SU2_MPI::Scatter(Buffer_Send_FlowNewCoord, nBuffer_FlowNewCoord, MPI_DOUBLE, Buffer_Recv_FlowNewCoord, nBuffer_FlowNewCoord, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
+		SU2_MPI::Scatter(Buffer_Send_SetIndex, nBuffer_SetIndex, MPI_LONG, Buffer_Recv_SetIndex, nBuffer_SetIndex, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
 
 		long indexPoint_iVertex, Point_Flow_Check;
 
@@ -11526,7 +11526,7 @@ void CEulerSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfig 
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Multizone problems require the number of the zone to be appended. ---*/
@@ -11746,8 +11746,8 @@ void CEulerSolver::SetFreeSurface_Distance(CGeometry *geometry, CConfig *config)
   nLocalVertex_LevelSet = 0, nGlobalVertex_LevelSet = 0, MaxLocalVertex_LevelSet = 0, nBuffer;
   su2double *Buffer_Send_Coord = NULL, *Buffer_Receive_Coord = NULL;
   
-  MPI_Comm_size(MPI_COMM_WORLD, &nProcessor);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
   
   Buffer_Send_nVertex = new unsigned long [1];
   Buffer_Receive_nVertex = new unsigned long [nProcessor];
@@ -11761,9 +11761,9 @@ void CEulerSolver::SetFreeSurface_Distance(CGeometry *geometry, CConfig *config)
   
   Buffer_Send_nVertex[0] = nLocalVertex_LevelSet;
   
-  SU2_MPI::Allreduce(&nLocalVertex_LevelSet, &nGlobalVertex_LevelSet, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&nLocalVertex_LevelSet, &MaxLocalVertex_LevelSet, 1, MPI_UNSIGNED_LONG, MPI_MAX, MPI_COMM_WORLD);
-  SU2_MPI::Allgather(Buffer_Send_nVertex, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&nLocalVertex_LevelSet, &nGlobalVertex_LevelSet, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&nLocalVertex_LevelSet, &MaxLocalVertex_LevelSet, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+  SU2_MPI::Allgather(Buffer_Send_nVertex, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm);
   
   nBuffer = MaxLocalVertex_LevelSet*nDim;
   Buffer_Send_Coord = new su2double [nBuffer];
@@ -11785,7 +11785,7 @@ void CEulerSolver::SetFreeSurface_Distance(CGeometry *geometry, CConfig *config)
     }
   }
   
-  SU2_MPI::Allgather(Buffer_Send_Coord, nBuffer, MPI_DOUBLE, Buffer_Receive_Coord, nBuffer, MPI_DOUBLE, MPI_COMM_WORLD);
+  SU2_MPI::Allgather(Buffer_Send_Coord, nBuffer, MPI_DOUBLE, Buffer_Receive_Coord, nBuffer, MPI_DOUBLE, SU2_MPI::comm);
   
   /*--- Identification of the 0 level set points and coordinates ---*/
   nVertex_LevelSet = 0;
@@ -11963,7 +11963,7 @@ CNSSolver::CNSSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh)
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Array initialization ---*/
@@ -12569,7 +12569,7 @@ CNSSolver::CNSSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh)
 #ifndef HAVE_MPI
     rbuf_NotMatching = sbuf_NotMatching;
 #else
-    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm);
 #endif
     
     if (rbuf_NotMatching != 0) {
@@ -12580,8 +12580,8 @@ CNSSolver::CNSSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh)
 #ifndef HAVE_MPI
       exit(EXIT_FAILURE);
 #else
-      MPI_Barrier(MPI_COMM_WORLD);
-      MPI_Abort(MPI_COMM_WORLD,1);
+      MPI_Barrier(SU2_MPI::comm);
+      MPI_Abort(SU2_MPI::comm,1);
       MPI_Finalize();
 #endif
     }
@@ -12641,7 +12641,7 @@ CNSSolver::CNSSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh)
     
     if (config->GetConsole_Output_Verb() == VERB_HIGH) {
 #ifdef HAVE_MPI
-      SU2_MPI::Reduce(&counter_local, &counter_global, 1, MPI_UNSIGNED_LONG, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
+      SU2_MPI::Reduce(&counter_local, &counter_global, 1, MPI_UNSIGNED_LONG, MPI_SUM, MASTER_NODE, SU2_MPI::comm);
 #else
       counter_global = counter_local;
 #endif
@@ -12729,7 +12729,7 @@ void CNSSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, C
   
 #ifdef HAVE_MPI
   int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   unsigned long ExtIter     = config->GetExtIter();
@@ -12824,9 +12824,9 @@ void CNSSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, C
     su2double MyOmega_Max = Omega_Max; Omega_Max = 0.0;
     su2double MyStrainMag_Max = StrainMag_Max; StrainMag_Max = 0.0;
     
-    SU2_MPI::Allreduce(&MyErrorCounter, &ErrorCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&MyStrainMag_Max, &StrainMag_Max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&MyOmega_Max, &Omega_Max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&MyErrorCounter, &ErrorCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&MyStrainMag_Max, &StrainMag_Max, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&MyOmega_Max, &Omega_Max, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm);
 #endif
     
     if (iMesh == MESH_0) {
@@ -13077,13 +13077,13 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
 #ifdef HAVE_MPI
     su2double rbuf_time, sbuf_time;
     sbuf_time = Min_Delta_Time;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Min_Delta_Time = rbuf_time;
     
     sbuf_time = Max_Delta_Time;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MAX, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MAX, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Max_Delta_Time = rbuf_time;
 #endif
   }
@@ -13093,8 +13093,8 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
 #ifdef HAVE_MPI
     su2double rbuf_time, sbuf_time;
     sbuf_time = Global_Delta_Time;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Global_Delta_Time = rbuf_time;
 #endif
     for (iPoint = 0; iPoint < nPointDomain; iPoint++)
@@ -13109,8 +13109,8 @@ void CNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container, CC
 #ifdef HAVE_MPI
     su2double rbuf_time, sbuf_time;
     sbuf_time = Global_Delta_UnstTimeND;
-    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, MPI_COMM_WORLD);
-    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, MPI_COMM_WORLD);
+    SU2_MPI::Reduce(&sbuf_time, &rbuf_time, 1, MPI_DOUBLE, MPI_MIN, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&rbuf_time, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
     Global_Delta_UnstTimeND = rbuf_time;
 #endif
     config->SetDelta_UnstTimeND(Global_Delta_UnstTimeND);
@@ -13484,21 +13484,21 @@ void CNSSolver::Viscous_Forces(CGeometry *geometry, CConfig *config) {
   MyAllBound_HeatFlux_Visc     = AllBound_HeatFlux_Visc;                   AllBound_HeatFlux_Visc = 0.0;
   MyAllBound_MaxHeatFlux_Visc  = pow(AllBound_MaxHeatFlux_Visc, MaxNorm);  AllBound_MaxHeatFlux_Visc = 0.0;
   
-  SU2_MPI::Allreduce(&MyAllBound_CDrag_Visc, &AllBound_CDrag_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CLift_Visc, &AllBound_CLift_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CSideForce_Visc, &AllBound_CSideForce_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&MyAllBound_CDrag_Visc, &AllBound_CDrag_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CLift_Visc, &AllBound_CLift_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CSideForce_Visc, &AllBound_CSideForce_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   AllBound_CEff_Visc = AllBound_CLift_Visc / (AllBound_CDrag_Visc + EPS);
-  SU2_MPI::Allreduce(&MyAllBound_CMx_Visc, &AllBound_CMx_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CMy_Visc, &AllBound_CMy_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CMz_Visc, &AllBound_CMz_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CFx_Visc, &AllBound_CFx_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CFy_Visc, &AllBound_CFy_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CFz_Visc, &AllBound_CFz_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CT_Visc, &AllBound_CT_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_CQ_Visc, &AllBound_CQ_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&MyAllBound_CMx_Visc, &AllBound_CMx_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CMy_Visc, &AllBound_CMy_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CMz_Visc, &AllBound_CMz_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CFx_Visc, &AllBound_CFx_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CFy_Visc, &AllBound_CFy_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CFz_Visc, &AllBound_CFz_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CT_Visc, &AllBound_CT_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_CQ_Visc, &AllBound_CQ_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   AllBound_CMerit_Visc = AllBound_CT_Visc / (AllBound_CQ_Visc + EPS);
-  SU2_MPI::Allreduce(&MyAllBound_HeatFlux_Visc, &AllBound_HeatFlux_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MyAllBound_MaxHeatFlux_Visc, &AllBound_MaxHeatFlux_Visc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&MyAllBound_HeatFlux_Visc, &AllBound_HeatFlux_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyAllBound_MaxHeatFlux_Visc, &AllBound_MaxHeatFlux_Visc, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   AllBound_MaxHeatFlux_Visc = pow(AllBound_MaxHeatFlux_Visc, 1.0/MaxNorm);
   
   /*--- Add the forces on the surfaces using all the nodes ---*/
@@ -13539,17 +13539,17 @@ void CNSSolver::Viscous_Forces(CGeometry *geometry, CConfig *config) {
     Surface_CMz_Visc[iMarker_Monitoring]        = 0.0;
   }
   
-  SU2_MPI::Allreduce(MySurface_CLift_Visc, Surface_CLift_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CDrag_Visc, Surface_CDrag_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CSideForce_Visc, Surface_CSideForce_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(MySurface_CLift_Visc, Surface_CLift_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CDrag_Visc, Surface_CDrag_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CSideForce_Visc, Surface_CSideForce_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   for (iMarker_Monitoring = 0; iMarker_Monitoring < config->GetnMarker_Monitoring(); iMarker_Monitoring++)
     Surface_CEff_Visc[iMarker_Monitoring] = Surface_CLift_Visc[iMarker_Monitoring] / (Surface_CDrag_Visc[iMarker_Monitoring] + EPS);
-  SU2_MPI::Allreduce(MySurface_CFx_Visc, Surface_CFx_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CFy_Visc, Surface_CFy_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CFz_Visc, Surface_CFz_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CMx_Visc, Surface_CMx_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CMy_Visc, Surface_CMy_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(MySurface_CMz_Visc, Surface_CMz_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(MySurface_CFx_Visc, Surface_CFx_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CFy_Visc, Surface_CFy_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CFz_Visc, Surface_CFz_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CMx_Visc, Surface_CMx_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CMy_Visc, Surface_CMy_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(MySurface_CMz_Visc, Surface_CMz_Visc, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
   
   delete [] MySurface_CLift_Visc; delete [] MySurface_CDrag_Visc; delete [] MySurface_CSideForce_Visc;
   delete [] MySurface_CEff_Visc;  delete [] MySurface_CFx_Visc;   delete [] MySurface_CFy_Visc;
