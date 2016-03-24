@@ -54,17 +54,17 @@ int main(int argc, char *argv[]) {
   MPI_Buffer_attach( malloc(BUFSIZE), BUFSIZE );
   MPI_Comm comm = MPI_COMM_WORLD;                 /* Global communicator */
   MPI_Comm comm_x, comm_t;                        /* Spacial and temporal communicators */
-
-  SU2_MPI::comm = comm;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
 #endif
 
-   /* Default XBraid parameters */
+   /* Declare XBraid variables */
+  braid_Core core;
   int max_levels, min_coarse, nrelax, nrelax0, tnorm, cfactor, cfactor0;
   int max_iter, fmg, print_level, access_level, run_wrapper_tests;
   su2double tol;
 
+  /* Set default xBraid parameters TODO: Read from config file */
   max_levels          = 15;           /* Max levels for XBraid solver */
   min_coarse          = 3;            /* Minimum possible coarse grid size */
   nrelax              = 1;            /* Number of CF relaxation sweeps on all levels */
@@ -79,6 +79,26 @@ int main(int argc, char *argv[]) {
   access_level        = 1;            /* Frequency of calls to access routine: 1 is for only after simu    lation */
   run_wrapper_tests   = 0;            /* Run no simulation, only run wrapper tests */
 
+  /* Check the processor grid (px*pt = num_of_procs. TODO: Read from command line?*/
+  int px = 4;                // Number of processors for spacial parallelization
+  int pt = 1;                // Number of processors for temporal parallelization
+  if( px*pt != size)  {
+      if( rank == 0 )
+          cout << "Error: px*pt does not equal the number of processors!\n";
+      MPI_Finalize();
+      return (0);
+  }
+
+  /* Split communicators for the time and space dimensions */
+  braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
+  /* Pass the spatial communicator to SU2 */
+  SU2_MPI::comm = comm_x;
+
+
+//  app->man->comm = comm_x;
+//  app->comm = comm;
+//  app->comm_t = comm_t;
+//  app->comm_x = comm_x;
 
 
 
@@ -354,8 +374,6 @@ int main(int argc, char *argv[]) {
   app->tstop  = config->GetTotal_UnstTime();
   app->ntime  = config->GetnExtIter();
 
-  /* Initialize xBraid */
-  braid_Core core;
 
   if (rank == MASTER_NODE){
     cout << "tstart " << app->tstart << "\n"
