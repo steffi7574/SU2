@@ -52,11 +52,34 @@ int main(int argc, char *argv[]) {
   int *bptr, bl;
   SU2_MPI::Init(&argc, &argv);
   MPI_Buffer_attach( malloc(BUFSIZE), BUFSIZE );
-  MPI_Comm comm = MPI_COMM_WORLD;
+  MPI_Comm comm = MPI_COMM_WORLD;                 /* Global communicator */
+  MPI_Comm comm_x, comm_t;                        /* Spacial and temporal communicators */
+
   SU2_MPI::comm = comm;
   MPI_Comm_rank(SU2_MPI::comm, &rank);
   MPI_Comm_size(SU2_MPI::comm, &size);
 #endif
+
+   /* Default XBraid parameters */
+  int max_levels, min_coarse, nrelax, nrelax0, tnorm, cfactor, cfactor0;
+  int max_iter, fmg, print_level, access_level, run_wrapper_tests;
+  su2double tol;
+
+  max_levels          = 15;           /* Max levels for XBraid solver */
+  min_coarse          = 3;            /* Minimum possible coarse grid size */
+  nrelax              = 1;            /* Number of CF relaxation sweeps on all levels */
+  nrelax0             = -1;           /* Number of CF relaxations only for level 0 -- overrides nrelax     */
+  tol                 = 1.0e-06;      /* Halting tolerance */
+  tnorm               = 2;            /* Halting norm to use (see docstring below) */
+  cfactor             = 2;            /* Coarsening factor */
+  cfactor0            = -1;           /* Coarsening factor for only level 0 -- overrides cfactor */
+  max_iter            = 100;          /* Maximum number of iterations */
+  fmg                 = 0;            /* Boolean, if 1, do FMG cycle.  If 0, use a V cycle */
+  print_level         = 1;            /* Level of XBraid printing to the screen */
+  access_level        = 1;            /* Frequency of calls to access routine: 1 is for only after simu    lation */
+  run_wrapper_tests   = 0;            /* Run no simulation, only run wrapper tests */
+
+
 
 
   /*--- Create pointers to all of the classes that may be used throughout
