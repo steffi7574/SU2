@@ -79,8 +79,8 @@ int main(int argc, char *argv[]) {
   access_level        = 1;            /* Frequency of calls to access routine: 1 is for only after simu    lation */
   run_wrapper_tests   = 0;            /* Run no simulation, only run wrapper tests */
 
-  /* Check the processor grid (px*pt = num_of_procs. TODO: Read from command line?*/
-  int px = 4;                // Number of processors for spacial parallelization
+  /* Check the processor grid (px*pt = num_of_procs. TODO: Read number of spatial and temporal processors from command line.*/
+  int px = 4;                // Number of processors for spatial parallelization
   int pt = 1;                // Number of processors for temporal parallelization
   if( px*pt != size)  {
       if( rank == 0 )
@@ -95,10 +95,6 @@ int main(int argc, char *argv[]) {
   SU2_MPI::comm = comm_x;
 
 
-//  app->man->comm = comm_x;
-//  app->comm = comm;
-//  app->comm_t = comm_t;
-//  app->comm_x = comm_x;
 
 
 
@@ -374,6 +370,10 @@ int main(int argc, char *argv[]) {
   app->tstop  = config->GetTotal_UnstTime();
   app->ntime  = config->GetnExtIter();
 
+  app->comm   = comm;
+  app->comm_t = comm_t;
+  app->comm_x = comm_x;
+
 
   if (rank == MASTER_NODE){
     cout << "tstart " << app->tstart << "\n"
@@ -388,7 +388,7 @@ int main(int argc, char *argv[]) {
     su2double tstop;
 
 //    braid_SetPrintLevel(core, 1 );
-//  braid_Init(MPI_COMM_WORLD, comm, app->tstart, app->tstop, app->ntime, app,
+//  braid_Init(comm, comm_t, app->tstart, app->tstop, app->ntime, app,
 //          my_Phi, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
 //          my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
 

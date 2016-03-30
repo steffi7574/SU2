@@ -21,6 +21,7 @@
 #include "../../Common/include/grid_movement_structure.hpp"
 #include "../../Common/include/config_structure.hpp"
 #include "../../Common/include/interpolation_structure.hpp"
+#include "../../Common/include/mpi_structure.hpp"
 
 
 /*!
@@ -32,6 +33,12 @@ typedef struct _braid_App_struct
   su2double tstop;      /* End of Time integration */
   int ntime;            /* Number of time steps */
 
+  MPI_Comm comm;        /* global communicator */
+  MPI_Comm comm_t;      /* temporal communicator */
+  MPI_Comm comm_x;      /* spatial communicator */
+
+  /* Add the SU2 containers for SU2_CFD computations */
+  /* TODO: Add only ZONE_0 ! (*_container[ZONE_0]) */
   CDriver *driver;
   CIteration **iteration_container;
   COutput *output;
