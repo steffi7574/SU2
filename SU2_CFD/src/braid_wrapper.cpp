@@ -45,27 +45,61 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
 int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 
-    /* Allocate memory on the heap */
+
+    /* Grab variables from the app */
+    int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    su2double Density_Inf   = app->config_container[ZONE_0]->GetDensity_FreeStreamND();
+    su2double *Velocity_Inf = app->config_container[ZONE_0]->GetVelocity_FreeStreamND();
+    su2double Energy_Inf    = app->config_container[ZONE_0]->GetEnergy_FreeStreamND();
+    int nDim                = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
+    int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    CConfig *config         = app->config_container[ZONE_0];
+
+    /* Allocate memory */
     my_Vector* u;
-    u = new my_Vector;
+    u          = new my_Vector;
+    u->node    = new CVariable*[nPoint];
 
-    /* Initialize the vector with initial values
-    // from Constructor of CNSSolver(geom, config, imglevel) :
-    node = new CVariable*[nPoint];
-    for (iPoint = 0; iPoint < nPoint; iPoint++)
-      node[iPoint] = new CNSVariable(Density_Inf, Velocity_Inf, Energy_Inf, nDim, nVar, config);
-    */
+    /* Initialize the solution vector with the free-stream state */
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      u->node[iPoint] = new CNSVariable(Density_Inf, Velocity_Inf, Energy_Inf, nDim, nVar, config);
+    }
 
-    /* Set pointer */
+    /* Set the pointer */
     *u_ptr = u;
 
 
-  return 0;
+    return 0;
 }
 
 int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
 
-  return 0;
+
+    /* Grab variables from the app */
+    int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nDim        = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
+    int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    CConfig *config = app->config_container[ZONE_0];
+
+    /* Allocate memory */
+    my_Vector* v;
+    v          = new my_Vector;
+    v->node    = new CVariable*[nPoint];
+
+    /* Copy solution from u to v at every Point */
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        /* Create new CNSVariable at every Point and initialize with the Solution in u */
+        su2double *uSolution = u->node[iPoint]->GetSolution();
+        v->node[iPoint]      = new CNSVariable(uSolution,nDim,nVar,config);
+        /* Copy old Solution and Solution at time n and from u to v */
+        v->node[iPoint]->SetSolution_Old(u->node[iPoint]->GetSolution_Old());
+        v->node[iPoint]->SetSolution_time_n(u->node[iPoint]->GetSolution_time_n());
+    }
+
+    /* Set the pointer */
+    *v_ptr = v;
+
+    return 0;
 }
 
 int my_Free( braid_App app, braid_Vector u ){
