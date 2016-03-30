@@ -482,7 +482,7 @@ void CAuxMPIWrapper::Bcast(void *buf, int count, MPI_Datatype datatype,
     MPI_Bcast(buf,count,datatype,root,comm);
   } else {
     int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_rank(comm,&rank);
     double *AuxBuffer = new double[count];
     double *ValueBuffer = new double[count];
 
