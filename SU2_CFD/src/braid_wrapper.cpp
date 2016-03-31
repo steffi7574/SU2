@@ -43,8 +43,8 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
   return 0;
 }
 
-int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 
+int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 
     /* Grab variables from the app */
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -100,15 +100,18 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
 }
 
 int my_Free( braid_App app, braid_Vector u ){
-    /* TODO: Ask Tim about destructor in SU2 ! */
 
     /* Grab variables from the app */
     int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
-    /* Call CVariable destructor forall points in the grid */
+    /* Delete the CNSVariable at each point in the grid */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        u->node[iPoint]->~CVariable();
+        delete u->node[iPoint];
     }
+
+    /* Delete the solution list */
+    delete [] u->node;
+
     /* Delete braid vector */
     delete u;
 
@@ -125,7 +128,6 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Loop over all variables */
-        /* TODO: Ask Tim, if nVar or nDim ! */
         for (int iVar = 0; iVar < nVar; iVar++){
             /* Compute the sum y = alpha * x + beta * y  */
             su2double alphax = alpha * x->node[iPoint]->GetSolution(iVar);
@@ -138,7 +140,6 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
 }
 
 int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
-
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -160,10 +161,24 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
-  return 0;
+    su2double t;
+
+    /* Retrieve xBraid time information from status object */
+    braid_AccessStatusGetT(astatus, &t);
+
+    /* TODO: Trick SU2 with the current time or: Trick the current ExtIter for naming the output file */
+
+    /* TODO: Trick SU2 with the state / solution at current time */
+
+    /* TODO: Call the SU2 output routine */
+//     output->SetResult_Files(solver_container, geometry_container, config_container, ExtIter, nZone);
+
+
+    return 0;
 }
 
 int my_BufSize ( braid_App app, int *size_ptr ){
+//  nPoints * nVar * sizeof(su2double)
 
   return 0;
 }
