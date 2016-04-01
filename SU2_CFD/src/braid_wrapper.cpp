@@ -88,8 +88,7 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
         /* Create new CNSVariable at every Point and initialize with the Solution in u */
         su2double *uSolution = u->node[iPoint]->GetSolution();
         v->node[iPoint]      = new CNSVariable(uSolution,nDim,nVar,config);
-        /* Copy old Solution and Solution at time n and from u to v */
-        v->node[iPoint]->SetSolution_Old(u->node[iPoint]->GetSolution_Old());
+        /* Copy Solution at previous time n from u to v */
         v->node[iPoint]->SetSolution_time_n(u->node[iPoint]->GetSolution_time_n());
     }
 
