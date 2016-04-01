@@ -23,7 +23,7 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     /* Trick the su2 solver with the new DeltaT */
     app->config_container[iZone]->SetDelta_UnstTimeND(tstop-tstart);
 
-    /* Trick the su2 solver with the right state vector */
+    /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
 //    app->solver_containter[iZone][iMGLevel]->node = u->node;
 //    ODER besser:
 //      forall iPoints:
@@ -88,8 +88,9 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
         /* Create new CNSVariable at every Point and initialize with the Solution in u */
         su2double *uSolution = u->node[iPoint]->GetSolution();
         v->node[iPoint]      = new CNSVariable(uSolution,nDim,nVar,config);
-        /* Copy Solution at previous time n from u to v */
-        v->node[iPoint]->SetSolution_time_n(u->node[iPoint]->GetSolution_time_n());
+        /* Copy Solution at current time n and previous time n-1 from u to v */
+        v->node[iPoint]->Set_Solution_time_n(u->node[iPoint]->GetSolution_time_n());
+        v->node[iPoint]->Set_Solution_time_n1(u->node[iPoint]->GetSolution_time_n1());
     }
 
     /* Set the pointer */
@@ -124,16 +125,25 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
+    /* Allocate memory for the sum */
+    su2double* vec_sum = new su2double[nVar];
+
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        /* Loop over all variables */
+        /* Initialize the sum with the solution at time n from y */
+        vec_sum = y->node[iPoint]->GetSolution_time_n();
+        /* Get Solution at time n from x */
+        su2double* xSolution = x->node[iPoint]->GetSolution_time_n();
+        /* Compute the sum y = alpha * x + beta * y  for all Variables*/
         for (int iVar = 0; iVar < nVar; iVar++){
-            /* Compute the sum y = alpha * x + beta * y  */
-            su2double alphax = alpha * x->node[iPoint]->GetSolution(iVar);
-            su2double betay  = beta  * y->node[iPoint]->GetSolution(iVar);
-            y->node[iPoint]->SetSolution(iVar, alphax + betay);
+            vec_sum[iVar] = beta * vec_sum[iVar] + alpha * xSolution[iVar];
         }
+        /* Store the vector sum in y */
+        y->node[iPoint]->Set_Solution_time_n(vec_sum);
     }
+
+    /* Destroy vec_sum */
+    delete [] vec_sum;
 
     return 0;
 }
@@ -146,16 +156,20 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
     /* Compute l2norm of the solution list */
     su2double norm = 0.0;
+    su2double *uSolution = new su2double[nVar];
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        uSolution = u->node[iPoint]->GetSolution();
         for (int iVar = 0; iVar < nVar; iVar++){
-            norm += pow(u->node[iPoint]->GetSolution(iVar), 2);
+            norm += pow(uSolution[iVar], 2);
         }
     }
 
-  /* Set the pointer */
-  *norm_ptr = sqrt(norm);
+    delete[] uSolution;
 
-  return 0;
+    /* Set the pointer */
+    *norm_ptr = sqrt(norm);
+
+    return 0;
 }
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
