@@ -161,35 +161,107 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
-    su2double t;
+    /* Grab variables from the app */
+    int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nDim   = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
+    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Retrieve xBraid time information from status object */
+    su2double t;
     braid_AccessStatusGetT(astatus, &t);
 
-    /* TODO: Trick SU2 with the current time or: Trick the current ExtIter for naming the output file */
+    /* Compute the current iExtIter for naming the output file */
+    int iExtIter = (int) ( app->tstop - app->tstart ) / app->initialDT ;
 
-    /* TODO: Trick SU2 with the state / solution at current time */
+    /* Trick SU2 with the current state / solution */
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        su2double *uSolution = u->node[iPoint]->GetSolution();
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution);
+    }
 
-    /* TODO: Call the SU2 output routine */
-//     output->SetResult_Files(solver_container, geometry_container, config_container, ExtIter, nZone);
-
+    /* Call the SU2 output routine */
+    app->output->SetResult_Files(app->solver_container, app->geometry_container,
+                                 app->config_container, iExtIter, ZONE_0);
 
     return 0;
 }
 
 int my_BufSize ( braid_App app, int *size_ptr ){
-//  nPoints * nVar * sizeof(su2double)
 
-  return 0;
+    /* Grab variables from the app */
+    int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Compute size of buffer */
+    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
+
+    return 0;
 }
 
-int my_BufPack( braid_App app, braid_Vector u, void *buffer,
-                braid_Int *size_ptr ){
+int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr ){
 
-  return 0;
+    /* Grab variables from the app */
+    int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Pack the buffer with current and previous time */
+    su2double *dbuffer = (su2double*)buffer;
+    int ibuffer = 0;
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        for (int iVar = 0; iVar < nVar; iVar++){
+          /* Write Solution at current time to the buffer */
+          dbuffer[ibuffer] = u->node[iPoint]->GetSolution(iVar);
+          ibuffer++;
+          /* Write Solution at previous time to the buffer */
+          dbuffer[ibuffer] = u->node[iPoint]->GetSolution_time_n(iVar);
+          ibuffer++;
+        }
+    }
+
+    /* Compute size of buffer */
+    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
+
+    return 0;
 }
 
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
 
-  return 0;
+    /* Initialize new braid vector */
+    /* Grab variables from the app */
+    int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    su2double Density_Inf   = app->config_container[ZONE_0]->GetDensity_FreeStreamND();
+    su2double *Velocity_Inf = app->config_container[ZONE_0]->GetVelocity_FreeStreamND();
+    su2double Energy_Inf    = app->config_container[ZONE_0]->GetEnergy_FreeStreamND();
+    int nDim                = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
+    int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    CConfig *config         = app->config_container[ZONE_0];
+
+    /* Allocate memory */
+    my_Vector* u;
+    u          = new my_Vector;
+    u->node    = new CVariable*[nPoint];
+    /* Initialize the solution vector with the free-stream state */
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      u->node[iPoint] = new CNSVariable(Density_Inf, Velocity_Inf, Energy_Inf, nDim, nVar, config);
+    }
+
+
+    /* Unpack the buffer and write solution to current and previous time */
+    su2double *dbuffer = (su2double*)buffer;
+    int ibuffer = 0;
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        for (int iVar = 0; iVar < nVar; iVar++){
+          /* Write Solution at current time from the buffer */
+          u->node[iPoint]->SetSolution(iVar,dbuffer[ibuffer]);
+          ibuffer++;
+          /* Write Solution at previous time from the buffer */
+          u->node[iPoint]->SetSolution_time_n(iVar,dbuffer[ibuffer]);
+          ibuffer++;
+        }
+    }
+
+    /* Set the pointer */
+    *u_ptr = u;
+
+    return 0;
 }

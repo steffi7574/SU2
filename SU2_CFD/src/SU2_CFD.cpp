@@ -366,9 +366,15 @@ int main(int argc, char *argv[]) {
   app->interpolator_container = interpolator_container;
   app->transfer_container     = transfer_container;
 
-  app->tstart = config->GetCurrent_UnstTime();
-  app->tstop  = config->GetTotal_UnstTime();
-  app->ntime  = config->GetnExtIter();
+  app->tstart    = config_container[ZONE_0]->GetCurrent_UnstTime();
+  app->ntime     = config_container[ZONE_0]->GetnExtIter();
+  app->initialDT = config_container[ZONE_0]->GetDelta_UnstTimeND();
+  app->tstop     = app->tstart + app->ntime * app->initialDT;
+  if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTime()){
+      cout << "ERROR: tstop > Total_UnstTime ! \n";
+      MPI_Finalize();
+      return (0);
+  }
 
   app->comm   = comm;
   app->comm_t = comm_t;
