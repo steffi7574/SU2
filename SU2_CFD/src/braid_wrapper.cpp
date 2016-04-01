@@ -169,8 +169,9 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     su2double t;
     braid_AccessStatusGetT(astatus, &t);
 
-    /* Compute the current iExtIter for naming the output file */
-    int iExtIter = (int) ( app->tstop - app->tstart ) / app->initialDT ;
+    /* Compute the current iExtIter for naming the output file and pass it to SU2 */
+    int iExtIter = ( t - app->tstart ) / app->initialDT ;
+    app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Trick SU2 with the current state / solution */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -180,7 +181,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Call the SU2 output routine */
     app->output->SetResult_Files(app->solver_container, app->geometry_container,
-                                 app->config_container, iExtIter, ZONE_0);
+                                 app->config_container, iExtIter, 1);
 
     return 0;
 }

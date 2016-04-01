@@ -61,7 +61,8 @@ int main(int argc, char *argv[]) {
    /* Declare XBraid variables */
   braid_Core core;
   int max_levels, min_coarse, nrelax, nrelax0, tnorm, cfactor, cfactor0;
-  int max_iter, fmg, print_level, access_level, run_wrapper_tests;
+  int max_iter, fmg, print_level, access_level;
+  bool run_wrapper_tests;
   su2double tol;
 
   /* Set default xBraid parameters TODO: Read from config file */
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
   fmg                 = 0;            /* Boolean, if 1, do FMG cycle.  If 0, use a V cycle */
   print_level         = 1;            /* Level of XBraid printing to the screen */
   access_level        = 1;            /* Frequency of calls to access routine: 1 is for only after simu    lation */
-  run_wrapper_tests   = 0;            /* Run no simulation, only run wrapper tests */
+  run_wrapper_tests   = true;            /* Run no simulation, only run wrapper tests */
 
   /* Check the processor grid (px*pt = num_of_procs. TODO: Read number of spatial and temporal processors from command line.*/
   int px = 4;                // Number of processors for spatial parallelization
@@ -381,19 +382,46 @@ int main(int argc, char *argv[]) {
   app->comm_x = comm_x;
 
 
-  if (rank == MASTER_NODE){
-    cout << "tstart " << app->tstart << "\n"
-       << "tstop  " << app->tstop << "\n"
-       << "ntime  " << app->ntime <<"\n"
-       << "DeltaT " << config_container[0]->GetDelta_UnstTimeND() << "\n";
+  braid_PhiStatus status;
+  su2double tstart;
+  su2double tstop;
+
+  if( run_wrapper_tests){
+      /* Run the xBraid wrapper tests */
+      su2double mytime = 0.002;
+      braid_TestInitAccess( app, SU2_MPI::comm, stdout, mytime, my_Init, my_Access, my_Free);
+
+      /*--- Finalize MPI parallelization ---*/
+      MPI_Buffer_detach(&bptr, &bl);
+      MPI_Finalize();
+      /* --- Exit computation --- */
+      return EXIT_SUCCESS;
+
+  } else {
+      /* !! Run Braid !! */
   }
 
+//     /* Run the XBraid wrapper tests */
+//     mytime = 0.0;
+//     for(i = 0; i < 2; i++){
+//        braid_TestInitAccess( app, comm_x, stdout, mytime, my_Init, my_Access, my_Free);
+//        braid_TestClone( app, comm_x, stdout, mytime, my_Init, my_Access, my_Free, my_Clone);
+//        braid_TestSum( app, comm_x, stdout, mytime, my_Init, my_Access, my_Free, my_Clone, my_Sum);
+//        correct1 = braid_TestSpatialNorm( app, comm_x, stdout, mytime, my_Init, my_Free, my_Clone, my_Sum, my_SpatialNorm);
+//        correct2 = braid_TestBuf( app, comm_x, stdout, mytime, my_Init, my_Free, my_Sum, my_SpatialNorm, my_BufSize, my_BufPack,     my_BufUnpack);
+//        mytime += app->man->dt;
 
-    braid_PhiStatus status;
-    su2double tstart;
-    su2double tstop;
+//        if( (correct1 == 0) || (correct2 == 0)) {
+//          printf("Failed: at least one of the tests failed\n");
+//        }
+//        else {
+//          printf("Passed: all tests passed\n");
+//        }
+//     }
+//  }
 
-//    braid_SetPrintLevel(core, 1 );
+
+    /* RUN BRAID */
 //  braid_Init(comm, comm_t, app->tstart, app->tstop, app->ntime, app,
 //          my_Phi, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
 //          my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
