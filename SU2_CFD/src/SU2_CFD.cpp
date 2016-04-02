@@ -388,7 +388,7 @@ int main(int argc, char *argv[]) {
 
   if( run_wrapper_tests){
       /* Run the xBraid wrapper tests */
-      su2double mytime = 0.002;
+      su2double mytime = 0.0;
       braid_TestInitAccess( app, SU2_MPI::comm, stdout, mytime, my_Init, my_Access, my_Free);
 
       /*--- Finalize MPI parallelization ---*/

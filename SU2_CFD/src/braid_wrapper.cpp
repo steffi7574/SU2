@@ -183,10 +183,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     int iExtIter = ( t - app->tstart ) / app->initialDT ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
-    /* Trick SU2 with the current solution at time n */
+    /* Trick SU2 with the current solution for output (SU2 write CVariable::Solution, not _time_n!) */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         su2double *uSolution = u->node[iPoint]->GetSolution_time_n();
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution_time_n(uSolution);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution);
     }
 
     /* Call the SU2 output routine */
