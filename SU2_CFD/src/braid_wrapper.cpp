@@ -86,8 +86,7 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     v->node    = new CVariable*[nPoint];
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Create new CNSVariable at every Point and initialize with the Solution in u */
-        su2double *uSolution = u->node[iPoint]->GetSolution();
-        v->node[iPoint]      = new CNSVariable(uSolution,nDim,nVar,config);
+        v->node[iPoint]      = new CNSVariable(u->node[iPoint]->GetSolution(),nDim,nVar,config);
         /* Copy Solution at current time n and previous time n-1 from u to v */
         v->node[iPoint]->Set_Solution_time_n(u->node[iPoint]->GetSolution_time_n());
         v->node[iPoint]->Set_Solution_time_n1(u->node[iPoint]->GetSolution_time_n1());
@@ -130,13 +129,12 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
 
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        /* Initialize the sum with the solution at time n from y */
-        vec_sum = y->node[iPoint]->GetSolution_time_n();
-        /* Get Solution at time n from x */
-        su2double* xSolution = x->node[iPoint]->GetSolution_time_n();
-        /* Compute the sum y = alpha * x + beta * y  for all Variables*/
+        /* Loop over all variables */
         for (int iVar = 0; iVar < nVar; iVar++){
-            vec_sum[iVar] = beta * vec_sum[iVar] + alpha * xSolution[iVar];
+            /* Compute the sum y = alpha x + beta y */
+            su2double alphax = alpha * x->node[iPoint]->GetSolution_time_n()[iVar];
+            su2double betay  = beta  * y->node[iPoint]->GetSolution_time_n()[iVar];
+            vec_sum[iVar] = alphax + betay;
         }
         /* Store the vector sum in y */
         y->node[iPoint]->Set_Solution_time_n(vec_sum);
@@ -154,17 +152,15 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
-    /* Compute l2norm of the solution list */
+    /* Compute l2norm of the solution list at time n */
     su2double norm = 0.0;
-    su2double *uSolution = new su2double[nVar];
+    /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        uSolution = u->node[iPoint]->GetSolution();
+        /* Loop over all variables */
         for (int iVar = 0; iVar < nVar; iVar++){
-            norm += pow(uSolution[iVar], 2);
+            norm += pow(u->node[iPoint]->GetSolution_time_n()[iVar], 2);
         }
     }
-
-    delete[] uSolution;
 
     /* Set the pointer */
     *norm_ptr = sqrt(norm);
@@ -187,10 +183,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     int iExtIter = ( t - app->tstart ) / app->initialDT ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
-    /* Trick SU2 with the current state / solution */
+    /* Trick SU2 with the current solution at time n */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        su2double *uSolution = u->node[iPoint]->GetSolution();
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution);
+        su2double *uSolution = u->node[iPoint]->GetSolution_time_n();
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution_time_n(uSolution);
     }
 
     /* Call the SU2 output routine */
@@ -224,10 +220,10 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
           /* Write Solution at current time to the buffer */
-          dbuffer[ibuffer] = u->node[iPoint]->GetSolution(iVar);
+          dbuffer[ibuffer] = u->node[iPoint]->GetSolution_time_n()[iVar];
           ibuffer++;
           /* Write Solution at previous time to the buffer */
-          dbuffer[ibuffer] = u->node[iPoint]->GetSolution_time_n(iVar);
+          dbuffer[ibuffer] = u->node[iPoint]->GetSolution_time_n1()[iVar];
           ibuffer++;
         }
     }
@@ -240,7 +236,6 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
 
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
 
-    /* Initialize new braid vector */
     /* Grab variables from the app */
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     su2double Density_Inf   = app->config_container[ZONE_0]->GetDensity_FreeStreamND();
@@ -250,29 +245,38 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
     int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
     CConfig *config         = app->config_container[ZONE_0];
 
-    /* Allocate memory */
+    /* Allocate memory for the new braid Vector */
     my_Vector* u;
     u          = new my_Vector;
     u->node    = new CVariable*[nPoint];
-    /* Initialize the solution vector with the free-stream state */
+    su2double* uSolution_n  = new su2double[nVar];
+    su2double* uSolution_n1 = new su2double[nVar];
+
+    /* Initialize the braid vector with the free-stream state */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
       u->node[iPoint] = new CNSVariable(Density_Inf, Velocity_Inf, Energy_Inf, nDim, nVar, config);
     }
-
 
     /* Unpack the buffer and write solution to current and previous time */
     su2double *dbuffer = (su2double*)buffer;
     int ibuffer = 0;
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
-          /* Write Solution at current time from the buffer */
-          u->node[iPoint]->SetSolution(iVar,dbuffer[ibuffer]);
+          /* Unpack Solution at current time from the buffer */
+          uSolution_n[iVar] = dbuffer[ibuffer];
           ibuffer++;
-          /* Write Solution at previous time from the buffer */
-          u->node[iPoint]->SetSolution_time_n(iVar,dbuffer[ibuffer]);
+          /* Unpack Solution at previous time from the buffer */
+          uSolution_n1[iVar] = dbuffer[ibuffer];
           ibuffer++;
         }
+        /* Write current and previous solution to u*/
+        u->node[iPoint]->Set_Solution_time_n(uSolution_n);
+        u->node[iPoint]->Set_Solution_time_n1(uSolution_n1);
     }
+
+    /* Delete the uSolution list */
+    delete [] uSolution_n;
+    delete [] uSolution_n1;
 
     /* Set the pointer */
     *u_ptr = u;
