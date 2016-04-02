@@ -391,6 +391,36 @@ int main(int argc, char *argv[]) {
       su2double mytime = 0.0;
       braid_TestInitAccess( app, SU2_MPI::comm, stdout, mytime, my_Init, my_Access, my_Free);
 
+      /* Test Clone */
+      braid_Vector        u, v;
+      braid_AccessStatus  astatus = _braid_CTAlloc(_braid_AccessStatus, 1);;
+      braid_Int           myid_x;
+      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
+      MPI_Comm_rank( SU2_MPI::comm, &myid_x );
+
+      my_Init(app, mytime, &u);
+      my_Clone(app, u, &v);
+
+      mytime = 0.001;
+      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
+      my_Access(app, u, astatus);
+
+      mytime = 0.003;
+      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
+      my_Access(app, v, astatus);
+
+      /* Free variables */
+      my_Free(app, u);
+      my_Free(app, v);
+
+      _braid_AccessStatusDestroy(astatus);
+      /* End of Test Clone */
+
+
+
+
+//      braid_TestSum( app, SU2_MPI::comm, stdout, mytime, my_Init, my_Access, my_Free, my_Clone, my_Sum);
+
       /*--- Finalize MPI parallelization ---*/
       MPI_Buffer_detach(&bptr, &bl);
       MPI_Finalize();
