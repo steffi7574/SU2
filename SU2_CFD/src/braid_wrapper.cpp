@@ -11,8 +11,8 @@
 
 int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
-    /* Only implemented for single Zone problems */
-    int iZone = 0;
+    /* Grab variables from the app */
+    int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
 
     /* Grab status of current time step */
@@ -21,24 +21,32 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
     /* Trick the su2 solver with the new DeltaT */
-    app->config_container[iZone]->SetDelta_UnstTimeND(tstop-tstart);
+    app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
 
     /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
-//    app->solver_containter[iZone][iMGLevel]->node = u->node;
-//    ODER besser:
-//      forall iPoints:
 //        app->solver_containter[iZone][iMGLevel]->node[iPoint]->SetSolution(u->node->GetSolution())
-
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        /* Get the Solution from braid vector u */
+        su2double* uSolution_time_n  = u->node[iPoint]->GetSolution_time_n();
+        su2double* uSolution_time_n1 = u->node[iPoint]->GetSolution_time_n1();
+        /* Set the solution in the SU2 solver */
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution_time_n);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(uSolution_time_n);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(uSolution_time_n1);
+    }
 
     /* Take a time step */
-    // app->driver->Run(app->iteration_container, app->output, app->integration_container,
-                  // app->geometry_container, app->solver_container, app->numerics_container,
-                  // app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
-                  // app->interpolator_container, app->transfer_container);
+     app->driver->Run(app->iteration_container, app->output, app->integration_container,
+                   app->geometry_container, app->solver_container, app->numerics_container,
+                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+                   app->interpolator_container, app->transfer_container);
 
     /* Grab the state vector from su2 */
-//    forall iPoints
-//        u->node[iPoint]->SetSolution(app->solver_container[iZone][iMGLevel]->node[iPoint]->GetSolution())
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        u->node[iPoint]->SetSolution(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
+        u->node[iPoint]->Set_Solution_time_n(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
+        u->node[iPoint]->Set_Solution_time_n1(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1());
+    }
 
   return 0;
 }
