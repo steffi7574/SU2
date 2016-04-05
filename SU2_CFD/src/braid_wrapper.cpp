@@ -43,9 +43,13 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
     /* Grab the state vector from su2 */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        u->node[iPoint]->SetSolution(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
-        u->node[iPoint]->Set_Solution_time_n(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
-        u->node[iPoint]->Set_Solution_time_n1(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1());
+        /* Get the new Solution from SU2 */
+        su2double *appSolution_time_n  = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n();
+        su2double *appSolution_time_n1 = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1();
+        /* Set the Solution to the xbraid vector */
+        u->node[iPoint]->SetSolution(appSolution_time_n);
+        u->node[iPoint]->Set_Solution_time_n(appSolution_time_n);
+        u->node[iPoint]->Set_Solution_time_n1(appSolution_time_n1);
     }
 
   return 0;
