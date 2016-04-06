@@ -193,8 +193,13 @@ void CMeanFlowIteration::Iterate(COutput *output,
       
       /*--- Write the convergence history (only screen output) ---*/
       
-      output->SetConvHistory_Body(NULL, geometry_container, solver_container, config_container, integration_container, true, 0.0, val_iZone);
-      
+      if ((config_container[val_iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+          (config_container[val_iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+
+        output->SetConvHistory_Body(NULL, geometry_container, solver_container, config_container, integration_container, true, 0.0, val_iZone);
+
+      }
+
       /*--- Set the value of the internal iteration ---*/
       
       config_container[val_iZone]->SetIntIter(IntIter);

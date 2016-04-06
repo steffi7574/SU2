@@ -206,6 +206,7 @@ int main(int argc, char *argv[]) {
 
   }
 
+
   if (rank == MASTER_NODE)
     cout << endl <<"------------------------- Geometry Preprocessing ------------------------" << endl;
 
@@ -386,206 +387,8 @@ int main(int argc, char *argv[]) {
   su2double tstart;
   su2double tstop;
 
-  if( run_wrapper_tests){
-      /* Run the xBraid wrapper tests */
-      su2double mytime = 0.0;
 
-      braid_Vector        u, v, w;
-      braid_AccessStatus  astatus = _braid_CTAlloc(_braid_AccessStatus, 1);;
-      braid_Int           myid_x;
-      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
-      MPI_Comm_rank( SU2_MPI::comm, &myid_x );
-
-        /* Test MyInit */
-//      braid_TestInitAccess( app, SU2_MPI::comm, stdout, mytime, my_Init, my_Access, my_Free);
-
-//      /* Test myClone */
-//      my_Init(app, mytime, &u);
-//      my_Clone(app, u, &v);
-
-//      mytime = 0.001;
-//      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
-//      my_Access(app, u, astatus);
-
-//      mytime = 0.003;
-//      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
-//      my_Access(app, v, astatus);
-
-//      /* Free variables */
-//      my_Free(app, u);
-//      my_Free(app, v);
-
-//      _braid_AccessStatusDestroy(astatus);
-//      /* End of Test Clone */
-
-
-//      /* Test mySum */
-
-//      my_Init(app, mytime, &u);
-//      my_Clone(app, u, &v);
-
-//      /* Test 1, v should be equal to zero */
-//      my_Sum(app, 1.0, u, -1.0, v);
-
-//      mytime = 0.000;
-//      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
-//      my_Access(app, v, astatus);
-
-//      /* Test 2 v = 2 * u + v */
-//      my_Sum(app, 2.0, u, 1.0, v);
-
-//      mytime = 0.001;
-//      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
-//      my_Access(app, v, astatus);
-
-//      mytime = 0.003;
-//      _braid_AccessStatusInit(mytime, 0.0, 0, 0, 0, 1, astatus);
-//      my_Access(app, u, astatus);
-
-//      /* Free variables */
-//      my_Free(app, u);
-//      my_Free(app, v);
-//      _braid_AccessStatusDestroy(astatus);
-
-//      /* End of Test my_Sum
-
-//      /* Test spatial norm */
-//   braid_Real    result1, result2;
-//   braid_Int     correct;
-//   braid_Int zero_flag = 0;
-//   double     wiggle = 1e-12;
-
-//   correct = 1;
-
-//   my_Init(app, mytime, &u);
-
-//   my_SpatialNorm(app, u, &result1);
-//   if (rank==MASTER_NODE){
-//       cout << "my_SpatialNorm = " << result1 << endl;
-//   }
-
-//   my_Clone(app, u, &v);
-
-//   /* v = u - v */
-//   my_Sum(app, 1.0, u, -1.0, v);
-
-//   my_SpatialNorm(app, v, &result1);
-//   if( (fabs(result1) > wiggle) || isnan(result1) )
-//   {
-//      correct = 0;
-//      if (rank==MASTER_NODE){
-//         cout << "ERROR" << endl;
-//         cout << "my_SpatialNorm = " << result1 << endl;
-//      }
-//   }
-//   if (rank==MASTER_NODE){
-//      cout << "my_SpatialNorm = " << result1 << " expected norm is 0.0" << endl;
-//   }
-
-//   /* Test 2 */
-//   my_Clone(app, u, &w);
-
-//   /* w = u + w */
-//   my_Sum(app, 1.0, u, 1.0, w);
-
-//   my_SpatialNorm(app, u, &result1);
-
-//   my_SpatialNorm(app, w, &result2);
-//   if( (fabs(result2/result1 - 2.0) > wiggle) || isnan(result2/result1) )
-//   {
-//      if (rank==MASTER_NODE){
-//         cout << "ERROR" << endl;
-//         cout << "my_SpatialNorm = " << result2 << endl;
-//      }
-//   }
-//   if (rank==MASTER_NODE){
-//      cout << "result2/result1 = " << result2/result1 << " expected norm is 2.0" << endl;
-//    }
-
-//   /* Test 3 */
-//   my_Free(app, w);
-
-//   my_Clone(app, u, &w);
-
-//   /* w = 0.0 * u + 0.5 * w  */
-//   my_Sum(app, 0.0, u, 0.5, w);
-
-//   my_SpatialNorm(app, u, &result1);
-
-//   my_SpatialNorm(app, w, &result2);
-//   /* Check Result */
-//   if( (fabs(result2/result1 - 0.5) > wiggle) || isnan(result2/result1) )
-//   {
-//      if (rank==MASTER_NODE){
-//         cout << "ERROR" << endl;
-//      }
-//   }
-
-//   if (rank==MASTER_NODE){
-//      cout << "result2/result1 = " << result2/result1 << " expected norm is 0.5" << endl;
-//    }
-
-//   /* Free variables */
-//   my_Free(app, u);
-//   my_Free(app, v);
-//   my_Free(app, w);
-
-   /* End of Test my_SpatialNorm */
-
-//      /* Test Bufferfunctions */
-//   braid_Real    result1;
-//   braid_Int     dummy_size;
-//   void      *buffer;
-//   double     wiggle = 1e-12;
-
-//   mytime = 0.0;
-//   my_Init(app, mytime, &u);
-
-//   my_SpatialNorm(app, u, &result1);
-//   if( fabs(result1) == 0.0)
-//   {
-//       cout<< " Warning:  spatialnorm(u) = 0.0\n";
-//   }
-//   else if( isnan(result1) )
-//   {
-//       cout<< " Warning:  spatialnorm(u) = nan\n";
-//   }
-
-//   my_BufSize(app, &size);
-//   buffer = malloc(size);
-
-//   my_BufPack(app, u, buffer, &dummy_size);
-
-//   my_BufUnpack(app, buffer, &v);
-
-//   my_Sum(app, 1.0, u, -1.0, v);
-
-//   my_SpatialNorm(app, v, &result1);
-//   if( (fabs(result1) > wiggle) || isnan(result1) )
-
-//   {
-//       cout << "ERROR" <<endl;
-//   }
-//   if (rank==MASTER_NODE){
-//      cout << "result1 = " << result1 << " expected norm is 0.0" << endl;
-//   }
-
-//   /* Free variables */
-//   my_Free(app, u);
-//   my_Free(app, v);
-
-
-
-//      /*--- Finalize MPI parallelization ---*/
-//      MPI_Buffer_detach(&bptr, &bl);
-//      MPI_Finalize();
-//      /* --- Exit computation --- */
-//      return EXIT_SUCCESS;
-
-  } else {
-      /* !! RUN Braid !! */
-
-
+  /* Initialize xBraid */
   braid_Init(comm, comm_t, app->tstart, app->tstop, app->ntime, app,
           my_Phi, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
           my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
@@ -605,25 +408,25 @@ int main(int argc, char *argv[]) {
      braid_SetFMG(core);
   }
 
+  /* Run parallel xBraid Solver */
   if (rank == MASTER_NODE)
     cout << endl <<"------------------------------ Begin Parallel xBRAID Solver -----------------------------" << endl;
 
   /*--- Set up a timer for performance benchmarking (preprocessing time is not included) ---*/
-
 #ifndef HAVE_MPI
   StartTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
 #else
   StartTime = MPI_Wtime();
 #endif
 
-//  // RUN XBRAID
+
+  // RUN XBRAID
   braid_Drive(core);
 
 
   // Finalize XBraid
   braid_Destroy(core);
 
-  }
 
 
 

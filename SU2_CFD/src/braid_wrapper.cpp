@@ -182,6 +182,10 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
+    /* Get rank of global communicator */
+    int rank;
+    MPI_Comm_rank(app->comm, &rank);
+
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nDim   = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
@@ -202,6 +206,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     }
 
     /* Call the SU2 output routine */
+    if (rank == MASTER_NODE) cout << "Write SU2 restart file at iExtIter = " << iExtIter << endl;
     app->output->SetResult_Files(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
 

@@ -6569,7 +6569,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
     
     bool Wrt_Csv = config[iZone]->GetWrt_Csv_Sol();
     
-    if (rank == MASTER_NODE) cout << endl << "Writing comma-separated values (CSV) surface files." << endl;
+    if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+        (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+        if (rank == MASTER_NODE) cout << endl << "Writing comma-separated values (CSV) surface files." << endl;
+    }
 
     switch (config[iZone]->GetKind_Solver()) {
         
@@ -6593,7 +6596,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
      is active by default. ---*/
     
     if (Wrt_Vol || Wrt_Srf) {
-      if (rank == MASTER_NODE) cout << "Merging connectivities in the Master node." << endl;
+      if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+          (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH))  {
+           if (rank == MASTER_NODE) cout << "Merging connectivities in the Master node." << endl;
+      }
       MergeConnectivity(config[iZone], geometry[iZone][MESH_0], iZone);
     }
     
@@ -6601,12 +6607,18 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
      The grid coordinates are always merged and included first in the
      restart files. ---*/
     
-    if (rank == MASTER_NODE) cout << "Merging coordinates in the Master node." << endl;
+    if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+        (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+          if (rank == MASTER_NODE) cout << "Merging coordinates in the Master node." << endl;
+    }
     MergeCoordinates(config[iZone], geometry[iZone][MESH_0]);
 
     if ((rank == MASTER_NODE) && (Wrt_Vol || Wrt_Srf)) {
       if (FileFormat == TECPLOT_BINARY) {
-        if (rank == MASTER_NODE) cout << "Writing Tecplot binary volume and surface mesh files." << endl;
+        if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+            (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+              if (rank == MASTER_NODE) cout << "Writing Tecplot binary volume and surface mesh files." << endl;
+        }
         SetTecplotBinary_DomainMesh(config[iZone], geometry[iZone][MESH_0], iZone);
         SetTecplotBinary_SurfaceMesh(config[iZone], geometry[iZone][MESH_0], iZone);
         if (!wrote_base_file)
@@ -6618,7 +6630,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
     
     /*--- Merge the solution data needed for volume solutions and restarts ---*/
     
-    if (rank == MASTER_NODE) cout << "Merging solution in the Master node." << endl;
+    if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+        (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+        if (rank == MASTER_NODE) cout << "Merging solution in the Master node." << endl;
+    }
     MergeSolution(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0], iZone);
     
     /*--- Write restart, or Tecplot files using the merged data.
@@ -6629,7 +6644,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
       
       /*--- Write a native restart file ---*/
       
-      if (rank == MASTER_NODE) cout << "Writing SU2 native restart file." << endl;
+      if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+          (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+            if (rank == MASTER_NODE) cout << "Writing SU2 native restart file." << endl;
+      }
       SetRestart(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0] , iZone);
       
       if (Wrt_Vol) {
@@ -6640,7 +6658,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a Tecplot ASCII file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing Tecplot ASCII file volume solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                   if (rank == MASTER_NODE) cout << "Writing Tecplot ASCII file volume solution file." << endl;
+            }
             SetTecplotASCII(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0], iZone, val_nZone, false);
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], false);
             break;
@@ -6649,7 +6670,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a FieldView ASCII file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing FieldView ASCII file volume solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                  if (rank == MASTER_NODE) cout << "Writing FieldView ASCII file volume solution file." << endl;
+            }
             SetFieldViewASCII(config[iZone], geometry[iZone][MESH_0], iZone, val_nZone);
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], false);
             break;
@@ -6658,7 +6682,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a Tecplot binary solution file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing Tecplot binary volume solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                  if (rank == MASTER_NODE) cout << "Writing Tecplot binary volume solution file." << endl;
+            }
             SetTecplotBinary_DomainSolution(config[iZone], geometry[iZone][MESH_0], iZone);
             break;
             
@@ -6666,7 +6693,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a FieldView binary file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing FieldView binary file volume solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                  if (rank == MASTER_NODE) cout << "Writing FieldView binary file volume solution file." << endl;
+            }
             SetFieldViewBinary(config[iZone], geometry[iZone][MESH_0], iZone, val_nZone);
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], false);
             break;
@@ -6675,7 +6705,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a Paraview ASCII file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing Paraview ASCII volume solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                if (rank == MASTER_NODE) cout << "Writing Paraview ASCII volume solution file." << endl;
+            }
             SetParaview_ASCII(config[iZone], geometry[iZone][MESH_0], iZone, val_nZone, false);
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], false);
             break;
@@ -6694,7 +6727,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a Tecplot ASCII file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing Tecplot ASCII surface solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                  if (rank == MASTER_NODE) cout << "Writing Tecplot ASCII surface solution file." << endl;
+            }
             SetTecplotASCII(config[iZone], geometry[iZone][MESH_0], solver_container[iZone][MESH_0] , iZone, val_nZone, true);
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], true);
             break;
@@ -6703,7 +6739,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a Tecplot binary solution file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing Tecplot binary surface solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                  if (rank == MASTER_NODE) cout << "Writing Tecplot binary surface solution file." << endl;
+            }
             SetTecplotBinary_SurfaceSolution(config[iZone], geometry[iZone][MESH_0], iZone);
             break;
             
@@ -6711,7 +6750,10 @@ void COutput::SetResult_Files(CSolver ****solver_container, CGeometry ***geometr
             
             /*--- Write a Paraview ASCII file ---*/
             
-            if (rank == MASTER_NODE) cout << "Writing Paraview ASCII surface solution file." << endl;
+            if ((config[iZone]->GetConsole_Output_Verb() == VERB_MEDIUM) ||
+                (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
+                  if (rank == MASTER_NODE) cout << "Writing Paraview ASCII surface solution file." << endl;
+            }
             SetParaview_ASCII(config[iZone], geometry[iZone][MESH_0], iZone, val_nZone, true);
             DeallocateConnectivity(config[iZone], geometry[iZone][MESH_0], true);
             break;
