@@ -11,11 +11,17 @@
 
 int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
+    /* Grab rank of the current SU2 processor */
+    int su2rank, su2size;
+    int braidrank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_size(app->comm_x, &su2size);
+    MPI_Comm_rank(app->comm_t, &braidrank);
+
     /* Grab variables from the app */
-    int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
-
-    /* Grab status of current time step */
+    /* Grab status of current time step from xBraid */
     su2double tstart;
     su2double tstop;
     braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
@@ -24,22 +30,26 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
 
     /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
-//        app->solver_containter[iZone][iMGLevel]->node[iPoint]->SetSolution(u->node->GetSolution())
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Get the Solution from braid vector u */
         su2double* uSolution_time_n  = u->node[iPoint]->GetSolution_time_n();
         su2double* uSolution_time_n1 = u->node[iPoint]->GetSolution_time_n1();
-        /* Set the solution in the SU2 solver */
+        /* Set the solution to the SU2 solver */
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution_time_n);
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(uSolution_time_n);
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(uSolution_time_n1);
     }
 
     /* Take a time step */
-     app->driver->Run(app->iteration_container, app->output, app->integration_container,
+
+    if (su2rank == MASTER_NODE) {
+      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop << endl;
+    }
+    app->driver->Run(app->iteration_container, app->output, app->integration_container,
                    app->geometry_container, app->solver_container, app->numerics_container,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
+
 
     /* Grab the state vector from su2 */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -52,7 +62,7 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
         u->node[iPoint]->Set_Solution_time_n1(appSolution_time_n1);
     }
 
-  return 0;
+    return 0;
 }
 
 
@@ -183,8 +193,8 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Get rank of global communicator */
-    int rank;
-    MPI_Comm_rank(app->comm, &rank);
+    int su2rank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -196,7 +206,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     braid_AccessStatusGetT(astatus, &t);
 
     /* Compute the current iExtIter for naming the output file and pass it to SU2 */
-    int iExtIter = ( t - app->tstart ) / app->initialDT ;
+    int iExtIter = (int) round( ( t - app->tstart ) / app->initialDT);
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Trick SU2 with the current solution for output (SU2 write CVariable::Solution, not _time_n!) */
@@ -206,7 +216,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     }
 
     /* Call the SU2 output routine */
-    if (rank == MASTER_NODE) cout << "Write SU2 restart file at iExtIter = " << iExtIter << endl;
+    if (su2rank==MASTER_NODE) cout << "Write SU2 restart file at iExtIter = " << iExtIter << endl;
     app->output->SetResult_Files(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
 
