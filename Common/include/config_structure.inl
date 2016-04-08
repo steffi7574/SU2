@@ -1130,6 +1130,30 @@ inline unsigned long CConfig::GetNonphysical_Reconstr(void) { return Nonphys_Rec
 
 inline unsigned short CConfig::GetConsole_Output_Verb(void) { return Console_Output_Verb; }
 
+inline unsigned long CConfig::GetBraid_Max_Level(void) { return Braid_Max_Level; }
+
+inline unsigned short CConfig::GetBraid_Min_Coarse(void) { return Braid_Min_Coarse; }
+
+inline long CConfig::GetBraid_NRelax(void) { return Braid_NRelax; }
+
+inline long CConfig::GetBraid_NRelax0(void) { return Braid_NRelax0; }
+
+inline su2double CConfig::GetBraid_Tol(void) { return Braid_Tol; }
+
+inline unsigned short CConfig::GetBraid_TNorm(void) { return Braid_TNorm; }
+
+inline long CConfig::GetBraid_CFactor(void) { return Braid_CFactor; }
+
+inline long CConfig::GetBraid_CFactor0(void) { return Braid_CFactor0; }
+
+inline unsigned long CConfig::GetBraid_Max_Iter(void) { return Braid_Max_Iter; }
+
+inline unsigned short CConfig::GetBraid_FMG(void) { return Braid_FMG; }
+
+inline unsigned short CConfig::GetBraid_Print_Level(void) { return Braid_Print_Level; }
+
+inline unsigned short CConfig::GetBraid_Access_Level(void) { return Braid_Access_Level; }
+
 inline unsigned short CConfig::GetnIterFSI(void) { return nIterFSI; }
 
 inline su2double CConfig::GetAitkenStatRelax(void) { return AitkenStatRelax; }

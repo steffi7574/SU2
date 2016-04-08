@@ -60,25 +60,25 @@ int main(int argc, char *argv[]) {
 
    /* Declare XBraid variables */
   braid_Core core;
-  int max_levels, min_coarse, nrelax, nrelax0, tnorm, cfactor, cfactor0;
-  int max_iter, fmg, print_level, access_level;
-  bool run_wrapper_tests;
-  su2double tol;
+//  int max_levels, min_coarse, nrelax, nrelax0, tnorm, cfactor, cfactor0;
+//  int max_iter, fmg, print_level, access_level;
+//  bool run_wrapper_tests;
+//  su2double tol;
 
-  /* Set default xBraid parameters TODO: Read from config file */
-  max_levels          = 1;           /* Max levels for XBraid solver */
-  min_coarse          = 3;            /* Minimum possible coarse grid size */
-  nrelax              = 1;            /* Number of CF relaxation sweeps on all levels */
-  nrelax0             = -1;           /* Number of CF relaxations only for level 0 -- overrides nrelax     */
-  tol                 = 1.0e-06;      /* Halting tolerance */
-  tnorm               = 2;            /* Halting norm to use (see docstring below) */
-  cfactor             = 2;            /* Coarsening factor */
-  cfactor0            = -1;           /* Coarsening factor for only level 0 -- overrides cfactor */
-  max_iter            = 100;          /* Maximum number of iterations */
-  fmg                 = 0;            /* Boolean, if 1, do FMG cycle.  If 0, use a V cycle */
-  print_level         = 1;            /* Level of XBraid printing to the screen */
-  access_level        = 1;            /* Frequency of calls to access routine: 1 is for only after simu    lation */
-  run_wrapper_tests   = false;            /* Run no simulation, only run wrapper tests */
+//  /* Set default xBraid parameters TODO: Read from config file */
+//  max_levels          = 2;           /* Max levels for XBraid solver */
+//  min_coarse          = 3;            /* Minimum possible coarse grid size */
+//  nrelax              = 1;            /* Number of CF relaxation sweeps on all levels */
+//  nrelax0             = -1;           /* Number of CF relaxations only for level 0 -- overrides nrelax     */
+//  tol                 = 1.0e-06;      /* Halting tolerance */
+//  tnorm               = 2;            /* Halting norm to use (see docstring below) */
+//  cfactor             = 2;            /* Coarsening factor */
+//  cfactor0            = -1;           /* Coarsening factor for only level 0 -- overrides cfactor */
+//  max_iter            = 100;          /* Maximum number of iterations */
+//  fmg                 = 0;            /* Boolean, if 1, do FMG cycle.  If 0, use a V cycle */
+//  print_level         = 2;            /* Level of XBraid printing to the screen */
+//  access_level        = 2;            /* Frequency of calls to access routine: 1 is for only after simulation */
+//  run_wrapper_tests   = false;            /* Run no simulation, only run wrapper tests */
 
   /* Check the processor grid (px*pt = num_of_procs. TODO: Read number of spatial and temporal processors from command line.*/
   int px = 4;                // Number of processors for spatial parallelization
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
     transfer_container[iZone]     = NULL;
   }
 
-  /*--- Loop over all zones to initialize the various classes. In most
+  /*--- Loop over all zones to initialize the various classes. In aost
    cases, nZone is equal to one. This represents the solution of a partial
    differential equation on a single block, unstructured mesh. ---*/
 
@@ -394,19 +394,31 @@ int main(int argc, char *argv[]) {
           my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
 
   // Set XBraid options
-  braid_SetPrintLevel(core, print_level );
-  braid_SetMaxLevels(core, max_levels );
-  braid_SetNRelax(core, -1, nrelax);
-  if (nrelax0 > -1) {
-     braid_SetNRelax(core,  0, nrelax0);
+
+  braid_SetPrintLevel( core, config_container[ZONE_0]->GetBraid_Print_Level() );
+  braid_SetAccessLevel( core, config_container[ZONE_0]->GetBraid_Access_Level() );
+  braid_SetMaxLevels( core, config_container[ZONE_0]->GetBraid_Max_Level() );
+  braid_SetNRelax( core, -1, config_container[ZONE_0]->GetBraid_NRelax());
+  if (config_container[ZONE_0]->GetBraid_NRelax0() > -1) {
+     braid_SetNRelax(core,  0, config_container[ZONE_0]->GetBraid_NRelax0() );
   }
-  braid_SetAbsTol(core, tol);
-  braid_SetCFactor(core, -1, cfactor);
-  braid_SetMaxIter(core, max_iter);
-  if (fmg)
+  braid_SetAbsTol( core, config_container[ZONE_0]->GetBraid_Tol() );
+  braid_SetCFactor( core, -1, config_container[ZONE_0]->GetBraid_CFactor() );
+  braid_SetMaxIter( core, config_container[ZONE_0]->GetBraid_Max_Iter() );
+  if (config_container[ZONE_0]->GetBraid_FMG() )
   {
-     braid_SetFMG(core);
+     braid_SetFMG( core );
   }
+
+
+  /* TEST XBRAIDS PHI FUNCTION */
+//  braid_Vector u,v;
+//  su2double mytime=0.0;
+
+  /* Initialize and clone the braid vector u */
+//  my_Init(app, mytime, &u);
+//  my_Clone(app, u, &v);
+
 
   /* Run parallel xBraid Solver */
   if (rank == MASTER_NODE)

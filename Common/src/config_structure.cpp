@@ -1340,6 +1340,45 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /* DESCRIPTION: Activate ParMETIS mode for testing */
   addBoolOption("PARMETIS", ParMETIS, false);
   
+  /*!\par CONFIG_CATEGORY: xBraid configuration \ingroup Config */
+  /*--- Options concerning the time-parallel xBraid solver ---*/
+
+  /* DESCRIPTION: Maximum Number of XBRAID levels \ingroup Config */
+  addUnsignedLongOption("BRAID_MAX_LEVEL", Braid_Max_Level, 15);
+
+  /* DESCRIPTION: Minimum possible coarse grid size */
+  addUnsignedShortOption("BRAID_MIN_COARSE", Braid_Min_Coarse, 3);
+
+  /* DESCRIPTION: Number of CF relaxation sweeps on all levels */
+  addLongOption("BRAID_NRELAX", Braid_NRelax, 1);
+
+  /* DESCRIPTION: Number of CF relaxations only for level 0 -- overrides nrelax */
+  addLongOption("BRAID_NRELAX0", Braid_NRelax0, -1);
+
+  /* DESCRIPTION: Halting tolerance */
+  addDoubleOption("BRAID_TOL", Braid_Tol, 1.0e-06);
+
+  /* DESCRIPTION: Halting norm to use (see docstring below) */
+  addUnsignedShortOption("BRAID_TNORM", Braid_TNorm, 2);
+
+  /* DESCRIPTION: Coarsening factor */
+  addLongOption("BRAID_CFACTOR", Braid_CFactor, 2);
+
+  /* DESCRIPTION: Coarsening factor for only level 0 -- overrides cfactor */
+  addLongOption("BRAID_CFACTOR0", Braid_CFactor0, -1);
+
+  /* DESCRIPTION: Maximum number of iterations */
+  addUnsignedLongOption("BRAID_MAX_ITER", Braid_Max_Iter, 100);
+
+  /* DESCRIPTION: Boolean, if 1, do FMG cycle. If 0, use a V cycle */
+  addUnsignedShortOption("BRAID_FMG", Braid_FMG, 0);
+
+  /* DESCRIPTION: Level of XBraid printing to the screen */
+  addUnsignedShortOption("BRAID_PRINT_LEVEL", Braid_Print_Level, 1);
+
+  /* DESCRIPTION: Frequency of calls to access routine: 1 is for only after simulation */
+  addUnsignedShortOption("BRAID_ACCESS_LEVEL", Braid_Access_Level, 1);
+
   /* END_CONFIG_OPTIONS */
 
 }
