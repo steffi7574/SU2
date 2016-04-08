@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 //  run_wrapper_tests   = false;            /* Run no simulation, only run wrapper tests */
 
   /* Check the processor grid (px*pt = num_of_procs. TODO: Read number of spatial and temporal processors from command line.*/
-  int px = 4;                // Number of processors for spatial parallelization
+  int px = 8;                // Number of processors for spatial parallelization
   int pt = 1;                // Number of processors for temporal parallelization
   if( px*pt != size)  {
       if( rank == 0 )
