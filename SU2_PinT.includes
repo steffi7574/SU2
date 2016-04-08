@@ -23,3 +23,5 @@ externals/parmetis/libparmetis
 externals/tecio/include
 externals/tecio/tecsrc
 /home/sguenther/Software/braid
+SU2_CFD/include
+Common/include
