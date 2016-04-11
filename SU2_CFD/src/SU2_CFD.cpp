@@ -383,7 +383,49 @@ int main(int argc, char *argv[]) {
   app->comm_x = comm_x;
 
 
+  /* TEST XBRAID'S PHI FUNCTION */
+  braid_Vector u,v;
   braid_PhiStatus status;
+  braid_AccessStatus astatus;
+  braid_Real mystart, mystop;
+  mystart=0.0;
+  mystop=0.001;
+
+  app->tstart = mystart;
+  app->tstop  = mystop;
+
+
+    int braidrank;
+    MPI_Comm_rank(app->comm_t, &braidrank);
+  if (braidrank == MASTER_NODE)
+{
+  /* Initialize two braid vectors */
+  my_Init(app, mystart, &u);
+
+   /* Call the time stepper function phi to move u from mytstart to mytstop and clone it*/
+  my_Phi(app, u, status);
+  my_Clone(app,u, &v);
+
+  /* Call phi twice to move u and v to the second time step */
+  app->tstart = mystop;
+  app->tstop = mystop + 0.001;
+  my_Phi(app, u, status);
+  my_Phi(app, v, status);
+
+  /* Print u and v */
+  app->tstop = 0.001;
+  my_Access(app, u, astatus);
+  app->tstop = 0.002;
+  my_Access(app, v, astatus);
+
+  /* COMPARE FILE restart_flow_00000.dat with restart_flow_00001.dat ! */
+  /* TODO: TESTING THE BUFFER ROUTINE */
+}
+  MPI_Finalize();
+  return 0;
+
+
+//  braid_PhiStatus status;
   su2double tstart;
   su2double tstop;
 
@@ -410,14 +452,6 @@ int main(int argc, char *argv[]) {
      braid_SetFMG( core );
   }
 
-
-  /* TEST XBRAIDS PHI FUNCTION */
-//  braid_Vector u,v;
-//  su2double mytime=0.0;
-
-  /* Initialize and clone the braid vector u */
-//  my_Init(app, mytime, &u);
-//  my_Clone(app, u, &v);
 
 
   /* Run parallel xBraid Solver */
