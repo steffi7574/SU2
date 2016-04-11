@@ -230,7 +230,7 @@ int my_BufSize ( braid_App app, int *size_ptr ){
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Compute size of buffer */
-    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
+    *size_ptr = 3.0 * nPoint * nVar * sizeof(su2double);
 
     return 0;
 }
@@ -246,6 +246,9 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
     int ibuffer = 0;
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
+          /* Write Solution to the buffer */
+          dbuffer[ibuffer] = u->node[iPoint]->GetSolution()[iVar];
+          ibuffer++;
           /* Write Solution at current time to the buffer */
           dbuffer[ibuffer] = u->node[iPoint]->GetSolution_time_n()[iVar];
           ibuffer++;
@@ -256,7 +259,7 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
     }
 
     /* Compute size of buffer */
-    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
+    *size_ptr = 3.0 * nPoint * nVar * sizeof(su2double);
 
     return 0;
 }
@@ -276,6 +279,7 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
     my_Vector* u;
     u          = new my_Vector;
     u->node    = new CVariable*[nPoint];
+    su2double* uSolution    = new su2double[nVar];
     su2double* uSolution_n  = new su2double[nVar];
     su2double* uSolution_n1 = new su2double[nVar];
 
@@ -289,6 +293,9 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
     int ibuffer = 0;
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
+          /* Unpack Solution from the buffer */
+          uSolution[iVar]   = dbuffer[ibuffer];
+          ibuffer++;
           /* Unpack Solution at current time from the buffer */
           uSolution_n[iVar] = dbuffer[ibuffer];
           ibuffer++;
@@ -297,6 +304,7 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
           ibuffer++;
         }
         /* Write current and previous solution to u*/
+        u->node[iPoint]->SetSolution(uSolution);
         u->node[iPoint]->Set_Solution_time_n(uSolution_n);
         u->node[iPoint]->Set_Solution_time_n1(uSolution_n1);
     }
