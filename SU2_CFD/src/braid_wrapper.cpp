@@ -31,8 +31,12 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     tstart = app->tstart;
     tstop  = app->tstop;
 
-    /* Trick the su2 solver with the new DeltaT */
+    /* Trick SU2 with xBraid's DeltaT */
     app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
+
+    /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  */
+    int iExtIter = (int) round( ( app->tstop - app->initialtstart ) / app->initialDT) - 1;
+    app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -48,7 +52,8 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     /* Take a time step */
 
     if (su2rank == MASTER_NODE) {
-      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop << endl;
+      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
+           << " with iExtIter " << iExtIter << endl;
     }
     app->driver->Run(app->iteration_container, app->output, app->integration_container,
                    app->geometry_container, app->solver_container, app->numerics_container,
@@ -203,8 +208,6 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
-    int nDim   = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
-    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Retrieve xBraid time information from status object */
     su2double t;
@@ -213,11 +216,12 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 /* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
     t = app->tstop;
 
-    /* Compute the current iExtIter for naming the output file and pass it to SU2 */
-    int iExtIter = (int) round( ( t - app->tstart ) / app->initialDT);
+
+    /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  which is used for naming the restart file */
+    int iExtIter = (int) round( ( t - app->initialtstart ) / app->initialDT) - 1;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
-    /* Trick SU2 with the current solution for output (SU2 write CVariable::Solution, not _time_n!) */
+    /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         su2double *uSolution = u->node[iPoint]->GetSolution_time_n();
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution);

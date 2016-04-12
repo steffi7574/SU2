@@ -354,6 +354,10 @@ int main(int argc, char *argv[]) {
   my_App *app;
   app = new my_App;
 
+  app->comm   = comm;
+  app->comm_t = comm_t;
+  app->comm_x = comm_x;
+
   app->driver                 = driver;
   app->iteration_container    = iteration_container;
   app->output                 = output;
@@ -368,19 +372,19 @@ int main(int argc, char *argv[]) {
   app->interpolator_container = interpolator_container;
   app->transfer_container     = transfer_container;
 
-  app->tstart    = config_container[ZONE_0]->GetCurrent_UnstTime();
-  app->ntime     = config_container[ZONE_0]->GetnExtIter();
-  app->initialDT = config_container[ZONE_0]->GetDelta_UnstTimeND();
-  app->tstop     = app->tstart + app->ntime * app->initialDT;
+  app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
+  app->initialtstart = app->tstart;
+  app->ntime         = config_container[ZONE_0]->GetnExtIter();
+  app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
+  app->tstop         = app->tstart + app->ntime * app->initialDT;
+
+  /* Check of xBraid's tstop is bigger that SU2's end time */
   if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTime()){
       cout << "ERROR: tstop > Total_UnstTime ! \n";
       MPI_Finalize();
       return (0);
   }
 
-  app->comm   = comm;
-  app->comm_t = comm_t;
-  app->comm_x = comm_x;
 
 
   /* TEST XBRAID'S PHI FUNCTION */
@@ -409,23 +413,17 @@ int main(int argc, char *argv[]) {
     /* Call the time stepper function phi to move u from mytstart to mytstop and clone it*/
     my_Phi(app, u, status);
 
-    /* Print u with identifier 1 */
-    app->tstart = 0.000;
-    app->tstop  = 0.001;
-    my_Access(app, u, astatus);
-
     /* Pack u into a buffer and send it to other processor*/
     my_BufPack(app, u, dbuffer, &dbufsize);
     MPI_Send(dbuffer, dbufsize, MPI_DOUBLE, 1, 0, app->comm_t);
+
 
     /* Move u to the next step */
     app->tstart = mystop;
     app->tstop = mystop + 0.001;
     my_Phi(app, u, status);
 
-    /* Print u with identifier 2 */
-    app->tstart = 0.000;
-    app->tstop  = 0.002;
+    /* Print u */
     my_Access(app, u, astatus);
 
   }
@@ -440,13 +438,12 @@ int main(int argc, char *argv[]) {
     app->tstop = mystop + 0.001;
     my_Phi(app, v, status);
 
-    /* Print v with identifier 3 */
-    app->tstart = 0.000;
+//    /* Print v with identifier 3 */
     app->tstop = 0.003;
     my_Access(app, v, astatus);
   }
 
-  /* COMPARE FILE restart_flow_00000.dat with restart_flow_00001.dat ! */
+  /* !!! COMPARE FILE restart_flow_00001.dat with restart_flow_00002.dat (they should match) !!! */
 
   MPI_Finalize();
   return 0;

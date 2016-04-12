@@ -29,10 +29,12 @@
  */
 typedef struct _braid_App_struct
 {
-  su2double tstart;     /* Begin of Time integration */
-  su2double tstop;      /* End of Time integration */
-  int       ntime;      /* Number of time steps */
-  su2double initialDT;  /* Initial DeltaT */
+  su2double tstart;         /* Begin of Time integration */
+  su2double tstop;          /* End of Time integration */
+  int       ntime;          /* Number of time steps */
+  su2double initialDT;      /* Initial DeltaT */
+  su2double initialtstart;  /* Initial Start Time */
+
 
   MPI_Comm comm;        /* global communicator */
   MPI_Comm comm_t;      /* temporal communicator */
