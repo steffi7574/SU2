@@ -395,32 +395,59 @@ int main(int argc, char *argv[]) {
   app->tstop  = mystop;
 
 
+    int dbufsize;
+    my_BufSize(app, &dbufsize);
+    su2double* dbuffer = new su2double[dbufsize];
     int braidrank;
     MPI_Comm_rank(app->comm_t, &braidrank);
+
   if (braidrank == MASTER_NODE)
-{
-  /* Initialize two braid vectors */
-  my_Init(app, mystart, &u);
+  {
+    /* Initialize a braid vector */
+    my_Init(app, mystart, &u);
 
-   /* Call the time stepper function phi to move u from mytstart to mytstop and clone it*/
-  my_Phi(app, u, status);
-  my_Clone(app,u, &v);
+    /* Call the time stepper function phi to move u from mytstart to mytstop and clone it*/
+    my_Phi(app, u, status);
 
-  /* Call phi twice to move u and v to the second time step */
-  app->tstart = mystop;
-  app->tstop = mystop + 0.001;
-  my_Phi(app, u, status);
-  my_Phi(app, v, status);
+    /* Print u with identifier 1 */
+    app->tstart = 0.000;
+    app->tstop  = 0.001;
+    my_Access(app, u, astatus);
 
-  /* Print u and v */
-  app->tstop = 0.001;
-  my_Access(app, u, astatus);
-  app->tstop = 0.002;
-  my_Access(app, v, astatus);
+    /* Pack u into a buffer and send it to other processor*/
+    my_BufPack(app, u, dbuffer, &dbufsize);
+    MPI_Send(dbuffer, dbufsize, MPI_DOUBLE, 1, 0, app->comm_t);
+
+    /* Move u to the next step */
+    app->tstart = mystop;
+    app->tstop = mystop + 0.001;
+    my_Phi(app, u, status);
+
+    /* Print u with identifier 2 */
+    app->tstart = 0.000;
+    app->tstop  = 0.002;
+    my_Access(app, u, astatus);
+
+  }
+  else if (braidrank == 1)
+  {
+    /* Receive u from braidrank==0 and store it in v*/
+    MPI_Recv(dbuffer, dbufsize, MPI_DOUBLE, 0, 0, app->comm_t, MPI_STATUS_IGNORE);
+    my_BufUnpack(app, dbuffer, &v);
+
+    /* Move v to the next step */
+    app->tstart = mystop;
+    app->tstop = mystop + 0.001;
+    my_Phi(app, v, status);
+
+    /* Print v with identifier 3 */
+    app->tstart = 0.000;
+    app->tstop = 0.003;
+    my_Access(app, v, astatus);
+  }
 
   /* COMPARE FILE restart_flow_00000.dat with restart_flow_00001.dat ! */
-  /* TODO: TESTING THE BUFFER ROUTINE */
-}
+
   MPI_Finalize();
   return 0;
 

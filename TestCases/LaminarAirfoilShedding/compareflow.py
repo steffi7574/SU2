@@ -29,20 +29,21 @@ def getdata(filename):
 
 # parse command line arguments
 args = sys.argv
-if (len(args) != 3):
+if (len(args) != 4):
   print("\nERROR while parsing argument list")
-  print("Usage: python3 compareflow.py <ReferenceDirection> <NumberOfTimeStepOfReference>\n")
+  print("Usage: python3 compareflow.py <ReferenceDirection> <NumberOfTimeStepOfReference> <NumberOfTimeStopToCompare\n")
   stop
 else:
-  refdir = str(args[1])  # Set the reference directory
-  Iter   = int(args[2])  # Set the number of time step that you want to compare
+  refdir     = str(args[1])  # Set the reference directory
+  IterRef    = int(args[2])  # Set the number of time step of the reference
+  IterComp   = int(args[3])  # Set the number of time step that you want to compare
 
 # define some constants
 EPS = 1E-14
 
 # Get the file names
-filenameref = refdir + '/restart_flow_' + '%05i'%(Iter) + '.dat'
-filenamecur = 'restart_flow_' + '%05i'%(Iter+1)  + '.dat'
+filenameref = refdir + '/restart_flow_' + '%05i'%(IterRef) + '.dat'
+filenamecur = 'restart_flow_' + '%05i'%(IterComp)  + '.dat'
 print("Comparing reference ", filenameref, " with ", filenamecur)
 
 # read data from reference and current file

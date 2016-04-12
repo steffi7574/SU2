@@ -18,13 +18,18 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     MPI_Comm_size(app->comm_x, &su2size);
     MPI_Comm_rank(app->comm_t, &braidrank);
 
+
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
     /* Grab status of current time step from xBraid */
     su2double tstart;
     su2double tstop;
-    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
+//    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
+
+/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
+    tstart = app->tstart;
+    tstop  = app->tstop;
 
     /* Trick the su2 solver with the new DeltaT */
     app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
@@ -203,7 +208,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Retrieve xBraid time information from status object */
     su2double t;
-    braid_AccessStatusGetT(astatus, &t);
+//    braid_AccessStatusGetT(astatus, &t);
+
+/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
+    t = app->tstop;
 
     /* Compute the current iExtIter for naming the output file and pass it to SU2 */
     int iExtIter = (int) round( ( t - app->tstart ) / app->initialDT);
@@ -230,7 +238,7 @@ int my_BufSize ( braid_App app, int *size_ptr ){
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Compute size of buffer */
-    *size_ptr = 3.0 * nPoint * nVar * sizeof(su2double);
+    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
 
     return 0;
 }
@@ -246,9 +254,6 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
     int ibuffer = 0;
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
-          /* Write Solution to the buffer */
-          dbuffer[ibuffer] = u->node[iPoint]->GetSolution()[iVar];
-          ibuffer++;
           /* Write Solution at current time to the buffer */
           dbuffer[ibuffer] = u->node[iPoint]->GetSolution_time_n()[iVar];
           ibuffer++;
@@ -259,7 +264,7 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
     }
 
     /* Compute size of buffer */
-    *size_ptr = 3.0 * nPoint * nVar * sizeof(su2double);
+    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
 
     return 0;
 }
@@ -293,9 +298,6 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
     int ibuffer = 0;
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
-          /* Unpack Solution from the buffer */
-          uSolution[iVar]   = dbuffer[ibuffer];
-          ibuffer++;
           /* Unpack Solution at current time from the buffer */
           uSolution_n[iVar] = dbuffer[ibuffer];
           ibuffer++;
@@ -304,7 +306,6 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
           ibuffer++;
         }
         /* Write current and previous solution to u*/
-        u->node[iPoint]->SetSolution(uSolution);
         u->node[iPoint]->Set_Solution_time_n(uSolution_n);
         u->node[iPoint]->Set_Solution_time_n1(uSolution_n1);
     }
