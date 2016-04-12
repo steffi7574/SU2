@@ -25,17 +25,13 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     /* Grab status of current time step from xBraid */
     su2double tstart;
     su2double tstop;
-//    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
-
-/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
-    tstart = app->tstart;
-    tstop  = app->tstop;
+    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
     /* Trick SU2 with xBraid's DeltaT */
     app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  */
-    int iExtIter = (int) round( ( app->tstop - app->initialtstart ) / app->initialDT) - 1;
+    int iExtIter = (int) round( ( tstop - app->tstart ) / app->initialDT) - 1;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
@@ -203,23 +199,25 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Get rank of global communicator */
-    int su2rank;
+    int su2rank, braidrank;
     MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_rank(app->comm_t, &braidrank);
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
     /* Retrieve xBraid time information from status object */
     su2double t;
-//    braid_AccessStatusGetT(astatus, &t);
-
-/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
-    t = app->tstop;
-
+    braid_AccessStatusGetT(astatus, &t);
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  which is used for naming the restart file */
-    int iExtIter = (int) round( ( t - app->initialtstart ) / app->initialDT) - 1;
+    int iExtIter = (int) round( ( t - app->tstart ) / app->initialDT) - 1;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
+    /* Check of xBraid tries to write to negative iExtIter */
+    if (iExtIter < 0) {
+      if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
+      return 0;
+    }
 
     /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -228,7 +226,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     }
 
     /* Call the SU2 output routine */
-    if (su2rank==MASTER_NODE) cout << "Write SU2 restart file at iExtIter = " << iExtIter << endl;
+    if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
     app->output->SetResult_Files(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
 

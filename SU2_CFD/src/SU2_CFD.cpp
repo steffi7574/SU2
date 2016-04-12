@@ -96,9 +96,6 @@ int main(int argc, char *argv[]) {
   SU2_MPI::comm = comm_x;
 
 
-
-
-
   /*--- Create pointers to all of the classes that may be used throughout
    the SU2_CFD code. In general, the pointers are instantiated down a
    heirarchy over all zones, multigrid levels, equation sets, and equation
@@ -373,7 +370,6 @@ int main(int argc, char *argv[]) {
   app->transfer_container     = transfer_container;
 
   app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
-  app->initialtstart = app->tstart;
   app->ntime         = config_container[ZONE_0]->GetnExtIter();
   app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
   app->tstop         = app->tstart + app->ntime * app->initialDT;
@@ -386,81 +382,12 @@ int main(int argc, char *argv[]) {
   }
 
 
-
-  /* TEST XBRAID'S PHI FUNCTION */
-  braid_Vector u,v;
-  braid_PhiStatus status;
-  braid_AccessStatus astatus;
-  braid_Real mystart, mystop;
-  mystart=0.0;
-  mystop=0.001;
-
-  app->tstart = mystart;
-  app->tstop  = mystop;
-
-
-    int dbufsize;
-    my_BufSize(app, &dbufsize);
-    su2double* dbuffer = new su2double[dbufsize];
-    int braidrank;
-    MPI_Comm_rank(app->comm_t, &braidrank);
-
-  if (braidrank == MASTER_NODE)
-  {
-    /* Initialize a braid vector */
-    my_Init(app, mystart, &u);
-
-    /* Call the time stepper function phi to move u from mytstart to mytstop and clone it*/
-    my_Phi(app, u, status);
-
-    /* Pack u into a buffer and send it to other processor*/
-    my_BufPack(app, u, dbuffer, &dbufsize);
-    MPI_Send(dbuffer, dbufsize, MPI_DOUBLE, 1, 0, app->comm_t);
-
-
-    /* Move u to the next step */
-    app->tstart = mystop;
-    app->tstop = mystop + 0.001;
-    my_Phi(app, u, status);
-
-    /* Print u */
-    my_Access(app, u, astatus);
-
-  }
-  else if (braidrank == 1)
-  {
-    /* Receive u from braidrank==0 and store it in v*/
-    MPI_Recv(dbuffer, dbufsize, MPI_DOUBLE, 0, 0, app->comm_t, MPI_STATUS_IGNORE);
-    my_BufUnpack(app, dbuffer, &v);
-
-    /* Move v to the next step */
-    app->tstart = mystop;
-    app->tstop = mystop + 0.001;
-    my_Phi(app, v, status);
-
-//    /* Print v with identifier 3 */
-    app->tstop = 0.003;
-    my_Access(app, v, astatus);
-  }
-
-  /* !!! COMPARE FILE restart_flow_00001.dat with restart_flow_00002.dat (they should match) !!! */
-
-  MPI_Finalize();
-  return 0;
-
-
-//  braid_PhiStatus status;
-  su2double tstart;
-  su2double tstop;
-
-
   /* Initialize xBraid */
   braid_Init(comm, comm_t, app->tstart, app->tstop, app->ntime, app,
           my_Phi, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
           my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
 
   // Set XBraid options
-
   braid_SetPrintLevel( core, config_container[ZONE_0]->GetBraid_Print_Level() );
   braid_SetAccessLevel( core, config_container[ZONE_0]->GetBraid_Access_Level() );
   braid_SetMaxLevels( core, config_container[ZONE_0]->GetBraid_Max_Level() );

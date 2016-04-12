@@ -29,14 +29,18 @@ def getdata(filename):
 
 # parse command line arguments
 args = sys.argv
-if (len(args) != 4):
-  print("\nERROR while parsing argument list")
-  print("Usage: python3 compareflow.py <ReferenceDirection> <NumberOfTimeStepOfReference> <NumberOfTimeStopToCompare\n")
-  stop
-else:
+if (len(args) == 3):
+  refdir     = str(args[1])  # Set the reference directory
+  IterRef    = int(args[2])  # Set the number of time step of the reference that you want to compare
+  IterComp   = IterRef 
+elif (len(args) == 4):
   refdir     = str(args[1])  # Set the reference directory
   IterRef    = int(args[2])  # Set the number of time step of the reference
-  IterComp   = int(args[3])  # Set the number of time step that you want to compare
+  IterComp   = int(args[3])  # Set the number of time step that you want to compare to
+else:
+  print("\nERROR while parsing argument list !")
+  print("Usage: python3 compareflow.py <ReferenceDirection> <NumberOfTimeStepOfReference> <NumberOfTimeStopToCompare>\n")
+  stop
 
 # define some constants
 EPS = 1E-14
