@@ -46,11 +46,10 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     }
 
     /* Take a time step */
-
-    if (su2rank == MASTER_NODE) {
-      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
-           << " with iExtIter " << iExtIter << endl;
-    }
+//    if (su2rank == MASTER_NODE) {
+//      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
+//           << " with iExtIter " << iExtIter << endl;
+//    }
     app->driver->Run(app->iteration_container, app->output, app->integration_container,
                    app->geometry_container, app->solver_container, app->numerics_container,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
@@ -67,6 +66,14 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
         u->node[iPoint]->Set_Solution_time_n(appSolution_time_n);
         u->node[iPoint]->Set_Solution_time_n1(appSolution_time_n1);
     }
+
+    /* Grab information about the convergence of the inner iteration */
+    su2double su2Res_rms = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0);
+//    if (su2rank == MASTER_NODE)
+//    {
+//      cout << "rank_t " << braidrank << " moved " << su2size << " processors from " << tstart << " to " << tstop
+//           << " with Res_RMS " << su2Res_rms << endl;
+//    }
 
     return 0;
 }
@@ -224,6 +231,9 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
         su2double *uSolution = u->node[iPoint]->GetSolution_time_n();
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution);
     }
+
+    /* Compute the primitive Variables from the conservative ones */
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
     /* Call the SU2 output routine */
     if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
