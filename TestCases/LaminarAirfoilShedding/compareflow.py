@@ -14,11 +14,13 @@ def getdata(filename):
   # open file for read only
   ufile=open(filename,'r')
 
-  # parse the second line of the file
-  ufile.readline()        # skip the first line (header)
-  line=ufile.readline()   # read the sond line
-  linelist = line.split() # split the string by separator " "
-
+  # parse the line of the file
+  for i, line in enumerate(ufile):
+    if i == LINENUMBER-1:
+      ufileline = ufile.readline()   # read the line
+      linelist  = ufileline.split()  # split the string by separator " "
+    elif i > LINENUMBER -1:
+      break
 
   datalist=[]
   for datastring in linelist:
@@ -43,6 +45,7 @@ else:
   stop
 
 # define some constants
+LINENUMBER= 201
 EPS = 1E-14
 
 # Get the file names
