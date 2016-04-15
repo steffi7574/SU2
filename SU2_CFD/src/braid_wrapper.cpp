@@ -25,11 +25,7 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     /* Grab status of current time step from xBraid */
     su2double tstart;
     su2double tstop;
-//    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
-
-/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
-    tstart = app->tstart;
-    tstop  = app->tstop;
+    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
     /* Trick SU2 with xBraid's DeltaT */
     app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
@@ -50,10 +46,10 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     }
 
     /* Take a time step */
-    if (su2rank == MASTER_NODE) {
-      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
-           << " with iExtIter " << iExtIter << endl;
-    }
+//    if (su2rank == MASTER_NODE) {
+//      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
+//           << " with iExtIter " << iExtIter << endl;
+//    }
     app->driver->Run(app->iteration_container, app->output, app->integration_container,
                    app->geometry_container, app->solver_container, app->numerics_container,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
@@ -73,11 +69,11 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
     /* Grab information about the convergence of the inner iteration */
     su2double su2Res_rms = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0);
-//    if (su2rank == MASTER_NODE)
-//    {
-//      cout << "rank_t " << braidrank << " moved " << su2size << " processors from " << tstart << " to " << tstop
-//           << " with Res_RMS " << su2Res_rms << endl;
-//    }
+    if (su2rank == MASTER_NODE)
+    {
+      cout << "rank_t " << braidrank << " moved " << su2size << " processors from " << tstart << " to " << tstop
+           << " with Res_RMS " << su2Res_rms << endl;
+    }
 
     return 0;
 }
@@ -164,23 +160,30 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Allocate memory for the sum */
-    su2double* vec_sum = new su2double[nVar];
+    su2double* vec_sum_n  = new su2double[nVar];
+    su2double* vec_sum_n1 = new su2double[nVar];
 
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Loop over all variables */
         for (int iVar = 0; iVar < nVar; iVar++){
-            /* Compute the sum y = alpha x + beta y */
+            /* Compute the sum y = alpha x + beta y at time n */
             su2double alphax = alpha * x->node[iPoint]->GetSolution_time_n()[iVar];
             su2double betay  = beta  * y->node[iPoint]->GetSolution_time_n()[iVar];
-            vec_sum[iVar] = alphax + betay;
+            vec_sum_n[iVar] = alphax + betay;
+            /* Compute the sum y = alpha x + beta y at time n-1 */
+            alphax = alpha * x->node[iPoint]->GetSolution_time_n1()[iVar];
+            betay  = beta  * y->node[iPoint]->GetSolution_time_n1()[iVar];
+            vec_sum_n1[iVar] = alphax + betay;
         }
         /* Store the vector sum in y */
-        y->node[iPoint]->Set_Solution_time_n(vec_sum);
+        y->node[iPoint]->Set_Solution_time_n(vec_sum_n);
+        y->node[iPoint]->Set_Solution_time_n1(vec_sum_n1);
     }
 
     /* Destroy vec_sum */
-    delete [] vec_sum;
+    delete [] vec_sum_n;
+    delete [] vec_sum_n1;
 
     return 0;
 }
@@ -219,11 +222,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Retrieve xBraid time information from status object */
     su2double t;
-//    braid_AccessStatusGetT(astatus, &t);
-
-/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
-    t = app->tstop;
-
+    braid_AccessStatusGetT(astatus, &t);
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  which is used for naming the restart file */
     int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) - 1;
