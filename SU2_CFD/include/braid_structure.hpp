@@ -33,6 +33,7 @@ typedef struct _braid_App_struct
   su2double tstop;          /* End of Time integration */
   int       ntime;          /* Number of time steps */
   su2double initialDT;      /* Initial DeltaT */
+  su2double initialstart;   /* Initial starting time USED FOR TESTING ONLY */
 
 
   MPI_Comm comm;        /* global communicator */

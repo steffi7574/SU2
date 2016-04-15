@@ -25,13 +25,17 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     /* Grab status of current time step from xBraid */
     su2double tstart;
     su2double tstop;
-    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
+//    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
+
+/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
+    tstart = app->tstart;
+    tstop  = app->tstop;
 
     /* Trick SU2 with xBraid's DeltaT */
     app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  */
-    int iExtIter = (int) round( ( tstop - app->tstart ) / app->initialDT) - 1;
+    int iExtIter = (int) round( ( tstop - app->initialstart ) / app->initialDT) - 1;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
@@ -46,10 +50,10 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     }
 
     /* Take a time step */
-//    if (su2rank == MASTER_NODE) {
-//      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
-//           << " with iExtIter " << iExtIter << endl;
-//    }
+    if (su2rank == MASTER_NODE) {
+      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
+           << " with iExtIter " << iExtIter << endl;
+    }
     app->driver->Run(app->iteration_container, app->output, app->integration_container,
                    app->geometry_container, app->solver_container, app->numerics_container,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
@@ -215,12 +219,17 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Retrieve xBraid time information from status object */
     su2double t;
-    braid_AccessStatusGetT(astatus, &t);
+//    braid_AccessStatusGetT(astatus, &t);
+
+/* THIS IS USED FOR PHI-TESTING. REMOVE AFTER TESTING!! */
+    t = app->tstop;
+
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  which is used for naming the restart file */
-    int iExtIter = (int) round( ( t - app->tstart ) / app->initialDT) - 1;
+    int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) - 1;
+    iExtIter = iExtIter + 10000*braidrank;   /* Make the identifier unique for each braid processor */
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
-    /* Check of xBraid tries to write to negative iExtIter */
+    /* Check if xBraid tries to write to negative iExtIter */
     if (iExtIter < 0) {
       if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
       return 0;

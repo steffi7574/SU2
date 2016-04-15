@@ -382,6 +382,90 @@ int main(int argc, char *argv[]) {
   }
 
 
+
+  /* TEST XBRAID'S PHI FUNCTION */
+  braid_Vector u,v;
+  braid_PhiStatus status;
+  braid_AccessStatus astatus;
+  braid_Real mystart, mystop;
+  mystart=0.0;
+  mystop=0.001;
+  app->initialstart = mystart;
+
+
+    int dbufsize;
+    my_BufSize(app, &dbufsize);
+    su2double* dbuffer = new su2double[dbufsize];
+    int braidrank;
+    MPI_Comm_rank(app->comm_t, &braidrank);
+
+    /* Initialize a braid vector */
+    my_Init(app, mystart, &u);
+
+  if (braidrank == MASTER_NODE)
+  {
+
+    /* take a step */
+    app->tstart = mystart;
+    app->tstop = mystop;
+    my_Phi(app, u, status);
+    /* Print u */
+    my_Access(app, u, astatus);
+
+    /* take a step */
+    app->tstart = mystart + 0.001;
+    app->tstop = mystop + 0.001;
+    my_Phi(app, u, status);
+    /* Print u */
+    my_Access(app, u, astatus);
+
+    /* Pack u into a buffer and send it to other processor*/
+    my_BufPack(app, u, dbuffer, &dbufsize);
+    MPI_Send(dbuffer, dbufsize, MPI_DOUBLE, 1, 0, app->comm_t);
+
+    /* take another step */
+    app->tstart = mystart + 0.002;
+    app->tstop = mystop + 0.002;
+    my_Phi(app, u, status);
+    /* Print u */
+    my_Access(app, u, astatus);
+
+  }
+  else if (braidrank == 1)
+  {
+
+    /* Receive u from braidrank==0 */
+    MPI_Recv(dbuffer, dbufsize, MPI_DOUBLE, 0, 0, app->comm_t, MPI_STATUS_IGNORE);
+    my_BufUnpack(app, dbuffer, &u);
+
+    cout << "Hi I'm braidrank " << braidrank << endl;
+
+    /* take a step */
+    app->tstart = mystart + 0.002;
+    app->tstop = mystop + 0.002;
+    my_Phi(app, u, status);
+    /* Print u */
+    my_Access(app, u, astatus);
+
+    /* take a step */
+    app->tstart = mystart + 0.003;
+    app->tstop = mystop + 0.003;
+    my_Phi(app, u, status);
+
+    /* Print u */
+    my_Access(app, u, astatus);
+  }
+
+
+  MPI_Finalize();
+  return 0;
+
+
+//  braid_PhiStatus status;
+  su2double tstart;
+  su2double tstop;
+
+
   /* Initialize xBraid */
   braid_Init(comm, comm_t, app->tstart, app->tstop, app->ntime, app,
           my_Phi, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
