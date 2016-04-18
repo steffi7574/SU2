@@ -1130,6 +1130,8 @@ inline unsigned long CConfig::GetNonphysical_Reconstr(void) { return Nonphys_Rec
 
 inline unsigned short CConfig::GetConsole_Output_Verb(void) { return Console_Output_Verb; }
 
+inline unsigned long CConfig::GetBraid_NProc_Time(void) { return Braid_NProc_Time; }
+
 inline unsigned long CConfig::GetBraid_Max_Level(void) { return Braid_Max_Level; }
 
 inline unsigned short CConfig::GetBraid_Min_Coarse(void) { return Braid_Min_Coarse; }

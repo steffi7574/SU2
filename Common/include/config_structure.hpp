@@ -538,6 +538,7 @@ private:
   Plot_Section_Forces,       /*!< \brief Write sectional forces for specified markers. */
 	Wrt_1D_Output;                /*!< \brief Write average stagnation pressure specified markers. */
   unsigned short Console_Output_Verb;  /*!< \brief Level of verbosity for console output */
+  unsigned long Braid_NProc_Time;   /*!< \brief Number of processors for time parallelization (1 is time serial, i.e. no xbraid) */
   unsigned long Braid_Max_Level;   /*!< \brief Maximum number of XBRAID levels (one is serial time computation) */
   unsigned short Braid_Min_Coarse; /*!< \brief Minimum possible coarse grid size  */
   long Braid_NRelax;               /*!< \brief Number of CF relaxation sweeps on all levels */
@@ -5289,6 +5290,12 @@ public:
    * \return Verbosity level for the console output.
    */
   unsigned short GetConsole_Output_Verb(void);
+
+  /*!
+   * \brief Get the number of processors for time parallelization.
+   * \return Number of processors for time parallelization (1 is for time serial, i.e. no xBraid)
+   */
+  unsigned long GetBraid_NProc_Time(void);
 
   /*!
    * \brief Get the maximum number of XBRAID levels.
