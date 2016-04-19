@@ -104,9 +104,9 @@ int main(int argc, char *argv[]) {
   } else {
       /* Split communicators for the time and space dimensions */
       int px = size / config->GetBraid_NProc_Time();
-//      braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
+      braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
       /* Pass the spatial communicator to SU2 */
-//      SU2_MPI::comm = comm_x;
+      SU2_MPI::comm = comm_x;
   }
 
 
@@ -630,14 +630,14 @@ int main(int argc, char *argv[]) {
       cout << "History file, closed." << endl;
     }
 
-      /*--- Deallocate config container ---*/
+    //  /*--- deallocate config container ---*/
 
-      for (iZone = 0; iZone < nZone; iZone++) {
-        if (config_container[iZone] != NULL) {
-          delete config_container[iZone];
-        }
-      }
-      if (config_container != NULL) delete[] config_container;
+    //  for (izone = 0; izone < nzone; izone++) {
+    //    if (config_container[izone] != null) {
+    //      delete config_container[izone];
+    //    }
+    //  }
+    //  if (config_container != NULL) delete[] config_container;
 
   }
 
