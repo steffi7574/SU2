@@ -27,12 +27,9 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     su2double tstop;
     braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
-    /* Trick SU2 with xBraid's DeltaT */
-    app->config_container[ZONE_0]->SetDelta_UnstTimeND(tstop-tstart);
-
-    /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  */
-    int iExtIter = (int) round( ( tstop - app->initialstart ) / app->initialDT) - 1;
-    app->config_container[ZONE_0]->SetExtIter(iExtIter);
+    /* Trick SU2 with xBraid's DeltaT / 2 */
+    su2double deltat = ( tstop - tstart ) / 2.0;
+    app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
 
     /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -45,16 +42,30 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(uSolution_time_n1);
     }
 
-    /* Take a time step */
-//    if (su2rank == MASTER_NODE) {
-//      cout << "rank_t " << braidrank << " moves " << su2size << " processors from " << tstart << " to " << tstop
-//           << " with iExtIter " << iExtIter << endl;
-//    }
+    /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  */
+    int iExtIter = (int) round( ( tstart + deltat - app->initialstart ) / app->initialDT) - 1;
+    app->config_container[ZONE_0]->SetExtIter(iExtIter);
+
+    /* Print information output */
+    if (su2rank == MASTER_NODE) {
+      cout << "rank_t " << braidrank << " performes two " << deltat << "-steps from " << tstart << " to " << tstop << endl;
+    }
+
+    /* Take the first time step to tstart + deltat */
     app->driver->Run(app->iteration_container, app->output, app->integration_container,
                    app->geometry_container, app->solver_container, app->numerics_container,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
+    /* Trick SU2 with the next iExtIter */
+    iExtIter++;
+    app->config_container[ZONE_0]->SetExtIter(iExtIter);
+
+    /* Take the next time step to tstart + 2*deltat = tstop */
+    app->driver->Run(app->iteration_container, app->output, app->integration_container,
+                   app->geometry_container, app->solver_container, app->numerics_container,
+                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+                   app->interpolator_container, app->transfer_container);
 
     /* Grab the state vector from su2 */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -68,12 +79,12 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     }
 
     /* Grab information about the convergence of the inner iteration */
-    su2double su2Res_rms = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0);
-    if (su2rank == MASTER_NODE)
-    {
-      cout << "rank_t " << braidrank << " moved " << su2size << " processors from " << tstart << " to " << tstop
-           << " with Res_RMS " << su2Res_rms << endl;
-    }
+//    su2double su2Res_rms = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0);
+//    if (su2rank == MASTER_NODE)
+//    {
+//      cout << "rank_t " << braidrank << " moved " << su2size << " processors from " << tstart << " to " << tstop
+//           << " with Res_RMS " << su2Res_rms << endl;
+//    }
 
     return 0;
 }
@@ -194,13 +205,14 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
-    /* Compute l2norm of the solution list at time n */
+    /* Compute l2norm of the solution list at time n and n1 */
     su2double norm = 0.0;
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Loop over all variables */
         for (int iVar = 0; iVar < nVar; iVar++){
             norm += pow(u->node[iPoint]->GetSolution_time_n()[iVar], 2);
+            norm += pow(u->node[iPoint]->GetSolution_time_n1()[iVar], 2);
         }
     }
 
@@ -224,9 +236,11 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     su2double t;
     braid_AccessStatusGetT(astatus, &t);
 
+    /* --- Write Solution_time_n to restart file ---*/
+
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  which is used for naming the restart file */
     int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) - 1;
-    iExtIter = iExtIter + 10000*braidrank;   /* Make the identifier unique for each braid processor */
+//    iExtIter = iExtIter + 10000*braidrank;   /* Make the identifier unique for each braid processor */
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
     /* Check if xBraid tries to write to negative iExtIter */
     if (iExtIter < 0) {
@@ -247,6 +261,32 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
     app->output->SetResult_Files(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
+
+    /* --- Write Solution_time_n1 to restart file ---*/
+
+    /* Trick SU2 with the correct iExtIter = iExtIter - 1 */
+    iExtIter--;
+    app->config_container[ZONE_0]->SetExtIter(iExtIter);
+    /* Check if xBraid tries to write to negative iExtIter */
+    if (iExtIter < 0) {
+      if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
+      return 0;
+    }
+
+    /* Trick SU2 with the current solution for output */
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        su2double *uSolution = u->node[iPoint]->GetSolution_time_n1();
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(uSolution);
+    }
+
+    /* Compute the primitive Variables from the conservative ones */
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
+
+    /* Call the SU2 output routine */
+    if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
+    app->output->SetResult_Files(app->solver_container, app->geometry_container,
+                                 app->config_container, iExtIter, 1);
+
 
     return 0;
 }

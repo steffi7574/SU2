@@ -354,11 +354,18 @@ int main(int argc, char *argv[]) {
     app->transfer_container     = transfer_container;
 
     app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
-    app->ntime         = config_container[ZONE_0]->GetnExtIter();
     app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
-    app->tstop         = app->tstart + app->ntime * app->initialDT;
 
-    /* Check of xBraid's tstop is bigger that SU2's end time */
+    /* Set the number of xBraid time steps ( = ExtIter / 2) */
+    if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
+        app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
+    }
+    else {
+        app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
+    }
+
+    /* Check if xBraid's tstop is bigger that SU2's end time */
+    app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
     if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTime()){
         cout << "ERROR: tstop > Total_UnstTime ! \n";
         MPI_Finalize();

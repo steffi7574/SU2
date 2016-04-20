@@ -1,1 +1,1 @@
-mpirun -np 4 ../../bin/SU2_CFD lam_airfoil_shedding.cfg
+mpirun -np 8 ../../bin/SU2_CFD lam_airfoil_shedding.cfg
