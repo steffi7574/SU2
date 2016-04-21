@@ -366,8 +366,8 @@ int main(int argc, char *argv[]) {
 
     /* Check if xBraid's tstop is bigger that SU2's end time */
     app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
-    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTime()){
-        cout << "ERROR: tstop > Total_UnstTime ! \n";
+    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
+        cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
         MPI_Finalize();
         return (0);
     }
