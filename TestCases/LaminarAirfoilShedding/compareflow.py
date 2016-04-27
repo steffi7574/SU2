@@ -16,9 +16,9 @@ def getdata(filename):
 
   # parse the line of the file
   for i, line in enumerate(ufile):
-    if i == LINENUMBER-1:
-      ufileline = ufile.readline()   # read the line
-      linelist  = ufileline.split()  # split the string by separator " "
+    if i == LINENUMBER:
+      #ufileline = ufile.readline()   # read the line
+      linelist  = line.split()  # split the string by separator " "
     elif i > LINENUMBER -1:
       break
 
