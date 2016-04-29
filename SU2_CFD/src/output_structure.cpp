@@ -4067,7 +4067,7 @@ void COutput::SetConvHistory_Header(ofstream *ConvHist_file, CConfig *config) {
 }
 
 
-void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
+void COutput::SetConvHistory_Body(ostream *ConvHist_file,
                                      CGeometry ***geometry,
                                      CSolver ****solver_container,
                                      CConfig **config,

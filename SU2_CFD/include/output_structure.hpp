@@ -473,7 +473,7 @@ public:
 	 * \param[in] timeused - Current number of clock tick in the computation (related with total time).
 	 * \param[in] val_nZone - iZone index.
 	 */
-	void SetConvHistory_Body(ofstream *ConvHist_file, CGeometry ***geometry, CSolver ****solver_container, CConfig **config,
+	void SetConvHistory_Body(ostream *ConvHist_file, CGeometry ***geometry, CSolver ****solver_container, CConfig **config,
                               CIntegration ***integration, bool DualTime, su2double timeused, unsigned short val_iZone);
   
   /*!
