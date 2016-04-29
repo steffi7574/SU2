@@ -32,7 +32,7 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     su2double deltat = ( tstop - tstart ) / 2.0;
     app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
 
-    /* Trick the su2 solver with the right state vector (Solution, Solution_time_n and Solution_time_n1*/
+    /* Trick the su2 solver with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n[iPoint]);
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution_time_n[iPoint]);
@@ -54,6 +54,30 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
+    /* Grab the history values from SU2's master node. */
+    if (su2rank == MASTER_NODE){
+//      /* Grab the flow coefficient values for that time step and store it at time n-1 */
+      u->Total_CLift_n1       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CLift();
+      u->Total_CDrag_n1       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
+      u->Total_CSideForce_n1  = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CSideForce();
+      u->Total_CEff_n1        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CEff();
+      u->Total_CMx_n1         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMx();
+      u->Total_CMy_n1         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMy();
+      u->Total_CMz_n1         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMz();
+      u->Total_CFx_n1         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFx();
+      u->Total_CFy_n1         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFy();
+      u->Total_CFz_n1         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFz();
+//      /* Grab the flow residual at that time stap and store it at time n-1 */
+//      for (int iVar = 0; iVar < nVar; iVar++){
+//          cout << "HI " << iVar <<"\n";
+//         u->residual_flow_n1[iVar] = 3.2;
+//         cout << "HI" << u->residual_flow_n1[iVar] <<"\n";
+//         u->residual_flow_n1[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+//      }
+      u->residual_dens_n1 = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0);
+    }
+
+
     /* Trick SU2 with the next iExtIter */
     iExtIter++;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
@@ -64,7 +88,28 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
-    /* Grab the state vector from su2 */
+    /* Grab the history values from SU2's master node. */
+    if (su2rank == MASTER_NODE){
+      /* Grab the flow coefficient values for that time step and store it at time n-1 */
+      u->Total_CLift_n       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CLift();
+      u->Total_CDrag_n       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
+      u->Total_CSideForce_n  = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CSideForce();
+      u->Total_CEff_n        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CEff();
+      u->Total_CMx_n         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMx();
+      u->Total_CMy_n         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMy();
+      u->Total_CMz_n         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMz();
+      u->Total_CFx_n         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFx();
+      u->Total_CFy_n         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFy();
+      u->Total_CFz_n         = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFz();
+      /* Grab the flow residual at that time stap and store it at time n-1 */
+//      for (int iVar = 0; iVar < nVar; iVar++){
+//         u->residual_flow_n[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+//      }
+      u->residual_dens_n = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0);
+    }
+
+
+   /* Grab the solution vectors from su2 for both time steps */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
             u->Solution_time_n[iPoint][iVar]  = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar];
@@ -72,16 +117,7 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
         }
     }
 
-    // Grab the history values drag usw. GetTotalCLift AUF DEM MASTER_NODE von su2rank
 
-
-    /* Grab information about the convergence of the inner iteration */
-//    su2double su2Res_rms = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0);
-//    if (su2rank == MASTER_NODE)
-//    {
-//      cout << "rank_t " << braidrank << " moved " << su2size << " processors from " << tstart << " to " << tstop
-//           << " with Res_RMS " << su2Res_rms << endl;
-//    }
 
     return 0;
 }
@@ -107,14 +143,13 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     u->Solution_time_n  = new su2double*[nPoint];
     u->Solution_time_n1 = new su2double*[nPoint];
 
-    /* Initialize the solution vector with the free-stream state */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
 
         /* Allocate memory */
         u->Solution_time_n[iPoint]  = new su2double[nVar];
         u->Solution_time_n1[iPoint] = new su2double[nVar];
 
-        /* Set the freestream values */
+        /* Initialize the solution with the freestream values */
         if (compressible) {
 			u->Solution_time_n[iPoint][0]  = Density_Inf;
 			u->Solution_time_n1[iPoint][0] = Density_Inf;
@@ -125,7 +160,6 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 			u->Solution_time_n[iPoint][nVar-1]  = Density_Inf*Energy_Inf;
             u->Solution_time_n1[iPoint][nVar-1] = Density_Inf*Energy_Inf;
 		}
-
         if (incompressible || freesurface) {
 			u->Solution_time_n[iPoint][0]  = Pressure_Inf;
 			u->Solution_time_n1[iPoint][0] = Pressure_Inf;
@@ -135,6 +169,15 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 			}
 		}
 	}
+
+
+//    /* Initialize Flow residual */
+//    u->residual_flow_n  = new su2double[nVar];
+//    u->residual_flow_n1 = new su2double[nVar];
+//    for (int iVar = 0; iVar < nVar; iVar++){
+//       u->residual_flow_n[iVar]  = 0.0;
+//       u->residual_flow_n1[iVar] = 0.0;
+//    }
 
     /* Set the pointer */
     *u_ptr = u;
@@ -187,6 +230,10 @@ int my_Free( braid_App app, braid_Vector u ){
     /* Delete the list of Solutions */
     delete [] u->Solution_time_n;
     delete [] u->Solution_time_n1;
+
+//    /* Delete the flow residual */
+//    delete [] u->residual_flow_n;
+//    delete [] u->residual_flow_n1;
 
     /* Delete braid vector */
     delete u;
@@ -248,6 +295,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Retrieve xBraid time information from status object */
     su2double t;
@@ -280,6 +328,24 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     app->output->SetResult_Files(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
 
+    /* Write history values at time n to the app stream */
+    if (su2rank == MASTER_NODE){
+      *app->history_stream << iExtIter << " " << u->Total_CLift_n
+                                       << " " << u->Total_CDrag_n
+                                       << " " << u->Total_CSideForce_n
+                                       << " " << u->Total_CMx_n
+                                       << " " << u->Total_CMy_n
+                                       << " " << u->Total_CMz_n
+                                       << " " << u->Total_CFx_n
+                                       << " " << u->Total_CFy_n
+                                       << " " << u->Total_CFz_n
+                                       << " " << u->Total_CEff_n;
+//      for (int iVar = 0; iVar < nVar; iVar++){
+//        *app->history_stream << " " << u->residual_flow_n[iVar];
+//      }
+      *app->history_stream << " " << u->residual_dens_n;
+      *app->history_stream << "\n";
+    }
 
     /* --- Write Solution_time_n1 to restart file ---*/
 
@@ -306,9 +372,29 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     app->output->SetResult_Files(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
 
+
+    /* Write history values at time n-1 to the app stream */
+    if (su2rank == MASTER_NODE){
+      *app->history_stream << iExtIter << " " << u->Total_CLift_n1
+                                       << " " << u->Total_CDrag_n1
+                                       << " " << u->Total_CSideForce_n1
+                                       << " " << u->Total_CMx_n1
+                                       << " " << u->Total_CMy_n1
+                                       << " " << u->Total_CMz_n1
+                                       << " " << u->Total_CFx_n1
+                                       << " " << u->Total_CFy_n1
+                                       << " " << u->Total_CFz_n1
+                                       << " " << u->Total_CEff_n1;
+//      for (int iVar = 0; iVar < nVar; iVar++){
+//        *app->history_stream << " " << u->residual_flow_n1[iVar];
+//      }
+      *app->history_stream << " " << u->residual_dens_n1;
+      *app->history_stream << "\n";
+    }
+
     // sum up the drag value into app->sum
 
-    // write the drag value at n and n1 to file with the help of Max' AD toolbox?
+
 
     return 0;
 }

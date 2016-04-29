@@ -56,6 +56,9 @@ typedef struct _braid_App_struct
   CInterpolator ***interpolator_container;
   CTransfer ***transfer_container;
 
+  /* Output of history file */
+  stringstream* history_stream;
+
 } my_App;
 
 
@@ -65,11 +68,27 @@ typedef struct _braid_App_struct
   */
 typedef struct _braid_Vector_struct
 {
+    /* Solution lists for all grid points and for all nVars*/
     su2double **Solution_time_n;    /*!<\brief List of solutions at time n for each point in space. */
     su2double **Solution_time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
 
 
-   // save all the drag bla history values for n and n1
+    /* Flow solution coefficients for time n and time n1*/
+    su2double Total_CLift_n, Total_CLift_n1;
+    su2double Total_CDrag_n, Total_CDrag_n1;
+    su2double Total_CSideForce_n, Total_CSideForce_n1;
+    su2double Total_CEff_n, Total_CEff_n1;
+    su2double Total_CMx_n, Total_CMx_n1;
+    su2double Total_CMy_n, Total_CMy_n1;
+    su2double Total_CMz_n, Total_CMz_n1;
+    su2double Total_CFx_n, Total_CFx_n1;
+    su2double Total_CFy_n, Total_CFy_n1;
+    su2double Total_CFz_n, Total_CFz_n1;
+
+    /* Flow residual */
+    su2double residual_dens_n;
+    su2double residual_dens_n1;
+
 
 } my_Vector;
 
