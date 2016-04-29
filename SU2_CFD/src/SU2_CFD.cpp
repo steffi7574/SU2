@@ -339,6 +339,8 @@ int main(int argc, char *argv[]) {
     app->comm_t = comm_t;
     app->comm_x = comm_x;
 
+    // app->cdrag_sum = 0
+
     app->driver                 = driver;
     app->iteration_container    = iteration_container;
     app->output                 = output;
@@ -354,7 +356,11 @@ int main(int argc, char *argv[]) {
     app->transfer_container     = transfer_container;
 
     app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
+    app->initialstart  = config_container[ZONE_0]->GetCurrent_UnstTime();
     app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
+
+    stringstream stream;
+    app->history_stream = &stream;
 
     /* Set the number of xBraid time steps ( = ExtIter / 2) */
     if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
@@ -407,8 +413,23 @@ int main(int argc, char *argv[]) {
   #endif
 
 
+
     // RUN XBRAID
     braid_Drive(core);
+
+    cout << (*app->history_stream).str();
+
+
+    // MPI_ALLREDUCE auf app->aum
+    // app->sum = 0
+
+//    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving to braid's app
+
+//    std::ofstream out;
+//    ParallelFileIO::startFileWrite(out, name, myId, nProcs, 42);
+
+//    out << stringStream.str();
+//    ParallelFileIO::endFileWrite(out, myId, nProcs, 42);
 
 
     // Finalize XBraid
