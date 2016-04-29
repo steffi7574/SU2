@@ -65,7 +65,11 @@ typedef struct _braid_App_struct
   */
 typedef struct _braid_Vector_struct
 {
-  CVariable** node;	    /*!< \brief Vector which defines the flow variables for each problem. */
+    su2double **Solution_time_n;    /*!<\brief List of solutions at time n for each point in space. */
+    su2double **Solution_time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
+
+
+   // save all the drag bla history values for n and n1
 
 } my_Vector;
 
