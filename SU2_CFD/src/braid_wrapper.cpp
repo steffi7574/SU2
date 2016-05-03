@@ -9,6 +9,13 @@
 //#include <braid.hpp>
 #include <../include/braid_structure.hpp>
 
+std::vector<void*>* tape;
+
+//void setupTapeData() {
+//    tape = new std::vector<void*>();
+//    tape->resize(100);
+//}
+
 int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
     /* Grab rank of the current SU2 processor */

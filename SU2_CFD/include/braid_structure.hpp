@@ -92,6 +92,8 @@ typedef struct _braid_Vector_struct
 
 } my_Vector;
 
+void setupTapeData();
+
 /*!
  * \brief This function tells XBraid how to take a time step. It advances the vector u from tstart to tstop.
 */

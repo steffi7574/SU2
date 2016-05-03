@@ -33,6 +33,8 @@
 
 #include <ParallelFileIO.hpp>
 
+
+
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -426,6 +428,8 @@ int main(int argc, char *argv[]) {
   #endif
 
 
+
+//    setupTapeData();
 
     // RUN XBRAID
     braid_Drive(core);
