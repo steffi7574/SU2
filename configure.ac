@@ -143,6 +143,11 @@ AC_ARG_WITH(xbraid-lib,
 AC_ARG_WITH(xbraid-include,
    	AS_HELP_STRING([--with-xbraid-include[=ARG]], [XBraid include directory, ARG = path to braid.hpp]),
 	[with_xbraid_include=$withval], [with_xbraid_include="no"])
+
+AC_ARG_WITH(adtoolbox-include,
+   	AS_HELP_STRING([--with-adtoolbox-include[=ARG]], [AD Toolbox include directory, ARG = path to AD Toolbox FileIOBase.hpp]),
+	[with_adtoolbox_include=$withval], [with_adtoolbox_include="no"])
+
 # Check for the old  MPI option so that we can throw an error
 AC_ARG_WITH(MPI,
 AS_HELP_STRING(),
@@ -537,7 +542,7 @@ fi
 if test "$have_xbraid" != "no"
 then
 AM_CONDITIONAL(BUILD_XBRAID,true)
-XBRAID_CXX="-DHAVE_XBRAID -I"$with_xbraid_lib""
+XBRAID_CXX="-DHAVE_XBRAID -I"$with_xbraid_include""
 XBRAID_LD="$with_xbraid_lib"/$xbraidlib
 else
 AM_CONDITIONAL(BUILD_XBRAID,false)
@@ -548,6 +553,36 @@ AC_SUBST([XBRAID_CXX])
 AC_SUBST([XBRAID_LD])
 
 ##########################
+
+# check for lib
+adtoolboxheader=FileIOBase.hpp
+have_adtoolbox="no"
+
+
+# check for header
+if test "$with_adtoolbox_include" != "no"
+then
+	AC_CHECK_FILE([$with_adtoolbox_include/$adtoolboxheader],[have_adtoolbox='yes'],[have_adtoolbox='no'])
+	if test "$have_adtoolbox" == "no"
+	then
+		AC_MSG_ERROR([adtoolbox requested but header file not found.])
+	fi
+else
+	have_adtoolbox="no"
+fi
+
+if test "$have_adtoolbox" != "no"
+then
+AM_CONDITIONAL(BUILD_ADTOOLBOX,true)
+AD_TOOLBOX_CXX="-DHAVE_ADTOOLBOX -I"$with_adtoolbox_include""
+else
+AM_CONDITIONAL(BUILD_ADTOOLBOX,false)
+AD_TOOLBOX_CXX=
+fi
+AC_SUBST([AD_TOOLBOX_CXX])
+
+
+
 ###########################
 # Determine what versions of the code to build
 
@@ -604,6 +639,8 @@ AM_CONDITIONAL([BUILD_SOL],[test $build_SOL != "no"])
 AM_CONDITIONAL([BUILD_GEO],[test $build_GEO != "no"])
 
 ###########################
+
+CXXFLAGS="$CXXFLAGS -std=c++11"
 
 AC_OUTPUT(Makefile \
         externals/Makefile \

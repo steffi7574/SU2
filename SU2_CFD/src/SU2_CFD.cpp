@@ -31,6 +31,8 @@
 
 #include "../include/SU2_CFD.hpp"
 
+#include <ParallelFileIO.hpp>
+
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -45,6 +47,7 @@ int main(int argc, char *argv[]) {
   ofstream ConvHist_file;
   int rank = MASTER_NODE;
   int size = SINGLE_NODE;
+  int braidsize, braidrank;
 
   /*--- MPI initialization, and buffer setting ---*/
 
@@ -107,6 +110,9 @@ int main(int argc, char *argv[]) {
       braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
       /* Pass the spatial communicator to SU2 */
       SU2_MPI::comm = comm_x;
+      /* Get the rank and size of braid processor */
+      MPI_Comm_size(comm_t, &braidsize);
+      MPI_Comm_rank(comm_t, &braidrank);
   }
 
 
@@ -359,8 +365,15 @@ int main(int argc, char *argv[]) {
     app->initialstart  = config_container[ZONE_0]->GetCurrent_UnstTime();
     app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
 
-    stringstream stream;
-    app->history_stream = &stream;
+    /* Prepare history file for output of CDrag, CLift etc. */
+    stringstream histstream;
+//    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
+//    ParallelFileIO fileIO(braidrank, size, 42);
+//    fileIO.prepareStream(histstream);
+    histstream.precision(8);
+    app->history_stream = &histstream;
+    if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
+
 
     /* Set the number of xBraid time steps ( = ExtIter / 2) */
     if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
@@ -417,19 +430,19 @@ int main(int argc, char *argv[]) {
     // RUN XBRAID
     braid_Drive(core);
 
-    cout << (*app->history_stream).str();
 
 
     // MPI_ALLREDUCE auf app->aum
     // app->sum = 0
 
-//    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving to braid's app
 
-//    std::ofstream out;
-//    ParallelFileIO::startFileWrite(out, name, myId, nProcs, 42);
+    std::ofstream out;
+    ParallelFileIO::startFileWrite(out, "history_test.dat", braidrank, braidsize, 42, comm_t);
 
-//    out << stringStream.str();
-//    ParallelFileIO::endFileWrite(out, myId, nProcs, 42);
+    cout << (*app->history_stream).str();
+    out << (*app->history_stream).str();
+
+    ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
 
 
     // Finalize XBraid

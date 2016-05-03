@@ -647,6 +647,9 @@ REVERSE_LIBS
 REVERSE_CXX
 DIRECTDIFF_LIBS
 DIRECTDIFF_CXX
+AD_TOOLBOX_CXX
+BUILD_ADTOOLBOX_FALSE
+BUILD_ADTOOLBOX_TRUE
 XBRAID_LD
 XBRAID_CXX
 BUILD_XBRAID_FALSE
@@ -831,6 +834,7 @@ enable_complex
 enable_normal
 with_xbraid_lib
 with_xbraid_include
+with_adtoolbox_include
 with_MPI
 enable_tecio
 enable_metis
@@ -1526,6 +1530,9 @@ Optional Packages:
   --with-xbraid-lib=ARG   XBraid library directory, ARG = path to libbraid.a
   --with-xbraid-include=ARG
                           XBraid include directory, ARG = path to braid.hpp
+  --with-adtoolbox-include=ARG
+                          AD Toolbox include directory, ARG = path to AD
+                          Toolbox FileIOBase.hpp
 
   --with-metis-cppflags="-D_FILE_OFFSET_BITS=64 -DNDEBUG -DNDEBUG2 -DHAVE_EXECINFO_H -DHAVE_GETLINE"
                           Specific METIS C Preprocessor flags to use
@@ -5800,6 +5807,16 @@ else
   with_xbraid_include="no"
 fi
 
+
+
+# Check whether --with-adtoolbox-include was given.
+if test "${with_adtoolbox_include+set}" = set; then :
+  withval=$with_adtoolbox_include; with_adtoolbox_include=$withval
+else
+  with_adtoolbox_include="no"
+fi
+
+
 # Check for the old  MPI option so that we can throw an error
 
 # Check whether --with-MPI was given.
@@ -6938,7 +6955,7 @@ else
   BUILD_XBRAID_FALSE=
 fi
 
-XBRAID_CXX="-DHAVE_XBRAID -I"$with_xbraid_lib""
+XBRAID_CXX="-DHAVE_XBRAID -I"$with_xbraid_include""
 XBRAID_LD="$with_xbraid_lib"/$xbraidlib
 else
  if false; then
@@ -6956,6 +6973,72 @@ fi
 
 
 ##########################
+
+# check for lib
+adtoolboxheader=FileIOBase.hpp
+have_adtoolbox="no"
+
+
+# check for header
+if test "$with_adtoolbox_include" != "no"
+then
+	as_ac_File=`$as_echo "ac_cv_file_$with_adtoolbox_include/$adtoolboxheader" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $with_adtoolbox_include/$adtoolboxheader" >&5
+$as_echo_n "checking for $with_adtoolbox_include/$adtoolboxheader... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "$with_adtoolbox_include/$adtoolboxheader"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
+  have_adtoolbox='yes'
+else
+  have_adtoolbox='no'
+fi
+
+	if test "$have_adtoolbox" == "no"
+	then
+		as_fn_error $? "adtoolbox requested but header file not found." "$LINENO" 5
+	fi
+else
+	have_adtoolbox="no"
+fi
+
+if test "$have_adtoolbox" != "no"
+then
+ if true; then
+  BUILD_ADTOOLBOX_TRUE=
+  BUILD_ADTOOLBOX_FALSE='#'
+else
+  BUILD_ADTOOLBOX_TRUE='#'
+  BUILD_ADTOOLBOX_FALSE=
+fi
+
+AD_TOOLBOX_CXX="-DHAVE_ADTOOLBOX -I"$with_adtoolbox_include""
+else
+ if false; then
+  BUILD_ADTOOLBOX_TRUE=
+  BUILD_ADTOOLBOX_FALSE='#'
+else
+  BUILD_ADTOOLBOX_TRUE='#'
+  BUILD_ADTOOLBOX_FALSE=
+fi
+
+AD_TOOLBOX_CXX=
+fi
+
+
+
+
 ###########################
 # Determine what versions of the code to build
 
@@ -7198,6 +7281,8 @@ fi
 
 
 ###########################
+
+CXXFLAGS="$CXXFLAGS -std=c++11"
 
 ac_config_files="$ac_config_files Makefile externals/Makefile Common/lib/Makefile SU2_CFD/obj/Makefile SU2_DOT/obj/Makefile SU2_MSH/obj/Makefile SU2_DEF/obj/Makefile SU2_SOL/obj/Makefile SU2_GEO/obj/Makefile SU2_PY/Makefile"
 
@@ -7452,6 +7537,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_XBRAID_TRUE}" && test -z "${BUILD_XBRAID_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_XBRAID\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_ADTOOLBOX_TRUE}" && test -z "${BUILD_ADTOOLBOX_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_ADTOOLBOX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_ADTOOLBOX_TRUE}" && test -z "${BUILD_ADTOOLBOX_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_ADTOOLBOX\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_NORMAL_TRUE}" && test -z "${BUILD_NORMAL_FALSE}"; then
