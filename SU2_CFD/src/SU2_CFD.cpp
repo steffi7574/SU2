@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
   int rank = MASTER_NODE;
   int size = SINGLE_NODE;
   int braidsize, braidrank;
+  int su2size, su2rank;
 
   /*--- MPI initialization, and buffer setting ---*/
 
@@ -112,9 +113,11 @@ int main(int argc, char *argv[]) {
       braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
       /* Pass the spatial communicator to SU2 */
       SU2_MPI::comm = comm_x;
-      /* Get the rank and size of braid processor */
+      /* Get the rank and size of braid and su2 processor */
       MPI_Comm_size(comm_t, &braidsize);
       MPI_Comm_rank(comm_t, &braidrank);
+      MPI_Comm_size(comm_x, &su2size);
+      MPI_Comm_rank(comm_x, &su2rank);
   }
 
 
@@ -369,12 +372,10 @@ int main(int argc, char *argv[]) {
 
     /* Prepare history file for output of CDrag, CLift etc. */
     stringstream histstream;
-//    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
-//    ParallelFileIO fileIO(braidrank, size, 42);
-//    fileIO.prepareStream(histstream);
     histstream.precision(8);
     app->history_stream = &histstream;
     if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
+
 
 
     /* Set the number of xBraid time steps ( = ExtIter / 2) */
@@ -392,6 +393,9 @@ int main(int argc, char *argv[]) {
         MPI_Finalize();
         return (0);
     }
+
+    /* Set up the global index count */
+    app->globalIndexCount = 0;
 
     /* Initialize xBraid */
     braid_Init(comm, comm_t, app->tstart, app->tstop, app->ntime, app,
@@ -414,6 +418,8 @@ int main(int argc, char *argv[]) {
        braid_SetFMG( core );
     }
 
+    /* Set up the tapes for storing xBraid actions and corresponding input and output indecees */
+    setupBraidActionTape();
 
 
     /* Run parallel xBraid Solver */
@@ -428,32 +434,81 @@ int main(int argc, char *argv[]) {
   #endif
 
 
+    /* Reset the global index count */
+    app->globalIndexCount = 0;
 
-//    setupTapeData();
+
+
 
     // RUN XBRAID
     braid_Drive(core);
-
-
 
     // MPI_ALLREDUCE auf app->aum
     // app->sum = 0
 
 
+    /* Write the history data to a file */
     std::ofstream out;
     ParallelFileIO::startFileWrite(out, "history_test.dat", braidrank, braidsize, 42, comm_t);
-
-    cout << (*app->history_stream).str();
     out << (*app->history_stream).str();
-
     ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
 
+
+    /* --- Write the BraidAction graph to a file --- */
+    if (su2rank == MASTER_NODE) {
+
+      /* Open file for Action graph output */
+      ostringstream filename;
+      filename << "graph" << braidrank << ".gv";
+      ofstream graphfile;
+      graphfile.open(filename.str());
+      /* Write the header */
+      graphfile << "digraph G { \n";
+      graphfile << "labelloc = \"t\"\n label = \"braidrank " << braidrank << "\"\n";
+
+      /* Evaluate Braid's action tape and write it to the .gv file */
+      cout << "Braidrank " << braidrank << " Size of Action Tape: " << braidAction_tape->size() <<"\n";
+      for (std::vector<BraidAction_t>::iterator action = braidAction_tape->begin(); action!=braidAction_tape->end(); ++action) {
+          switch ( action->braidCall ) {
+            case BraidCall_t::PHI :
+                        graphfile << action->inIndex->back() << " -> " << action->outIndex << " [label=\"Phi\"];\n";
+                        break;
+            case BraidCall_t::INIT :
+                        graphfile << action->outIndex << " [shape=box, label=\"Init " << action->outIndex << "\"];\n";
+                        break;
+            case BraidCall_t::CLONE :
+                        graphfile << action->inIndex->back() << " -> " << action->outIndex << " [label=\"Clone\"];\n";
+                        break;
+            case BraidCall_t::FREE :
+                        graphfile << action->inIndex->back() << " [label=\"Free " << action->inIndex->back() << "\"];\n";
+                        break;
+            case BraidCall_t::SUM :
+                        for (std::vector<int>::iterator inIndex = action->inIndex->begin(); inIndex!=action->inIndex->end(); ++inIndex){
+                            graphfile << *inIndex << " -> " << action->outIndex << " [label=\"Sum\"];\n";
+                        }
+                        break;
+            case BraidCall_t::BUFPACK :
+                        graphfile << action->inIndex->back() << " [shape=invtriangle, label=\"BufPack " << action->inIndex->back() << "\"];\n";
+                        break;
+            case BraidCall_t::BUFUNPACK :
+                        graphfile << action->outIndex << " [shape=triangle, label=\"BufUnpack " << action->outIndex << "\"];\n";
+                        break;
+          }
+      }
+      /* Close the Action graph output file */
+      graphfile << "}";
+      graphfile.close();
+    }
 
     // Finalize XBraid
     braid_Destroy(core);
 
+
+
   }
   else{ /* --- Perform a time serial run --- */
+
+
 
 
     /*--- Main external loop of the solver. Within this loop, each iteration ---*/

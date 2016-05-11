@@ -59,6 +59,9 @@ typedef struct _braid_App_struct
   /* Output of history file */
   stringstream* history_stream;
 
+  /* Global index of the braid vectors */
+  int globalIndexCount;
+
 } my_App;
 
 
@@ -89,10 +92,44 @@ typedef struct _braid_Vector_struct
     su2double residual_dens_n;
     su2double residual_dens_n1;
 
+    int index;
 
 } my_Vector;
 
-void setupTapeData();
+
+/*!
+ * \brief Enumerator for all xBraid actions that need an adjoint action
+ */
+
+
+enum class BraidCall_t { PHI       = 1,
+                         INIT      = 2,
+                         CLONE     = 3,
+                         FREE      = 4,
+                         SUM       = 5,
+                         BUFPACK   = 6,
+                         BUFUNPACK = 7,
+                       };
+
+struct BraidAction_t {
+
+    BraidCall_t       braidCall;
+    std::vector<int>* inIndex;
+    int               outIndex;
+
+    /* Constructor */
+    BraidAction_t(){
+        inIndex = new std::vector<int>;
+    }
+
+};
+
+
+/*! \brief Tape that stores Braid's actions */
+extern std::vector<BraidAction_t>* braidAction_tape;
+
+/*! \brief Sets up the Tape for storing Braid's actions */
+void setupBraidActionTape();
 
 /*!
  * \brief This function tells XBraid how to take a time step. It advances the vector u from tstart to tstop.

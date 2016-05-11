@@ -9,14 +9,16 @@
 //#include <braid.hpp>
 #include <../include/braid_structure.hpp>
 
-std::vector<void*>* tape;
+std::vector<BraidAction_t>* braidAction_tape;
 
-//void setupTapeData() {
-//    tape = new std::vector<void*>();
-//    tape->resize(100);
-//}
+void setupBraidActionTape(){
+
+    braidAction_tape= new std::vector<BraidAction_t>();
+
+}
 
 int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
+
 
     /* Grab rank of the current SU2 processor */
     int su2rank, su2size;
@@ -124,13 +126,25 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
         }
     }
 
-
+    /* Update the index of u and set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::PHI;
+    action->inIndex->push_back(u->index);
+    u->index = ++app->globalIndexCount;
+    action->outIndex = u->index;
+    braidAction_tape->push_back(*action);
+    delete action;
 
     return 0;
 }
 
 
 int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
+
+    /* Grab rank of the current SU2 processor */
+    int su2rank, braidrank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_rank(app->comm_t, &braidrank);
 
     /* Grab variables from the app */
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -177,23 +191,28 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 		}
 	}
 
-
-//    /* Initialize Flow residual */
-//    u->residual_flow_n  = new su2double[nVar];
-//    u->residual_flow_n1 = new su2double[nVar];
-//    for (int iVar = 0; iVar < nVar; iVar++){
-//       u->residual_flow_n[iVar]  = 0.0;
-//       u->residual_flow_n1[iVar] = 0.0;
-//    }
+    /* Set the global index */
+    u->index = ++app->globalIndexCount;
 
     /* Set the pointer */
     *u_ptr = u;
 
+    /* Set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::INIT;
+    action->outIndex = u->index;
+    braidAction_tape->push_back(*action);
+    delete action;
 
     return 0;
 }
 
 int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
+
+    /* Grab rank of the current SU2 processor */
+    int su2rank, braidrank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_rank(app->comm_t, &braidrank);
 
     /* Grab variables from the app */
     int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -217,13 +236,36 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
         }
     }
 
+    /* Set the global index */
+    v->index = ++app->globalIndexCount;
+
     /* Set the pointer */
     *v_ptr = v;
+
+    /* Set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::CLONE;
+    action->inIndex->push_back(u->index);
+    action->outIndex = v->index;
+    braidAction_tape->push_back(*action);
+    delete action;
 
     return 0;
 }
 
 int my_Free( braid_App app, braid_Vector u ){
+
+    /* Grab rank of the current SU2 processor */
+    int su2rank, braidrank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_rank(app->comm_t, &braidrank);
+
+    /* Set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::FREE;
+    action->inIndex->push_back(u->index);
+    braidAction_tape->push_back(*action);
+    delete action;
 
     /* Grab variables from the app */
     int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -238,10 +280,6 @@ int my_Free( braid_App app, braid_Vector u ){
     delete [] u->Solution_time_n;
     delete [] u->Solution_time_n1;
 
-//    /* Delete the flow residual */
-//    delete [] u->residual_flow_n;
-//    delete [] u->residual_flow_n1;
-
     /* Delete braid vector */
     delete u;
 
@@ -250,6 +288,11 @@ int my_Free( braid_App app, braid_Vector u ){
 
 int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
     braid_Vector y ){
+
+    /* Grab rank of the current SU2 processor */
+    int su2rank, braidrank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_rank(app->comm_t, &braidrank);
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -266,6 +309,16 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
                                               + beta  * y->Solution_time_n1[iPoint][iVar];
         }
     }
+
+    /* Set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::SUM;
+    action->inIndex->push_back(x->index);
+    action->inIndex->push_back(y->index);
+    y->index = ++app->globalIndexCount;
+    action->outIndex = y->index;
+    braidAction_tape->push_back(*action);
+    delete action;
 
     return 0;
 }
@@ -420,6 +473,11 @@ int my_BufSize ( braid_App app, int *size_ptr ){
 
 int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr ){
 
+    /* Grab rank of the current SU2 processor */
+    int su2rank, braidrank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_rank(app->comm_t, &braidrank);
+
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
@@ -441,10 +499,22 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
     /* Compute size of buffer */
     *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
 
+    /* Set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::BUFPACK;
+    action->inIndex->push_back(u->index);
+    braidAction_tape->push_back(*action);
+    delete action;
+
     return 0;
 }
 
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
+
+    /* Grab rank of the current SU2 processor */
+    int su2rank, braidrank;
+    MPI_Comm_rank(app->comm_x, &su2rank);
+    MPI_Comm_rank(app->comm_t, &braidrank);
 
     /* Grab variables from the app */
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -475,8 +545,18 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
         }
     }
 
+    u->index = ++app->globalIndexCount;
+
+    /* Set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::BUFUNPACK;
+    action->outIndex = u->index;
+    braidAction_tape->push_back(*action);
+    delete action;
+
     /* Set the pointer */
     *u_ptr = u;
 
     return 0;
 }
+
