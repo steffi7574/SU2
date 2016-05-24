@@ -1344,6 +1344,9 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /*--- Options concerning the time-parallel xBraid solver ---*/
 
   /* DESCRIPTION: Number of processors for time parallelization */
+  addUnsignedShortOption("BRAID_RUN", Braid_Run, 0);
+
+  /* DESCRIPTION: Number of processors for time parallelization */
   addUnsignedLongOption("BRAID_NPROC_TIME", Braid_NProc_Time, 1);
 
   /* DESCRIPTION: Maximum Number of XBRAID levels \ingroup Config */

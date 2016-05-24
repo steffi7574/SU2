@@ -102,19 +102,21 @@ int main(int argc, char *argv[]) {
 
   /* --- Preprocess the processor grid --- */
 
-  if ( size % config->GetBraid_NProc_Time() != 0 ){
-      if( rank == 0 ) cout << "Error: px*pt does not equal the number of processors!\n";
-      MPI_Finalize();
-      return (0);
-  } else {
-      /* Split communicators for the time and space dimensions */
-      int px = size / config->GetBraid_NProc_Time();
-      braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
-      /* Pass the spatial communicator to SU2 */
-      SU2_MPI::comm = comm_x;
-      /* Get the rank and size of braid processor */
-      MPI_Comm_size(comm_t, &braidsize);
-      MPI_Comm_rank(comm_t, &braidrank);
+  if ( config->GetBraid_Run() ){
+    if ( size % config->GetBraid_NProc_Time() != 0 ){
+        if( rank == 0 ) cout << "Error: px*pt does not equal the number of processors!\n";
+        MPI_Finalize();
+        return (0);
+    } else {
+        /* Split communicators for the time and space dimensions */
+        int px = size / config->GetBraid_NProc_Time();
+        braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
+        /* Pass the spatial communicator to SU2 */
+        SU2_MPI::comm = comm_x;
+        /* Get the rank and size of braid processor */
+        MPI_Comm_size(comm_t, &braidsize);
+        MPI_Comm_rank(comm_t, &braidrank);
+    }
   }
 
 
@@ -330,8 +332,9 @@ int main(int argc, char *argv[]) {
   	for (iZone = 0; iZone < nZone; iZone++)
   	  iteration_container[iZone]->Preprocess(output, integration_container, geometry_container, solver_container, numerics_container, config_container, surface_movement, grid_movement, FFDBox, iZone);
 
-  if ( config_container[ZONE_0]->GetBraid_NProc_Time() > 1 ){/* --- Perform an xBraid Run ! */
-
+  /* Check whether xBraid or time-stepping simulation */
+  if ( config_container[ZONE_0]->GetBraid_Run() ){
+    /* xBraid simulation*/
 
     if (rank == MASTER_NODE)
       cout << endl <<"------------------------------ xBraid Preprocessing -----------------------------" << endl;
@@ -453,7 +456,8 @@ int main(int argc, char *argv[]) {
     braid_Destroy(core);
 
   }
-  else{ /* --- Perform a time serial run --- */
+  else{
+    /* --- Perform a time serial run --- */
 
 
     /*--- Main external loop of the solver. Within this loop, each iteration ---*/

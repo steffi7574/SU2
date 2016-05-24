@@ -538,6 +538,7 @@ private:
   Plot_Section_Forces,       /*!< \brief Write sectional forces for specified markers. */
 	Wrt_1D_Output;                /*!< \brief Write average stagnation pressure specified markers. */
   unsigned short Console_Output_Verb;  /*!< \brief Level of verbosity for console output */
+  unsigned short Braid_Run;         /*!< \brief Boolean that determines, whether a xBraid or a time-stepping simulation is performed */
   unsigned long Braid_NProc_Time;   /*!< \brief Number of processors for time parallelization (1 is time serial, i.e. no xbraid) */
   unsigned long Braid_Max_Level;   /*!< \brief Maximum number of XBRAID levels (one is serial time computation) */
   unsigned short Braid_Min_Coarse; /*!< \brief Minimum possible coarse grid size  */
@@ -5290,6 +5291,12 @@ public:
    * \return Verbosity level for the console output.
    */
   unsigned short GetConsole_Output_Verb(void);
+
+  /*!
+   * \brief Get the boolean that determines whether a xBraid (1) or a time-stepping simulation (0) is performed.
+   * \return Boolean that determines whether a xBraid (1) or a time-stepping simulation (0) is performed.
+   */
+  unsigned short GetBraid_Run(void);
 
   /*!
    * \brief Get the number of processors for time parallelization.
