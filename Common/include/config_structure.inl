@@ -1152,6 +1152,10 @@ inline long CConfig::GetBraid_CFactor0(void) { return Braid_CFactor0; }
 
 inline unsigned long CConfig::GetBraid_Max_Iter(void) { return Braid_Max_Iter; }
 
+inline unsigned long CConfig::GetBraid_Skip(void) { return Braid_Skip; }
+
+inline unsigned long CConfig::GetBraid_Warm_Restart(void) { return Braid_Warm_Restart; }
+
 inline unsigned short CConfig::GetBraid_FMG(void) { return Braid_FMG; }
 
 inline unsigned short CConfig::GetBraid_Print_Level(void) { return Braid_Print_Level; }

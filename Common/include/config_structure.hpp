@@ -552,7 +552,9 @@ private:
   unsigned short Braid_FMG;         /*!< \brief Boolean, if 1, do FMG cycle. If 0, use a V cycle */
   unsigned short Braid_Print_Level; /*!< \brief Level of XBraid printing to the screen */
   unsigned short Braid_Access_Level; /*!< \brief Frequency of calls to access routine: 1 is for only after simulation */
-	su2double Gamma,			/*!< \brief Ratio of specific heats of the gas. */
+  unsigned short Braid_Skip; /*!< \brief Boolean, whether to skip all work on first down cycle */
+  unsigned short Braid_Warm_Restart; /*!< \brief Whether to use the warm_restart utility. Make sure to turn skip off if using warm_restarts! */
+    su2double Gamma,			/*!< \brief Ratio of specific heats of the gas. */
 	Bulk_Modulus,			/*!< \brief Value of the bulk modulus for incompressible flows. */
 	ArtComp_Factor,			/*!< \brief Value of the artificial compresibility factor for incompressible flows. */
 	Gas_Constant,     /*!< \brief Specific gas constant. */
@@ -5356,6 +5358,18 @@ public:
    * \return Maximum number of xBraid iterations
    */
   unsigned long GetBraid_Max_Iter(void);
+
+  /*!
+   * \brief Get the Boolean that determines if XBRAID skips all work on in the down cycle
+   * \return Boolean: if 1: skip all work on the down cycle
+   */
+  unsigned long GetBraid_Skip(void);
+
+  /*!
+   * \brief Get the Boolean that determines whether XBRAID runs in Warm-restart mode or not
+   * \return Boolean: if 1: do warm-restart iterations
+   */
+  unsigned long GetBraid_Warm_Restart(void);
 
   /*!
    * \brief Get the Boolean, that determines if XBRAID performes FMG cycles (1) or V cycles (0)

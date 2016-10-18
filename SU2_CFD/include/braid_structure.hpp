@@ -36,9 +36,16 @@ typedef struct _braid_App_struct
   su2double initialstart;   /* Initial starting time USED FOR TESTING ONLY */
 
 
+  /* Information about communication */
   MPI_Comm comm;        /* global communicator */
   MPI_Comm comm_t;      /* temporal communicator */
   MPI_Comm comm_x;      /* spatial communicator */
+
+
+  /* Information about the braid grid */
+  int ilower;              // smallest time index that belongs to this processor
+  int iupper;              // largest time index that belongs to this processor
+
 
   /* Add the SU2 containers for SU2_CFD computations */
   /* TODO: Add only ZONE_0 ! (*_container[ZONE_0]) */
@@ -58,6 +65,9 @@ typedef struct _braid_App_struct
 
   /* Output of history file */
   stringstream* history_stream;
+
+  /* Information for optimization */
+  su2double primal_norm;
 
 } my_App;
 
@@ -97,7 +107,12 @@ void setupTapeData();
 /*!
  * \brief This function tells XBraid how to take a time step. It advances the vector u from tstart to tstop.
 */
-int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status );
+int my_Step( braid_App        app,
+             braid_Vector     ustop,
+             braid_Vector     fstop,
+             braid_Vector     u,
+             braid_StepStatus status );
+//int my_( braid_App app, braid_Vector u, braid_PhiStatus status );
 
 /*!
  *\brief Tells XBraid, how to initialize a vector at time t
@@ -133,15 +148,14 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus );
 /*!
  *\brief XBraid function that computes the upper bound of the size of a solution vector.
  */
-int my_BufSize ( braid_App app, int *size_ptr );
+int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus );
 
 /*!
  *\brief XBraid function that packs a vector into a void * buffer for MPI communication
  */
-int my_BufPack( braid_App app, braid_Vector u, void *buffer,
-                braid_Int *size_ptr );
+int my_BufPack(braid_App app, braid_Vector u, void *buffer, braid_BufferStatus bstatus);
 
 /*!
  *\brief XBraid function that unpacks a void * buffer into a vector
  */
-int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr );
+int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_BufferStatus bstatus  );

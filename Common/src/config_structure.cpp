@@ -1376,6 +1376,12 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /* DESCRIPTION: Maximum number of iterations */
   addUnsignedLongOption("BRAID_MAX_ITER", Braid_Max_Iter, 100);
 
+  /* DESCRIPTION: Maximum number of iterations */
+  addUnsignedShortOption("BRAID_SKIP", Braid_Skip, 0);
+
+  /* DESCRIPTION: Maximum number of iterations */
+  addUnsignedShortOption("BRAID_WARM_RESTART", Braid_Warm_Restart, 1);
+
   /* DESCRIPTION: Boolean, if 1, do FMG cycle. If 0, use a V cycle */
   addUnsignedShortOption("BRAID_FMG", Braid_FMG, 0);
 

@@ -16,7 +16,12 @@ std::vector<void*>* tape;
 //    tape->resize(100);
 //}
 
-int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
+int my_Step( braid_App        app,
+             braid_Vector     ustop,
+             braid_Vector     fstop,
+             braid_Vector     u,
+             braid_StepStatus status ){
+//int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
     /* Grab rank of the current SU2 processor */
     int su2rank, su2size;
@@ -33,7 +38,8 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
     /* Grab status of current time step from xBraid */
     su2double tstart;
     su2double tstop;
-    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
+    braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
+//    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
     /* Trick SU2 with xBraid's DeltaT / 2 */
     su2double deltat = ( tstop - tstart ) / 2.0;
@@ -124,6 +130,8 @@ int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
         }
     }
 
+    /* Tell XBraid no refinement */
+    braid_StepStatusSetRFactor(status, 1);
 
 
     return 0;
@@ -406,7 +414,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     return 0;
 }
 
-int my_BufSize ( braid_App app, int *size_ptr ){
+int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -418,7 +426,7 @@ int my_BufSize ( braid_App app, int *size_ptr ){
     return 0;
 }
 
-int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr ){
+int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
@@ -438,13 +446,15 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_Int *size_ptr
         }
     }
 
-    /* Compute size of buffer */
-    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
+    /* Set the size of the buffer */
+    int size = 2.0 * nPoint * nVar * sizeof(su2double);
+    braid_BufferStatusSetSize( bstatus, size );
+
 
     return 0;
 }
 
-int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr ){
+int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
