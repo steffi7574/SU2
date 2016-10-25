@@ -1388,6 +1388,9 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /* DESCRIPTION: Level of XBraid printing to the screen */
   addUnsignedShortOption("BRAID_PRINT_LEVEL", Braid_Print_Level, 1);
 
+  /* DESCRIPTION: Level of XBraid Action verbosity*/
+  addUnsignedShortOption("BRAID_ACTION_VERB", Braid_Action_Verb, 0);
+
   /* DESCRIPTION: Frequency of calls to access routine: 1 is for only after simulation */
   addUnsignedShortOption("BRAID_ACCESS_LEVEL", Braid_Access_Level, 1);
 

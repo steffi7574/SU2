@@ -1160,6 +1160,8 @@ inline unsigned short CConfig::GetBraid_FMG(void) { return Braid_FMG; }
 
 inline unsigned short CConfig::GetBraid_Print_Level(void) { return Braid_Print_Level; }
 
+inline unsigned short CConfig::GetBraid_Action_Verb(void) { return Braid_Action_Verb; }
+
 inline unsigned short CConfig::GetBraid_Access_Level(void) { return Braid_Access_Level; }
 
 inline unsigned short CConfig::GetnIterFSI(void) { return nIterFSI; }

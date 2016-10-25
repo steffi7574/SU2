@@ -554,6 +554,7 @@ private:
   unsigned short Braid_Access_Level; /*!< \brief Frequency of calls to access routine: 1 is for only after simulation */
   unsigned short Braid_Skip; /*!< \brief Boolean, whether to skip all work on first down cycle */
   unsigned short Braid_Warm_Restart; /*!< \brief Whether to use the warm_restart utility. Make sure to turn skip off if using warm_restarts! */
+  unsigned short Braid_Action_Verb; /*!< \brief Verbosity of the xBraid actions. */
     su2double Gamma,			/*!< \brief Ratio of specific heats of the gas. */
 	Bulk_Modulus,			/*!< \brief Value of the bulk modulus for incompressible flows. */
 	ArtComp_Factor,			/*!< \brief Value of the artificial compresibility factor for incompressible flows. */
@@ -5382,6 +5383,12 @@ public:
    * \return Level of XBRAID Printing
    */
   unsigned short GetBraid_Print_Level(void);
+
+  /*!
+   * \brief Get the level of Verbosity of the XBraid Actions (0=none, 1=medium)
+   * \return Level of XBRAID Printing
+   */
+  unsigned short GetBraid_Action_Verb(void);
 
   /*!
    * \brief Get the frequency of calls to the access routine: 1 is for only after simulation

@@ -412,6 +412,7 @@ int main(int argc, char *argv[]) {
     }
     braid_SetAbsTol( core, config_container[ZONE_0]->GetBraid_Tol() );
     braid_SetCFactor( core, -1, config_container[ZONE_0]->GetBraid_CFactor() );
+    braid_SetMinCoarse( core, config_container[ZONE_0]->GetBraid_Min_Coarse() );
     braid_SetMaxIter( core, config_container[ZONE_0]->GetBraid_Max_Iter() );
     if (config_container[ZONE_0]->GetBraid_FMG() )
     {
