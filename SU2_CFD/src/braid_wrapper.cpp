@@ -25,11 +25,6 @@ int my_Step( braid_App        app,
 //int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
     /* Grab rank of the current SU2 processor */
-    int su2rank, su2size;
-    int braidrank;
-    MPI_Comm_rank(app->comm_x, &su2rank);
-    MPI_Comm_size(app->comm_x, &su2size);
-    MPI_Comm_rank(app->comm_t, &braidrank);
 
 
     /* Grab variables from the app */
@@ -58,10 +53,7 @@ int my_Step( braid_App        app,
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Print information output */
-    if (su2rank == MASTER_NODE) {
-//      cout << "rank_t " << braidrank << " performes two " << deltat << "-steps from " << tstart << " to " << tstop << endl;
-      cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", braidrank, deltat, tstart, tstop);
-    }
+    if (app->su2rank == MASTER_NODE) cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", app->braidrank, deltat, tstart, tstop);
 
     /* Take the first time step to tstart + deltat */
 //    app->driver->Run(app->iteration_container, app->output, app->integration_container,
@@ -70,7 +62,7 @@ int my_Step( braid_App        app,
 //                   app->interpolator_container, app->transfer_container);
 
     /* Grab the history values from SU2's master node. */
-    if (su2rank == MASTER_NODE){
+    if (app->su2rank == MASTER_NODE){
 //      /* Grab the flow coefficient values for that time step and store it at time n-1 */
       u->Total_CLift_n1       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CLift();
       u->Total_CDrag_n1       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
@@ -104,7 +96,7 @@ int my_Step( braid_App        app,
 //                   app->interpolator_container, app->transfer_container);
 
     /* Grab the history values from SU2's master node. */
-    if (su2rank == MASTER_NODE){
+    if (app->su2rank == MASTER_NODE){
       /* Grab the flow coefficient values for that time step and store it at time n-1 */
       u->Total_CLift_n       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CLift();
       u->Total_CDrag_n       = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
@@ -154,8 +146,10 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     bool incompressible = (app->config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
     bool freesurface = (app->config_container[ZONE_0]->GetKind_Regime() == FREESURFACE);
 
-    /* Print information output */
-//    cout << "Inits at time " << t << endl;
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      /* Print information output */
+      if (app->su2rank == MASTER_NODE) cout << format("My_Init at time %1.4f\n", t);
+    }
 
     /* Allocate memory */
     my_Vector* u;
@@ -214,8 +208,10 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
     CConfig *config = app->config_container[ZONE_0];
 
-    /* Print information output */
-//      cout << "Clone"<< endl;
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      /* Print information output */
+      if (app->su2rank == MASTER_NODE) cout << format("My_Clone\n");
+    }
 
     /* Allocate memory for the new copy v */
     my_Vector* v;
@@ -244,8 +240,10 @@ int my_Free( braid_App app, braid_Vector u ){
     /* Grab variables from the app */
     int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
-    /* Print information output */
-//      cout << "Deletes."<< endl;
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      /* Print information output */
+      if (app->su2rank == MASTER_NODE) cout << format("My_Free\n");
+    }
 
     /* Delete the Solution each point in space. */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -274,8 +272,10 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
-    /* Print information output */
-//      cout << "Sum." << endl;
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      /* Print information output */
+      if (app->su2rank == MASTER_NODE) cout << format("My_Sum\n");
+    }
 
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -298,8 +298,10 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
-    /* Print information output */
-//      cout << "SpatialNorm." << endl;
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      /* Print information output */
+      if (app->su2rank == MASTER_NODE) cout << format("My_SpatialNorm\n");
+    }
 
     /* Compute l2norm of the solution list at time n and n1 */
     su2double norm = 0.0;
@@ -320,16 +322,6 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
-    /* Get rank of global communicator */
-    int su2rank, braidrank;
-    MPI_Comm_rank(app->comm_x, &su2rank);
-    MPI_Comm_rank(app->comm_t, &braidrank);
-
-    /* Print information output */
-    if (su2rank == MASTER_NODE) {
-//      cout << "rank_t " << braidrank << " accesses solution." << endl;
-    }
-
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
@@ -338,6 +330,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     double t;
     braid_AccessStatusGetT(astatus, &t);
 
+    /* Print information output */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank == MASTER_NODE) cout << format("My_Access at t = %1.4f\n", t);
+    }
 
     /* --- Write Solution_time_n to restart file ---*/
 
@@ -348,7 +344,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
     /* Check if xBraid tries to write to negative iExtIter */
     if (iExtIter < 0) {
-      if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
+      if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
       return 0;
     }
 
@@ -360,13 +356,13 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     /* Compute the primitive Variables from the conservative ones */
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
-    /* Call the SU2 output routine */
-    if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
-    app->output->SetResult_Files(app->solver_container, app->geometry_container,
-                                 app->config_container, iExtIter, 1);
+//    /* Call the SU2 output routine */
+//    if (app->su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
+//    app->output->SetResult_Files(app->solver_container, app->geometry_container,
+//                                 app->config_container, iExtIter, 1);
 
     /* Write history values at time n to the app stream */
-    if (su2rank == MASTER_NODE){
+    if (app->su2rank == MASTER_NODE){
       *app->history_stream << iExtIter << " " << u->Total_CLift_n
                                        << " " << u->Total_CDrag_n
                                        << " " << u->Total_CSideForce_n
@@ -392,7 +388,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
     /* Check if xBraid tries to write to negative iExtIter */
     if (iExtIter < 0) {
-      if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
+      if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
       return 0;
     }
 
@@ -404,14 +400,13 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     /* Compute the primitive Variables from the conservative ones */
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
-    /* Call the SU2 output routine */
-    if (su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
-    app->output->SetResult_Files(app->solver_container, app->geometry_container,
-                                 app->config_container, iExtIter, 1);
+//    /* Call the SU2 output routine */
+//    app->output->SetResult_Files(app->solver_container, app->geometry_container,
+//                                 app->config_container, iExtIter, 1);
 
 
     /* Write history values at time n-1 to the app stream */
-    if (su2rank == MASTER_NODE){
+    if (app->su2rank == MASTER_NODE){
       *app->history_stream << iExtIter << " " << u->Total_CLift_n1
                                        << " " << u->Total_CDrag_n1
                                        << " " << u->Total_CSideForce_n1
@@ -452,10 +447,12 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Print information output */
-//      cout << "Bufpack." << endl;
-    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank == MASTER_NODE) cout << format("My_BufPack\n");
+    }
 
     /* Pack the buffer with current and previous time */
     su2double *dbuffer = (su2double*)buffer;
@@ -486,7 +483,9 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Print information output */
-//      cout << "BufUnPack." << endl;
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank == MASTER_NODE) cout << format("My_BufUnpack\n");
+    }
 
     /* Get the buffer */
     su2double *dbuffer = (su2double*)buffer;

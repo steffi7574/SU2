@@ -40,6 +40,8 @@ typedef struct _braid_App_struct
   MPI_Comm comm;        /* global communicator */
   MPI_Comm comm_t;      /* temporal communicator */
   MPI_Comm comm_x;      /* spatial communicator */
+  int su2rank;          /* Rank of current su2 processor */
+  int braidrank;        /* Rank of current braid processor */
 
 
   /* Information about the braid grid */

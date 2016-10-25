@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
   int rank = MASTER_NODE;
   int size = SINGLE_NODE;
   int braidsize, braidrank;
+  int su2size, su2rank;
 
   /*--- MPI initialization, and buffer setting ---*/
 
@@ -113,9 +114,11 @@ int main(int argc, char *argv[]) {
         braid_SplitCommworld(&comm, px, &comm_x, &comm_t);
         /* Pass the spatial communicator to SU2 */
         SU2_MPI::comm = comm_x;
-        /* Get the rank and size of braid processor */
+        /* Get the rank and size of braid and su2 processors */
         MPI_Comm_size(comm_t, &braidsize);
+        MPI_Comm_size(comm_x, &su2size);
         MPI_Comm_rank(comm_t, &braidrank);
+        MPI_Comm_rank(comm_x, &su2rank);
     }
   }
 
@@ -346,9 +349,15 @@ int main(int argc, char *argv[]) {
     my_App *app;
     app = new my_App;
 
+    /* Set the communicators */
     app->comm   = comm;
     app->comm_t = comm_t;
     app->comm_x = comm_x;
+
+    /* Set the ranks of current processor */
+    app->su2rank   = su2rank;
+    app->braidrank = braidrank;
+
 
     // app->cdrag_sum = 0
 
@@ -390,8 +399,9 @@ int main(int argc, char *argv[]) {
     /* From XBraid 2.0 on, substract one here!! */
     app->ntime = app->ntime-1;
 
-    /* Check if xBraid's tstop is bigger that SU2's end time */
+    /* Set tstop */
     app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
+    /* Check if xBraid's tstop is bigger that SU2's end time */
     if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
         cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
         MPI_Finalize();
@@ -472,13 +482,10 @@ int main(int argc, char *argv[]) {
 
         /* Output */
         if (rank == MASTER_NODE){
-          if (optimiter==0)
-          {
-            cout<<"       || r_pri || \n";
-          }
-          cout<< optimiter << "  " << app->primal_norm << "\n";
+          cout<<format(" || r_%d || = %1.14e\n", optimiter, app->primal_norm);
         }
-      }
+
+      } // END OF OPTIMIZATION LOOP
 
     } else {
       std::cout<<format("\n\nTurn warm_restart option on for One-Shot!!\n\n");
