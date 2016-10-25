@@ -380,13 +380,15 @@ int main(int argc, char *argv[]) {
     if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
 
 
-    /* Set the number of xBraid time steps ( = ExtIter / 2) */
+    /* Set the number of xBraid time steps ( = ExtIter / 2 - 1) */
     if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
         app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
     }
     else {
         app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
     }
+    /* From XBraid 2.0 on, substract one here!! */
+    app->ntime = app->ntime-1;
 
     /* Check if xBraid's tstop is bigger that SU2's end time */
     app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
