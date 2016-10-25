@@ -29,11 +29,11 @@
  */
 typedef struct _braid_App_struct
 {
-  su2double tstart;         /* Begin of Time integration */
-  su2double tstop;          /* End of Time integration */
-  int       ntime;          /* Number of time steps */
-  su2double initialDT;      /* Initial DeltaT */
-  su2double initialstart;   /* Initial starting time USED FOR TESTING ONLY */
+  double tstart       = 0.0;  /* Begin of Time integration */
+  double tstop        = 0.0;  /* End of Time integration */
+  int    ntime        = 0;    /* Number of time steps */
+  double initialDT    = 0.0;  /* Initial DeltaT */
+  double initialstart = 0.0;  /* Initial starting time USED FOR TESTING ONLY */
 
 
   /* Information about communication */
@@ -67,7 +67,7 @@ typedef struct _braid_App_struct
   stringstream* history_stream;
 
   /* Information for optimization */
-  su2double primal_norm;
+  double primal_norm;
 
 } my_App;
 
