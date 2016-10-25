@@ -10,8 +10,7 @@
 #include <../include/util.hpp>
 #include <../include/braid_structure.hpp>
 
-std::vector<void*>* tape;
-
+//std::vector<void*>* tape;
 //void setupTapeData() {
 //    tape = new std::vector<void*>();
 //    tape->resize(100);
@@ -32,13 +31,13 @@ int my_Step( braid_App        app,
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Grab status of current time step from xBraid */
-    su2double tstart;
-    su2double tstop;
+    double tstart;
+    double tstop;
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
 //    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
     /* Trick SU2 with xBraid's DeltaT / 2 */
-    su2double deltat = ( tstop - tstart ) / 2.0;
+    double deltat = ( tstop - tstart ) / 2.0;
     app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
 
     /* Trick the su2 solver with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
@@ -138,10 +137,10 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nDim                = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
     int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
-    su2double Density_Inf   = app->config_container[ZONE_0]->GetDensity_FreeStreamND();
-    su2double *Velocity_Inf = app->config_container[ZONE_0]->GetVelocity_FreeStreamND();
-    su2double Energy_Inf    = app->config_container[ZONE_0]->GetEnergy_FreeStreamND();
-    su2double Pressure_Inf  = app->config_container[ZONE_0]->GetPressure_FreeStreamND();
+    double Density_Inf   = app->config_container[ZONE_0]->GetDensity_FreeStreamND();
+    double *Velocity_Inf = app->config_container[ZONE_0]->GetVelocity_FreeStreamND();
+    double Energy_Inf    = app->config_container[ZONE_0]->GetEnergy_FreeStreamND();
+    double Pressure_Inf  = app->config_container[ZONE_0]->GetPressure_FreeStreamND();
     bool compressible = (app->config_container[ZONE_0]->GetKind_Regime() == COMPRESSIBLE);
     bool incompressible = (app->config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
     bool freesurface = (app->config_container[ZONE_0]->GetKind_Regime() == FREESURFACE);
@@ -154,14 +153,14 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     /* Allocate memory */
     my_Vector* u;
     u = new my_Vector;
-    u->Solution_time_n  = new su2double*[nPoint];
-    u->Solution_time_n1 = new su2double*[nPoint];
+    u->Solution_time_n  = new double*[nPoint];
+    u->Solution_time_n1 = new double*[nPoint];
 
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
 
         /* Allocate memory */
-        u->Solution_time_n[iPoint]  = new su2double[nVar];
-        u->Solution_time_n1[iPoint] = new su2double[nVar];
+        u->Solution_time_n[iPoint]  = new double[nVar];
+        u->Solution_time_n1[iPoint] = new double[nVar];
 
         /* Initialize the solution with the freestream values */
         if (compressible) {
@@ -216,12 +215,12 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     /* Allocate memory for the new copy v */
     my_Vector* v;
     v = new my_Vector;
-    v->Solution_time_n = new su2double*[nPoint];
-    v->Solution_time_n1 = new su2double*[nPoint];
+    v->Solution_time_n = new double*[nPoint];
+    v->Solution_time_n1 = new double*[nPoint];
 
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        v->Solution_time_n[iPoint]  = new su2double[nVar];
-        v->Solution_time_n1[iPoint] = new su2double[nVar];
+        v->Solution_time_n[iPoint]  = new double[nVar];
+        v->Solution_time_n1[iPoint] = new double[nVar];
         /* Copy the values from u to v */
         for (int iVar = 0; iVar < nVar; iVar++){
             v->Solution_time_n[iPoint][iVar]  = u->Solution_time_n[iPoint][iVar];
@@ -304,7 +303,7 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     }
 
     /* Compute l2norm of the solution list at time n and n1 */
-    su2double norm = 0.0;
+    double norm = 0.0;
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Loop over all variables */
@@ -438,7 +437,7 @@ int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Compute size of buffer */
-    *size_ptr = 2.0 * nPoint * nVar * sizeof(su2double);
+    *size_ptr = 2.0 * nPoint * nVar * sizeof(double);
 
     return 0;
 }
@@ -455,7 +454,7 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
     }
 
     /* Pack the buffer with current and previous time */
-    su2double *dbuffer = (su2double*)buffer;
+    double *dbuffer = (double*)buffer;
     int ibuffer = 0;
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
@@ -469,7 +468,7 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
     }
 
     /* Set the size of the buffer */
-    int size = 2.0 * nPoint * nVar * sizeof(su2double);
+    int size = 2.0 * nPoint * nVar * sizeof(double);
     braid_BufferStatusSetSize( bstatus, size );
 
 
@@ -488,18 +487,18 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     }
 
     /* Get the buffer */
-    su2double *dbuffer = (su2double*)buffer;
+    double *dbuffer = (double*)buffer;
     int ibuffer = 0;
 
     /* Allocate memory for the new braid Vector */
     my_Vector* u;
     u = new my_Vector;
-    u->Solution_time_n  = new su2double*[nPoint];
-    u->Solution_time_n1 = new su2double*[nPoint];
+    u->Solution_time_n  = new double*[nPoint];
+    u->Solution_time_n1 = new double*[nPoint];
 
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        u->Solution_time_n[iPoint]  = new su2double[nVar];
-        u->Solution_time_n1[iPoint] = new su2double[nVar];
+        u->Solution_time_n[iPoint]  = new double[nVar];
+        u->Solution_time_n1[iPoint] = new double[nVar];
 
         /* Unpack the buffer and write solution to current and previous time */
         for (int iVar = 0; iVar < nVar; iVar++){
