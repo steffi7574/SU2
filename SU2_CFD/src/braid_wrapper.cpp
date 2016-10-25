@@ -7,6 +7,7 @@
  */
 
 //#include <braid.hpp>
+#include <../include/util.hpp>
 #include <../include/braid_structure.hpp>
 
 std::vector<void*>* tape;
@@ -52,20 +53,21 @@ int my_Step( braid_App        app,
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution_time_n1[iPoint]);
     }
 
-    /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  */
-    int iExtIter = (int) round( ( tstart + deltat - app->initialstart ) / app->initialDT) - 1;
+    /* Trick SU2 with the correct iExtIter = (t - t0)/dt  -1 */
+    int iExtIter = (int) round( ( tstart + deltat - app->initialstart ) / app->initialDT) ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Print information output */
     if (su2rank == MASTER_NODE) {
-      cout << "rank_t " << braidrank << " performes two " << deltat << "-steps from " << tstart << " to " << tstop << endl;
+//      cout << "rank_t " << braidrank << " performes two " << deltat << "-steps from " << tstart << " to " << tstop << endl;
+      cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", braidrank, deltat, tstart, tstop);
     }
 
     /* Take the first time step to tstart + deltat */
-    app->driver->Run(app->iteration_container, app->output, app->integration_container,
-                   app->geometry_container, app->solver_container, app->numerics_container,
-                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
-                   app->interpolator_container, app->transfer_container);
+//    app->driver->Run(app->iteration_container, app->output, app->integration_container,
+//                   app->geometry_container, app->solver_container, app->numerics_container,
+//                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+//                   app->interpolator_container, app->transfer_container);
 
     /* Grab the history values from SU2's master node. */
     if (su2rank == MASTER_NODE){
@@ -96,10 +98,10 @@ int my_Step( braid_App        app,
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Take the next time step to tstart + 2*deltat = tstop */
-    app->driver->Run(app->iteration_container, app->output, app->integration_container,
-                   app->geometry_container, app->solver_container, app->numerics_container,
-                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
-                   app->interpolator_container, app->transfer_container);
+//    app->driver->Run(app->iteration_container, app->output, app->integration_container,
+//                   app->geometry_container, app->solver_container, app->numerics_container,
+//                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+//                   app->interpolator_container, app->transfer_container);
 
     /* Grab the history values from SU2's master node. */
     if (su2rank == MASTER_NODE){
@@ -151,6 +153,9 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     bool compressible = (app->config_container[ZONE_0]->GetKind_Regime() == COMPRESSIBLE);
     bool incompressible = (app->config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
     bool freesurface = (app->config_container[ZONE_0]->GetKind_Regime() == FREESURFACE);
+
+    /* Print information output */
+//    cout << "Inits at time " << t << endl;
 
     /* Allocate memory */
     my_Vector* u;
@@ -209,6 +214,9 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
     CConfig *config = app->config_container[ZONE_0];
 
+    /* Print information output */
+//      cout << "Clone"<< endl;
+
     /* Allocate memory for the new copy v */
     my_Vector* v;
     v = new my_Vector;
@@ -235,6 +243,9 @@ int my_Free( braid_App app, braid_Vector u ){
 
     /* Grab variables from the app */
     int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+
+    /* Print information output */
+//      cout << "Deletes."<< endl;
 
     /* Delete the Solution each point in space. */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -263,6 +274,9 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
+    /* Print information output */
+//      cout << "Sum." << endl;
+
     /* Loop over all points */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Loop over all variables */
@@ -283,6 +297,9 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Print information output */
+//      cout << "SpatialNorm." << endl;
 
     /* Compute l2norm of the solution list at time n and n1 */
     su2double norm = 0.0;
@@ -308,20 +325,25 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     MPI_Comm_rank(app->comm_x, &su2rank);
     MPI_Comm_rank(app->comm_t, &braidrank);
 
+    /* Print information output */
+    if (su2rank == MASTER_NODE) {
+//      cout << "rank_t " << braidrank << " accesses solution." << endl;
+    }
+
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Retrieve xBraid time information from status object */
-    su2double t;
+    double t;
     braid_AccessStatusGetT(astatus, &t);
 
 
     /* --- Write Solution_time_n to restart file ---*/
 
 
-    /* Trick SU2 with the correct iExtIter = (t - t0)/dt - 1  which is used for naming the restart file */
-    int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) - 1;
+    /* Trick SU2 with the correct iExtIter = (t - t0)/dt which is used for naming the restart file */
+    int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) ;
 //    iExtIter = iExtIter + 10000*braidrank;   /* Make the identifier unique for each braid processor */
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
     /* Check if xBraid tries to write to negative iExtIter */
@@ -430,6 +452,9 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+
+    /* Print information output */
+//      cout << "Bufpack." << endl;
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Pack the buffer with current and previous time */
@@ -459,6 +484,9 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     /* Grab variables from the app */
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Print information output */
+//      cout << "BufUnPack." << endl;
 
     /* Get the buffer */
     su2double *dbuffer = (su2double*)buffer;
