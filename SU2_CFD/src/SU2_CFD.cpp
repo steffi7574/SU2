@@ -485,7 +485,16 @@ int main(int argc, char *argv[]) {
           cout<<format(" || r_%d || = %1.14e\n", optimiter, app->primal_norm);
         }
 
+        /* Stopping criterion */
+        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
+            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
+            break;
+        }
+
       } // END OF OPTIMIZATION LOOP
+
+      /* Print some statistics */
+      braid_PrintStats(core);
 
     } else {
       std::cout<<format("\n\nTurn warm_restart option on for One-Shot!!\n\n");
