@@ -70,6 +70,7 @@ typedef struct _braid_App_struct
 
   /* Information for optimization */
   double primal_norm;
+  double optimiter;
 
 } my_App;
 
@@ -104,7 +105,18 @@ typedef struct _braid_Vector_struct
 
 } my_Vector;
 
+/*!
+ * \brief Creates the braidTape
+ */
 void setupTapeData();
+
+/*!
+ * \brief Create a copy v of a given vector u
+ * \param braid_App app
+ * \param braid_Vector u that is to be copied
+ * \return braid_Vector copy
+ */
+braid_Vector deep_copy( braid_App app, braid_Vector u );
 
 /*!
  * \brief This function tells XBraid how to take a time step. It advances the vector u from tstart to tstop.

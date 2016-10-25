@@ -408,6 +408,10 @@ int main(int argc, char *argv[]) {
         return (0);
     }
 
+    /* Prepare the Action tape */
+    setupTapeData();
+
+
     /* Initialize xBraid */
     braid_Init(comm, comm_t, app->tstart, app->tstop, app->ntime, app,
             my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
@@ -456,29 +460,35 @@ int main(int argc, char *argv[]) {
 
 
 
-//    setupTapeData();
 
-    // RUN XBRAID
+     // RUN XBRAID
     if ( config_container[ZONE_0]->GetBraid_Warm_Restart() ) {
 
         /* Set the number of xBraid iterations to 1 */
       braid_SetMaxIter(core, 1);
-//      app->braid_iter = 0;
+      app->optimiter = 0;
 
 
       /* --- OPTIMIZATION LOOP --- */
       for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
         /* Reset the app */
 //        app->Total_amp_avg    = 0.0;
-//        app->braid_iter       = iter;
+        app->optimiter = optimiter;
 //        app->globalIndexCount = ncpoints;
 //        *app->historyfile << format("\nIteration %d\n", iter);
+
+        /* Clear the action tape */
+        braidTape->action.clear();
+
 
         /* Run one primal xBraid iteration */
         braid_Drive(core);
 
         /* Get the primal xBraid residuum */
         _braid_GetRNorm(core, -1, &app->primal_norm);
+
+        /* Evaluate the Action tape */
+        evalAdjointAction(app, braidTape);
 
         /* Output */
         if (rank == MASTER_NODE){

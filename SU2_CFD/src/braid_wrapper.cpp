@@ -9,19 +9,48 @@
 //#include <braid.hpp>
 #include <../include/util.hpp>
 #include <../include/braid_structure.hpp>
+#include <../include/braidtape.hpp>
 
-//std::vector<void*>* tape;
-//void setupTapeData() {
-//    tape = new std::vector<void*>();
-//    tape->resize(100);
-//}
+
+BraidTape_t* braidTape;
+
+void setupTapeData(){
+   /* Create the braid tape */
+   braidTape = new BraidTape_t();
+}
+
+
+/* Make a copy of a Vector. Used for primal taping. */
+braid_Vector deep_copy( braid_App app, braid_Vector u ){
+
+    /* Grab variables from the app */
+    int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nDim        = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
+    int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    CConfig *config = app->config_container[ZONE_0];
+
+    /* Allocate memory for the new copy v */
+    my_Vector* v;
+    v = new my_Vector;
+    v->Solution_time_n = new double*[nPoint];
+    v->Solution_time_n1 = new double*[nPoint];
+
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        v->Solution_time_n[iPoint]  = new double[nVar];
+        v->Solution_time_n1[iPoint] = new double[nVar];
+        /* Copy the values from u to v */
+        for (int iVar = 0; iVar < nVar; iVar++){
+            v->Solution_time_n[iPoint][iVar]  = u->Solution_time_n[iPoint][iVar];
+            v->Solution_time_n1[iPoint][iVar] = u->Solution_time_n1[iPoint][iVar];
+        }
+    }
+}
 
 int my_Step( braid_App        app,
              braid_Vector     ustop,
              braid_Vector     fstop,
              braid_Vector     u,
              braid_StepStatus status ){
-//int my_Phi( braid_App app, braid_Vector u, braid_PhiStatus status ){
 
     /* Grab rank of the current SU2 processor */
 
@@ -127,6 +156,20 @@ int my_Step( braid_App        app,
     braid_StepStatusSetRFactor(status, 1);
 
 
+    /* Push the braid Action to the action tape */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::PHI;
+//    action->inIndex.push_back(u->index);
+//    action->outIndex  = app->globalIndexCount + 1;
+    action->inTime    = tstart;
+    action->outTime   = tstop;
+    action->StepStatus = status;
+    braidTape->action.push_back(*action);
+    delete action;
+//    /* Update the index of u */
+//    u->index = ++app->globalIndexCount;
+
+
     return 0;
 }
 
@@ -195,6 +238,13 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     /* Set the pointer */
     *u_ptr = u;
 
+    /* Push the braid action to the action tape */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::INIT;
+//    action->outIndex = u->index;
+    action->inTime   = t;
+    braidTape->action.push_back(*action);
+    delete action;
 
     return 0;
 }
@@ -231,6 +281,16 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     /* Set the pointer */
     *v_ptr = v;
 
+
+    /* Push the braid action to the action tape*/
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::CLONE;
+//    action->inIndex.push_back(u->index);
+//    action->outIndex = (*v_ptr)->index;
+//    action->myid = app->myid;
+    braidTape->action.push_back(*action);
+    delete action;
+
     return 0;
 }
 
@@ -261,6 +321,13 @@ int my_Free( braid_App app, braid_Vector u ){
     /* Delete braid vector */
     delete u;
 
+    /* Push the braid action to the action tape */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::FREE;
+//    action->inIndex.push_back(u->index);
+    braidTape->action.push_back(*action);
+    delete action;
+
     return 0;
 }
 
@@ -287,6 +354,18 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
                                               + beta  * y->Solution_time_n1[iPoint][iVar];
         }
     }
+
+    /* Push the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::SUM;
+//    action->inIndex.push_back(x->index);
+//    action->inIndex.push_back(y->index);
+//    action->outIndex  = app->globalIndexCount + 1;
+    action->sum_alpha = alpha;
+    action->sum_beta  = beta;
+//    action->myid = app->myid;
+    braidTape->action.push_back(*action);
+    delete action;
 
     return 0;
 }
@@ -426,6 +505,14 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     // sum up the drag value into app->sum
 
 
+    /* Push the braid action to the action tape*/
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::ACCESS;
+//    action->inIndex.push_back(u->index);
+//    action->inTime = t;
+    action->optimiter = app->optimiter;
+    braidTape->action.push_back(*action);
+    delete action;
 
     return 0;
 }
@@ -471,6 +558,13 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
     int size = 2.0 * nPoint * nVar * sizeof(double);
     braid_BufferStatusSetSize( bstatus, size );
 
+    /* Set up the braid action */
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::BUFPACK;
+//    action->inIndex.push_back(u->index);
+//    action->send_recv_rank = receiver;
+    braidTape->action.push_back(*action);
+    delete action;
 
     return 0;
 }
@@ -514,5 +608,89 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     /* Set the pointer */
     *u_ptr = u;
 
+    /* Set up the braid action */
+    BraidAction_t* action  = new BraidAction_t();
+    action->braidCall      = BraidCall_t::BUFUNPACK;
+//    action->outIndex       = u->index;
+//    action->send_recv_rank = source;
+    braidTape->action.push_back(*action);
+    delete action;
+
     return 0;
+}
+
+
+void evalAdjointAction( braid_App app, BraidTape_t* braidTape){
+
+  /* Evaluate the action tape in reverse order */
+  for (std::vector<BraidAction_t>::reverse_iterator action = braidTape->action.rbegin(); action != braidTape->action.rend(); ++action)
+  {
+      switch ( action->braidCall )
+      {
+        case BraidCall_t::PHI : {
+//          my_Phi_adjoint(*action, app);
+//          if (writegraph_adj) graphfile << action->outIndex << " -> " << action->inIndex.back() << format(" [label=\"Phi_adjoint\"];\n");
+            cout<< "Phi_adj\n";
+          break;
+        }
+
+        case BraidCall_t::INIT : {
+          /* Do nothing. */
+          cout<<"Init_adj\n";
+          break;
+        }
+
+        case BraidCall_t::CLONE : {
+//          my_Clone_adjoint(*action);
+//          if (writegraph_adj)
+//            graphfile << action->outIndex  << " -> " << action->inIndex.back() << format(" [label=\"Clone_adjoint\"];\n");
+            cout<< "Clone_adj\n";
+          break;
+        }
+
+        case BraidCall_t::FREE : {
+          /* Do nothing. */
+            cout<< "Free_adj\n";
+          break;
+        }
+
+        case BraidCall_t::SUM : {
+//          my_Sum_adjoint(*action);
+//          if (writegraph_adj){
+//            for (std::vector<int>::iterator inIndex = action->inIndex.begin(); inIndex!=action->inIndex.end(); ++inIndex)
+//            {
+//              graphfile << action->outIndex  << " -> " << *inIndex << format(" [label=\"Sum_adjoint\"];\n");
+//            }
+//          }
+            cout<<"Sum_adj\n";
+          break;
+        }
+
+        case BraidCall_t::ACCESS : {
+//          my_Access_adjoint(*action, app);
+//          if (writegraph_adj)
+//          {
+//            graphfile << format("%2.4f", action->inTime) << " -> " << action->inIndex.back() << format(" [label=\"Access_adjoint\"];\n");
+//          }
+            cout<<"Access_adj\n";
+          break;
+        }
+
+        case BraidCall_t::BUFPACK : {
+//          my_BufPack_adjoint(*action, app);
+//          if (writegraph_adj)
+//            graphfile << action->inIndex.back() << " [shape=invtriangle, label=\"BufPack " << action->inIndex.back() << "\"];\n";
+//          break;
+            cout<<"BufPack_adj\n";
+        }
+
+        case BraidCall_t::BUFUNPACK : {
+//          my_BufUnPack_adjoint(*action, app);
+//          if (writegraph_adj)
+//            graphfile << action->outIndex << " [shape=triangle, label=\"BufUnpack " << action->outIndex << "\"];\n";
+          cout<<"BufUnpack_adj\n";
+          break;
+        }
+    }
+  }
 }

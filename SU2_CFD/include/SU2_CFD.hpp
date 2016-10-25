@@ -49,6 +49,8 @@
 #include "../include/iteration_structure.hpp"
 #include "../include/transfer_structure.hpp"
 #include "../include/braid_structure.hpp"
+#include "../include/braidtape.hpp"
+#include "../include/util.hpp"
 
 #include "braid.hpp"
 
