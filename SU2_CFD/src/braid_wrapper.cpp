@@ -163,8 +163,7 @@ int my_Step( braid_App        app,
     action->braidCall = BraidCall_t::PHI;
 //    action->inIndex.push_back(u->index);
 //    action->outIndex  = app->globalIndexCount + 1;
-    action->inTime    = tstart;
-    action->outTime   = tstop;
+    action->deltat    = deltat;
     action->StepStatus = status;
     braidTape->action.push_back(*action);
     delete action;
@@ -248,7 +247,7 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     BraidAction_t* action = new BraidAction_t();
     action->braidCall = BraidCall_t::INIT;
 //    action->outIndex = u->index;
-    action->inTime   = t;
+//    action->inTime   = t;
     braidTape->action.push_back(*action);
     delete action;
 
@@ -697,4 +696,47 @@ void evalAdjointAction( braid_App app, BraidTape_t* braidTape){
         }
     }
   }
+}
+
+
+
+void my_Phi_adjoint( BraidAction_t &action, braid_App app ){
+
+  if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank==MASTER_NODE) std::cout << format("%d: PHI adi\n", app->braidrank);
+  }
+
+  /* Grab variables from the app */
+  int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+  int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+  /* Load the primal vector that was the output of the xBraid Step function (current time) */
+  braid_Vector u_in = braidTape->primal.back();
+  /* Free the memory. */
+  for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      delete [] u_in->Solution_time_n[iPoint];
+      delete [] u_in->Solution_time_n1[iPoint];
+  }
+  delete [] u_in->Solution_time_n;
+  delete [] u_in->Solution_time_n1;
+  delete u_in;
+  braidTape->primal.pop_back(); /* Pop the empty pointer */
+
+  /* Load the primal vector that was the input of the xBraid Step function (previous time) */
+  braid_Vector u_out = braidTape->primal.back();
+  /* Free the memory. */
+  for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      delete [] u_out->Solution_time_n[iPoint];
+      delete [] u_out->Solution_time_n1[iPoint];
+  }
+  delete [] u_out->Solution_time_n;
+  delete [] u_out->Solution_time_n1;
+  delete u_out;
+  braidTape->primal.pop_back(); /* Pop the empty pointer */
+
+  /* Set the Time step that was used in the primal xbraid run */
+  app->config_container[ZONE_0]->SetDelta_UnstTimeND( action.deltat );
+
+  /* TODO: Implement adjoint action */
+
 }
