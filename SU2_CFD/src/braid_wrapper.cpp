@@ -19,6 +19,16 @@ void setupTapeData(){
    braidTape = new BraidTape_t();
 }
 
+/* Deallocate memory of a braid_Vector u */
+void free_braid_Vector( braid_Vector u, size_t nPoint){
+
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        delete [] u->Solution_time_n[iPoint];
+        delete [] u->Solution_time_n1[iPoint];
+    }
+    delete [] u->Solution_time_n;
+    delete [] u->Solution_time_n1;
+}
 
 /* Make a copy of a Vector. Used for primal taping. */
 braid_Vector deep_copy( braid_App app, braid_Vector u ){
@@ -26,7 +36,6 @@ braid_Vector deep_copy( braid_App app, braid_Vector u ){
     /* Grab variables from the app */
     int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
-    CConfig *config = app->config_container[ZONE_0];
 
     /* Allocate memory for the new copy v */
     my_Vector* v;
@@ -44,6 +53,7 @@ braid_Vector deep_copy( braid_App app, braid_Vector u ){
             v->Solution_time_n1[iPoint][iVar] = u->Solution_time_n1[iPoint][iVar];
         }
     }
+    return v;
 }
 
 int my_Step( braid_App        app,
@@ -86,10 +96,10 @@ int my_Step( braid_App        app,
     if (app->su2rank == MASTER_NODE) cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", app->braidrank, deltat, tstart, tstop);
 
     /* Take the first time step to tstart + deltat */
-//    app->driver->Run(app->iteration_container, app->output, app->integration_container,
-//                   app->geometry_container, app->solver_container, app->numerics_container,
-//                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
-//                   app->interpolator_container, app->transfer_container);
+    app->driver->Run(app->iteration_container, app->output, app->integration_container,
+                   app->geometry_container, app->solver_container, app->numerics_container,
+                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+                   app->interpolator_container, app->transfer_container);
 
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
@@ -120,10 +130,10 @@ int my_Step( braid_App        app,
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Take the next time step to tstart + 2*deltat = tstop */
-//    app->driver->Run(app->iteration_container, app->output, app->integration_container,
-//                   app->geometry_container, app->solver_container, app->numerics_container,
-//                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
-//                   app->interpolator_container, app->transfer_container);
+    app->driver->Run(app->iteration_container, app->output, app->integration_container,
+                   app->geometry_container, app->solver_container, app->numerics_container,
+                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+                   app->interpolator_container, app->transfer_container);
 
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
@@ -626,72 +636,37 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
 void evalAdjointAction( braid_App app, BraidTape_t* braidTape){
 
   /* Evaluate the action tape in reverse order */
-  for (std::vector<BraidAction_t>::reverse_iterator action = braidTape->action.rbegin(); action != braidTape->action.rend(); ++action)
-  {
-      switch ( action->braidCall )
-      {
+  for (std::vector<BraidAction_t>::reverse_iterator action = braidTape->action.rbegin(); action != braidTape->action.rend(); ++action) {
+      switch ( action->braidCall ) {
         case BraidCall_t::PHI : {
-//          my_Phi_adjoint(*action, app);
-//          if (writegraph_adj) graphfile << action->outIndex << " -> " << action->inIndex.back() << format(" [label=\"Phi_adjoint\"];\n");
-            cout<< "Phi_adj\n";
+          my_Step_adjoint(*action, app);
           break;
         }
-
         case BraidCall_t::INIT : {
           /* Do nothing. */
-          cout<<"Init_adj\n";
           break;
         }
-
         case BraidCall_t::CLONE : {
 //          my_Clone_adjoint(*action);
-//          if (writegraph_adj)
-//            graphfile << action->outIndex  << " -> " << action->inIndex.back() << format(" [label=\"Clone_adjoint\"];\n");
-            cout<< "Clone_adj\n";
           break;
         }
-
         case BraidCall_t::FREE : {
           /* Do nothing. */
-            cout<< "Free_adj\n";
           break;
         }
-
         case BraidCall_t::SUM : {
 //          my_Sum_adjoint(*action);
-//          if (writegraph_adj){
-//            for (std::vector<int>::iterator inIndex = action->inIndex.begin(); inIndex!=action->inIndex.end(); ++inIndex)
-//            {
-//              graphfile << action->outIndex  << " -> " << *inIndex << format(" [label=\"Sum_adjoint\"];\n");
-//            }
-//          }
-            cout<<"Sum_adj\n";
           break;
         }
-
         case BraidCall_t::ACCESS : {
-//          my_Access_adjoint(*action, app);
-//          if (writegraph_adj)
-//          {
-//            graphfile << format("%2.4f", action->inTime) << " -> " << action->inIndex.back() << format(" [label=\"Access_adjoint\"];\n");
-//          }
-            cout<<"Access_adj\n";
+          my_Access_adjoint(*action, app);
           break;
         }
-
         case BraidCall_t::BUFPACK : {
 //          my_BufPack_adjoint(*action, app);
-//          if (writegraph_adj)
-//            graphfile << action->inIndex.back() << " [shape=invtriangle, label=\"BufPack " << action->inIndex.back() << "\"];\n";
-//          break;
-            cout<<"BufPack_adj\n";
         }
-
         case BraidCall_t::BUFUNPACK : {
 //          my_BufUnPack_adjoint(*action, app);
-//          if (writegraph_adj)
-//            graphfile << action->outIndex << " [shape=triangle, label=\"BufUnpack " << action->outIndex << "\"];\n";
-          cout<<"BufUnpack_adj\n";
           break;
         }
     }
@@ -700,10 +675,10 @@ void evalAdjointAction( braid_App app, BraidTape_t* braidTape){
 
 
 
-void my_Phi_adjoint( BraidAction_t &action, braid_App app ){
+void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
   if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
-      if (app->su2rank==MASTER_NODE) std::cout << format("%d: PHI adi\n", app->braidrank);
+      if (app->su2rank==MASTER_NODE) std::cout << format("%d: PHI adj\n", app->braidrank);
   }
 
   /* Grab variables from the app */
@@ -711,32 +686,49 @@ void my_Phi_adjoint( BraidAction_t &action, braid_App app ){
   int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
   /* Load the primal vector that was the output of the xBraid Step function (current time) */
-  braid_Vector u_in = braidTape->primal.back();
-  /* Free the memory. */
-  for (int iPoint = 0; iPoint < nPoint; iPoint++){
-      delete [] u_in->Solution_time_n[iPoint];
-      delete [] u_in->Solution_time_n1[iPoint];
-  }
-  delete [] u_in->Solution_time_n;
-  delete [] u_in->Solution_time_n1;
-  delete u_in;
-  braidTape->primal.pop_back(); /* Pop the empty pointer */
-
-  /* Load the primal vector that was the input of the xBraid Step function (previous time) */
   braid_Vector u_out = braidTape->primal.back();
-  /* Free the memory. */
-  for (int iPoint = 0; iPoint < nPoint; iPoint++){
-      delete [] u_out->Solution_time_n[iPoint];
-      delete [] u_out->Solution_time_n1[iPoint];
-  }
-  delete [] u_out->Solution_time_n;
-  delete [] u_out->Solution_time_n1;
+  /* Load the primal vector that was the input of the xBraid Step function (previous time) */
+  braidTape->primal.pop_back(); /* Pop the pointer */
+
+  braid_Vector u_in = braidTape->primal.back();
+  braidTape->primal.pop_back(); /* Pop the pointer */
+
+  /* Free the memory of the intermediate primal vectors. */
+  free_braid_Vector( u_out , nPoint );
+  free_braid_Vector( u_in , nPoint );
   delete u_out;
-  braidTape->primal.pop_back(); /* Pop the empty pointer */
+  delete u_in;
 
   /* Set the Time step that was used in the primal xbraid run */
   app->config_container[ZONE_0]->SetDelta_UnstTimeND( action.deltat );
 
   /* TODO: Implement adjoint action */
+
+}
+
+
+void my_Access_adjoint( BraidAction_t &action , braid_App app ){
+
+  if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank==MASTER_NODE) std::cout << format("%d: Access adj\n", app->braidrank);
+  }
+
+  /* Grab variables from the app */
+  int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+  int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    /* TODO: If CPoint: Set the adjoint seed from previous iteration */
+    /* TODO: Compute the adjoint of space-averaged costfunction  */
+
+    /* Load the primal braid vector that was used in the primal xbraid run */
+    my_Vector* u_in = braidTape->primal.back();
+    braidTape->primal.pop_back();
+
+    cout<< format("Access adjoint u_in %1.14e\n", u_in->Solution_time_n[1][1]);
+
+    /* TODO: Implement adjoint action */
+
+    /* Free the memory of the intermediate primal vector. */
+    free_braid_Vector( u_in , nPoint );
+    delete u_in;
 
 }

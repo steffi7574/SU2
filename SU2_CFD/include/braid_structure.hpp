@@ -119,6 +119,13 @@ void setupTapeData();
 braid_Vector deep_copy( braid_App app, braid_Vector u );
 
 /*!
+ * \brief Deallocate the memory of a braid_Vector (Solution_time_n and Solution_time_n1)
+ * \param braid_Vector u that is to be free'd
+ * \param Size of the Solution list.
+ */
+void free_braid_Vector( braid_Vector u, size_t nPoint);
+
+/*!
  * \brief This function tells XBraid how to take a time step. It advances the vector u from tstart to tstop.
 */
 int my_Step( braid_App        app,
@@ -126,7 +133,6 @@ int my_Step( braid_App        app,
              braid_Vector     fstop,
              braid_Vector     u,
              braid_StepStatus status );
-//int my_( braid_App app, braid_Vector u, braid_PhiStatus status );
 
 /*!
  *\brief Tells XBraid, how to initialize a vector at time t
@@ -173,3 +179,4 @@ int my_BufPack(braid_App app, braid_Vector u, void *buffer, braid_BufferStatus b
  *\brief XBraid function that unpacks a void * buffer into a vector
  */
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_BufferStatus bstatus  );
+
