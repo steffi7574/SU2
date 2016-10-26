@@ -473,6 +473,8 @@ int main(int argc, char *argv[]) {
       for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
         /* Reset the app */
         app->Total_Cd_avg = 0.0;
+        app->Total_Cd_avg = 1.0;
+        app->redgrad = 0.0;
         app->optimiter = optimiter;
 //        app->globalIndexCount = ncpoints;
 
@@ -480,17 +482,25 @@ int main(int argc, char *argv[]) {
         braidTape->action.clear();
 
 
+        /* --- Primal xBraid computation ---*/
+
         /* Run one primal xBraid iteration */
         braid_Drive(core);
 
         /* Get the primal xBraid residuum */
         _braid_GetRNorm(core, -1, &app->primal_norm);
 
-        /* Compute the time-averaged Costfunction*/
+        /* Compute the time-average of CDrag */
         double MyTotalAvg = app->Total_Cd_avg;
         app->Total_Cd_avg = 0.0;
         MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
         app->Total_Cd_avg = 1.0/(app->ntime-1) * app->Total_Cd_avg;
+
+
+        /* --- Adjoint sensitivity computation --- */
+
+        /* Adjoint of computing the time-average. */
+         app->Total_Cd_avg_b = 1.0/(app->ntime-1) * app->Total_Cd_avg_b;
 
         /* Evaluate the Action tape in reverse order. */
         evalAdjointAction(app, braidTape);

@@ -69,9 +69,13 @@ typedef struct _braid_App_struct
   stringstream* history_stream;
 
   /* Information for optimization */
-  double Total_Cd_avg = 0.0;
-  double primal_norm  = 0.0;
-  int optimiter;
+  double primal_norm    = 0.0;    // Norm of primal xBraid residual
+  double Total_Cd_avg   = 0.0;    // Time-averaged objective funtion
+  double Total_Cd_avg_b = 1.0;    // Seed for adjoint sensitivity computation
+  double redgrad        = 0.0;    // Gradient of the costfunction wrt beta
+  double redgrad_norm   = 0.0;    // Norm of the gradient
+  int optimiter;                // Iteration number of outer optimization loop.
+
 
 } my_App;
 
