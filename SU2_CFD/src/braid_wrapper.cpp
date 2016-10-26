@@ -474,6 +474,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
           *app->history_stream << "\n";
       }
 
+
       /* --- Write Solution_time_n1 to restart file ---*/
 
 
@@ -513,7 +514,8 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
           *app->history_stream << "\n";
       }
 
-      // TODO: Sum up the drag value into app->sum
+      /* Add to objective function. */
+      app->Total_Cd_avg += u->Total_CDrag_n + u->Total_CDrag_n1;
 
 
       /* Push the braid action to the action tape*/
@@ -722,8 +724,6 @@ void my_Access_adjoint( BraidAction_t &action , braid_App app ){
     /* Load the primal braid vector that was used in the primal xbraid run */
     my_Vector* u_in = braidTape->primal.back();
     braidTape->primal.pop_back();
-
-    cout<< format("Access adjoint u_in %1.14e\n", u_in->Solution_time_n[1][1]);
 
     /* TODO: Implement adjoint action */
 

@@ -69,8 +69,9 @@ typedef struct _braid_App_struct
   stringstream* history_stream;
 
   /* Information for optimization */
-  double primal_norm;
-  double optimiter;
+  double Total_Cd_avg = 0.0;
+  double primal_norm  = 0.0;
+  int optimiter;
 
 } my_App;
 

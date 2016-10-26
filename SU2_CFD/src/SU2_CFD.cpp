@@ -472,10 +472,9 @@ int main(int argc, char *argv[]) {
       /* --- OPTIMIZATION LOOP --- */
       for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
         /* Reset the app */
-//        app->Total_amp_avg    = 0.0;
+        app->Total_Cd_avg = 0.0;
         app->optimiter = optimiter;
 //        app->globalIndexCount = ncpoints;
-//        *app->historyfile << format("\nIteration %d\n", iter);
 
         /* Clear the action tape */
         braidTape->action.clear();
@@ -487,12 +486,18 @@ int main(int argc, char *argv[]) {
         /* Get the primal xBraid residuum */
         _braid_GetRNorm(core, -1, &app->primal_norm);
 
-        /* Evaluate the Action tape */
+        /* Compute the time-averaged Costfunction*/
+        double MyTotalAvg = app->Total_Cd_avg;
+        app->Total_Cd_avg = 0.0;
+        MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
+        app->Total_Cd_avg = 1.0/(app->ntime-1) * app->Total_Cd_avg;
+
+        /* Evaluate the Action tape in reverse order. */
         evalAdjointAction(app, braidTape);
 
         /* Output */
         if (rank == MASTER_NODE){
-          cout<<format(" || r_%d || = %1.14e\n", optimiter, app->primal_norm);
+          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.8e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
         }
 
         /* Stopping criterion */
@@ -512,18 +517,11 @@ int main(int argc, char *argv[]) {
     }
 
 
-
-    // MPI_ALLREDUCE auf app->aum
-    // app->sum = 0
-
-
-    std::ofstream out;
-    ParallelFileIO::startFileWrite(out, "history_test.dat", braidrank, braidsize, 42, comm_t);
-
-    cout << (*app->history_stream).str();
-    out << (*app->history_stream).str();
-
-    ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
+//    std::ofstream out;
+//    ParallelFileIO::startFileWrite(out, "history_test.dat", braidrank, braidsize, 42, comm_t);
+//    cout << (*app->history_stream).str();
+//    out << (*app->history_stream).str();
+//    ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
 
 
     // Finalize XBraid
