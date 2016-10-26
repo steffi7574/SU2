@@ -414,22 +414,17 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     double t;
     braid_AccessStatusGetT(astatus, &t);
 
-    /* Print information output */
-    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
-      if (app->su2rank == MASTER_NODE) cout << format("My_Access at t = %1.4f\n", t);
-    }
-
     /* Compute the time step iExtIter = (t - t0)/dt which is used for naming the restart file */
     int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
-    /* Check if xBraid tries to write to negative iExtIter */
-    if (iExtIter < 0) {
-      if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
-      return 0;
-    }
 
     /* Only continue if iExtIter > 0 !! Otherwise xbraid tries to write at timestep -1*/
     if (iExtIter>0){
+
+       /* Print Action Information */
+       if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+          if (app->su2rank == MASTER_NODE) cout << format("My_Access at t = %1.4f\n", t);
+       }
 
       /* Push the input braid_vector the primal tape */
       braid_Vector ustore = deep_copy(app, u);
