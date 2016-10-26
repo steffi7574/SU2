@@ -25,7 +25,6 @@ braid_Vector deep_copy( braid_App app, braid_Vector u ){
 
     /* Grab variables from the app */
     int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
-    int nDim        = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
     int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
     CConfig *config = app->config_container[ZONE_0];
 
@@ -39,6 +38,7 @@ braid_Vector deep_copy( braid_App app, braid_Vector u ){
         v->Solution_time_n[iPoint]  = new double[nVar];
         v->Solution_time_n1[iPoint] = new double[nVar];
         /* Copy the values from u to v */
+        /* TODO: Set the values with the SetSolution(...), Set_solution_time_n(...) and Set_Solution_timen1(...) */
         for (int iVar = 0; iVar < nVar; iVar++){
             v->Solution_time_n[iPoint][iVar]  = u->Solution_time_n[iPoint][iVar];
             v->Solution_time_n1[iPoint][iVar] = u->Solution_time_n1[iPoint][iVar];
@@ -52,7 +52,9 @@ int my_Step( braid_App        app,
              braid_Vector     u,
              braid_StepStatus status ){
 
-    /* Grab rank of the current SU2 processor */
+    /* Push the input braid_vector the primal tape */
+    braid_Vector ustore = deep_copy(app, u);
+    braidTape->primal.push_back(ustore);
 
 
     /* Grab variables from the app */
@@ -168,6 +170,10 @@ int my_Step( braid_App        app,
     delete action;
 //    /* Update the index of u */
 //    u->index = ++app->globalIndexCount;
+
+    /*  Store the primal output Braid Vector on the primal tape */
+    braid_Vector ustore_out = deep_copy(app, u);
+    braidTape->primal.push_back(ustore_out);
 
 
     return 0;
@@ -413,12 +419,8 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       if (app->su2rank == MASTER_NODE) cout << format("My_Access at t = %1.4f\n", t);
     }
 
-    /* --- Write Solution_time_n to restart file ---*/
-
-
-    /* Trick SU2 with the correct iExtIter = (t - t0)/dt which is used for naming the restart file */
+    /* Compute the time step iExtIter = (t - t0)/dt which is used for naming the restart file */
     int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) ;
-//    iExtIter = iExtIter + 10000*braidrank;   /* Make the identifier unique for each braid processor */
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
     /* Check if xBraid tries to write to negative iExtIter */
     if (iExtIter < 0) {
@@ -426,93 +428,100 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       return 0;
     }
 
-    /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n[iPoint]);
-    }
+    /* Only continue if iExtIter > 0 !! Otherwise xbraid tries to write at timestep -1*/
+    if (iExtIter>0){
 
-    /* Compute the primitive Variables from the conservative ones */
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
+      /* Push the input braid_vector the primal tape */
+      braid_Vector ustore = deep_copy(app, u);
+      braidTape->primal.push_back(ustore);
+
+
+      /* --- Write Solution_time_n to restart file ---*/
+
+      /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
+      for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n[iPoint]);
+      }
+
+      /* Compute the primitive Variables from the conservative ones */
+      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
 //    /* Call the SU2 output routine */
 //    if (app->su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
 //    app->output->SetResult_Files(app->solver_container, app->geometry_container,
 //                                 app->config_container, iExtIter, 1);
 
-    /* Write history values at time n to the app stream */
-    if (app->su2rank == MASTER_NODE){
-      *app->history_stream << iExtIter << " " << u->Total_CLift_n
-                                       << " " << u->Total_CDrag_n
-                                       << " " << u->Total_CSideForce_n
-                                       << " " << u->Total_CMx_n
-                                       << " " << u->Total_CMy_n
-                                       << " " << u->Total_CMz_n
-                                       << " " << u->Total_CFx_n
-                                       << " " << u->Total_CFy_n
-                                       << " " << u->Total_CFz_n
-                                       << " " << u->Total_CEff_n;
-//      for (int iVar = 0; iVar < nVar; iVar++){
-//        *app->history_stream << " " << u->residual_flow_n[iVar];
-//      }
-      *app->history_stream << " " << u->residual_dens_n;
-      *app->history_stream << "\n";
+      /* Write history values at time n to the app stream */
+      if (app->su2rank == MASTER_NODE){
+          *app->history_stream << iExtIter << " " << u->Total_CLift_n
+                               << " " << u->Total_CDrag_n
+                               << " " << u->Total_CSideForce_n
+                               << " " << u->Total_CMx_n
+                               << " " << u->Total_CMy_n
+                               << " " << u->Total_CMz_n
+                               << " " << u->Total_CFx_n
+                               << " " << u->Total_CFy_n
+                               << " " << u->Total_CFz_n
+                               << " " << u->Total_CEff_n;
+          //      for (int iVar = 0; iVar < nVar; iVar++){
+          //        *app->history_stream << " " << u->residual_flow_n[iVar];
+          //      }
+          *app->history_stream << " " << u->residual_dens_n;
+          *app->history_stream << "\n";
+      }
+
+      /* --- Write Solution_time_n1 to restart file ---*/
+
+
+      /* Trick SU2 with the correct iExtIter = iExtIter - 1 */
+      iExtIter--;
+      app->config_container[ZONE_0]->SetExtIter(iExtIter);
+
+      /* Trick SU2 with the current solution for output */
+      for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n1[iPoint]);
+      }
+
+      /* Compute the primitive Variables from the conservative ones */
+      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
+
+      //    /* Call the SU2 output routine */
+      //    app->output->SetResult_Files(app->solver_container, app->geometry_container,
+      //                                 app->config_container, iExtIter, 1);
+
+
+      /* Write history values at time n-1 to the app stream */
+      if (app->su2rank == MASTER_NODE){
+          *app->history_stream << iExtIter << " " << u->Total_CLift_n1
+                               << " " << u->Total_CDrag_n1
+                               << " " << u->Total_CSideForce_n1
+                               << " " << u->Total_CMx_n1
+                               << " " << u->Total_CMy_n1
+                               << " " << u->Total_CMz_n1
+                               << " " << u->Total_CFx_n1
+                               << " " << u->Total_CFy_n1
+                               << " " << u->Total_CFz_n1
+                               << " " << u->Total_CEff_n1;
+          //      for (int iVar = 0; iVar < nVar; iVar++){
+          //        *app->history_stream << " " << u->residual_flow_n1[iVar];
+          //      }
+          *app->history_stream << " " << u->residual_dens_n1;
+          *app->history_stream << "\n";
+      }
+
+      // TODO: Sum up the drag value into app->sum
+
+
+      /* Push the braid action to the action tape*/
+      BraidAction_t* action = new BraidAction_t();
+      action->braidCall = BraidCall_t::ACCESS;
+      //    action->inIndex.push_back(u->index);
+      //    action->inTime = t;
+      action->optimiter = app->optimiter;
+      braidTape->action.push_back(*action);
+      delete action;
+
     }
-
-    /* --- Write Solution_time_n1 to restart file ---*/
-
-
-    /* Trick SU2 with the correct iExtIter = iExtIter - 1 */
-    iExtIter--;
-    app->config_container[ZONE_0]->SetExtIter(iExtIter);
-    /* Check if xBraid tries to write to negative iExtIter */
-    if (iExtIter < 0) {
-      if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " tries to write to iExtIter -1 -> Early Exit.\n" << endl;
-      return 0;
-    }
-
-    /* Trick SU2 with the current solution for output */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n1[iPoint]);
-    }
-
-    /* Compute the primitive Variables from the conservative ones */
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
-
-//    /* Call the SU2 output routine */
-//    app->output->SetResult_Files(app->solver_container, app->geometry_container,
-//                                 app->config_container, iExtIter, 1);
-
-
-    /* Write history values at time n-1 to the app stream */
-    if (app->su2rank == MASTER_NODE){
-      *app->history_stream << iExtIter << " " << u->Total_CLift_n1
-                                       << " " << u->Total_CDrag_n1
-                                       << " " << u->Total_CSideForce_n1
-                                       << " " << u->Total_CMx_n1
-                                       << " " << u->Total_CMy_n1
-                                       << " " << u->Total_CMz_n1
-                                       << " " << u->Total_CFx_n1
-                                       << " " << u->Total_CFy_n1
-                                       << " " << u->Total_CFz_n1
-                                       << " " << u->Total_CEff_n1;
-//      for (int iVar = 0; iVar < nVar; iVar++){
-//        *app->history_stream << " " << u->residual_flow_n1[iVar];
-//      }
-      *app->history_stream << " " << u->residual_dens_n1;
-      *app->history_stream << "\n";
-    }
-
-    // sum up the drag value into app->sum
-
-
-    /* Push the braid action to the action tape*/
-    BraidAction_t* action = new BraidAction_t();
-    action->braidCall = BraidCall_t::ACCESS;
-//    action->inIndex.push_back(u->index);
-//    action->inTime = t;
-    action->optimiter = app->optimiter;
-    braidTape->action.push_back(*action);
-    delete action;
 
     return 0;
 }
