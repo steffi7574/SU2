@@ -22,6 +22,7 @@
 #include "../../Common/include/config_structure.hpp"
 #include "../../Common/include/interpolation_structure.hpp"
 #include "../../Common/include/mpi_structure.hpp"
+#include <memory>
 
 
 /*!
@@ -185,3 +186,65 @@ int my_BufPack(braid_App app, braid_Vector u, void *buffer, braid_BufferStatus b
  */
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_BufferStatus bstatus  );
 
+enum class BraidCall_t {
+  PHI       = 1,
+  INIT      = 2,
+  CLONE     = 3,
+  FREE      = 4,
+  SUM       = 5,
+  BUFPACK   = 6,
+  BUFUNPACK = 7,
+  ACCESS    = 8,
+};
+
+
+struct BraidAction_t {
+    BraidCall_t       braidCall;        /* The type of xBraid call */
+    std::vector<int>  inIndex;          /* The indicees input xBraid vectors */
+    int               outIndex;         /* The index of output xBraid vector */
+    double            deltat;           /* The time step size that was used in the primal Step function*/
+    braid_StepStatus  StepStatus;        /* The status of xBraid for Phi Calls */
+    double            sum_alpha;        /* First coefficient of the sum */
+    double            sum_beta;         /* Second coefficient of the sum */
+    int               send_recv_rank;   /* Processor rank of the sender / receiver */
+    int               optimiter;       /* Iteration number of xBraid */
+    int               myid;             /* Processors id */
+
+    /* Constructor */
+    BraidAction_t() : inIndex() {
+    }
+};
+
+struct BraidTape_t {
+    std::vector<my_Vector*>     primal;   /* Intermediate primal braid vectors that are used in the nonlinear operations */
+    std::vector<BraidAction_t>  action;   /* Actions during one xBraid iteration */
+
+    std::vector<std::shared_ptr<my_Vector>> adjoint; /* Intermediate adjoint braid vectors */
+//    std::vector<std::shared_ptr<SolutionVars>> in_Adjoint;
+//    std::vector<std::shared_ptr<SolutionVars>> out_Adjoint;
+
+    /* Constructor */
+    BraidTape_t() : primal(), action(), adjoint() {}
+//     in_Adjoint(),
+//     out_Adjoint() {
+//    }
+};
+
+// Define the tapes as extern
+extern BraidTape_t* braidTape;
+
+/*!
+ * \brief Creates the braidTape
+ */
+void setupTapeData();
+
+/*!
+ * \brief Evaluates the Braid ActionTape in reverse order and calls adjoint actions
+ */
+void evalAdjointAction( braid_App app, BraidTape_t* braidTape);
+
+
+
+/* Adjoint Action Calls */
+void my_Step_adjoint( BraidAction_t &action, braid_App app );
+void my_Access_adjoint( BraidAction_t &action , braid_App app );

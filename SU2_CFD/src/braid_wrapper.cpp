@@ -9,7 +9,7 @@
 //#include <braid.hpp>
 #include <../include/util.hpp>
 #include <../include/braid_structure.hpp>
-#include <../include/braidtape.hpp>
+//#include <../include/braidtape.hpp>
 
 
 BraidTape_t* braidTape;
