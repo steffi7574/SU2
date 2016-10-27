@@ -108,7 +108,6 @@ typedef struct _braid_Vector_struct
     double residual_dens_n;
     double residual_dens_n1;
 
-
 } my_Vector;
 
 /*!
@@ -130,6 +129,12 @@ braid_Vector deep_copy( braid_App app, braid_Vector u );
  * \param Size of the Solution list.
  */
 void free_braid_Vector( braid_Vector u, size_t nPoint);
+
+/*!
+ * \brief Allocate memory for a braid_Vector
+ */
+void allocate_braid_Vector( braid_Vector u, size_t nPoint, size_t nVar);
+
 
 /*!
  * \brief This function tells XBraid how to take a time step. It advances the vector u from tstart to tstop.
@@ -242,7 +247,6 @@ void setupTapeData();
  * \brief Evaluates the Braid ActionTape in reverse order and calls adjoint actions
  */
 void evalAdjointAction( braid_App app, BraidTape_t* braidTape);
-
 
 
 /* Adjoint Action Calls */

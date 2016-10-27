@@ -30,6 +30,17 @@ void free_braid_Vector( braid_Vector u, size_t nPoint){
     delete [] u->Solution_time_n1;
 }
 
+/* Allocate memory for a braid_Vector u */
+void allocate_braid_Vector( braid_Vector u, size_t nPoint, size_t nVar){
+
+    u->Solution_time_n  = new double*[nPoint];
+    u->Solution_time_n1 = new double*[nPoint];
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        u->Solution_time_n[iPoint]  = new double[nVar];
+        u->Solution_time_n1[iPoint] = new double[nVar];
+    }
+}
+
 /* Make a copy of a Vector. Used for primal taping. */
 braid_Vector deep_copy( braid_App app, braid_Vector u ){
 
@@ -208,17 +219,13 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
       if (app->su2rank == MASTER_NODE) cout << format("My_Init at time %1.4f\n", t);
     }
 
-    /* Allocate memory */
+    /* Allocate memory for the primal braid vector */
     my_Vector* u;
     u = new my_Vector;
-    u->Solution_time_n  = new double*[nPoint];
-    u->Solution_time_n1 = new double*[nPoint];
+    allocate_braid_Vector(u, nPoint, nVar);
 
+    /* Set the initial values */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-
-        /* Allocate memory */
-        u->Solution_time_n[iPoint]  = new double[nVar];
-        u->Solution_time_n1[iPoint] = new double[nVar];
 
         /* Initialize the solution with the freestream values */
         if (compressible) {
@@ -319,15 +326,7 @@ int my_Free( braid_App app, braid_Vector u ){
       if (app->su2rank == MASTER_NODE) cout << format("My_Free\n");
     }
 
-    /* Delete the Solution each point in space. */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        delete [] u->Solution_time_n[iPoint];
-        delete [] u->Solution_time_n1[iPoint];
-    }
-
-    /* Delete the list of Solutions */
-    delete [] u->Solution_time_n;
-    delete [] u->Solution_time_n1;
+    free_braid_Vector( u, nPoint );
 
 //    /* Delete the flow residual */
 //    delete [] u->residual_flow_n;
@@ -451,9 +450,9 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
 //    /* Call the SU2 output routine */
-//    if (app->su2rank==MASTER_NODE) cout << "rank_t " << braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
-//    app->output->SetResult_Files(app->solver_container, app->geometry_container,
-//                                 app->config_container, iExtIter, 1);
+      if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
+      app->output->SetResult_Files(app->solver_container, app->geometry_container,
+                                 app->config_container, iExtIter, 1);
 
       /* Write history values at time n to the app stream */
       if (app->su2rank == MASTER_NODE){
@@ -490,9 +489,9 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       /* Compute the primitive Variables from the conservative ones */
       app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
-      //    /* Call the SU2 output routine */
-      //    app->output->SetResult_Files(app->solver_container, app->geometry_container,
-      //                                 app->config_container, iExtIter, 1);
+      /* Call the SU2 output routine */
+      app->output->SetResult_Files(app->solver_container, app->geometry_container,
+                                       app->config_container, iExtIter, 1);
 
 
       /* Write history values at time n-1 to the app stream */
