@@ -120,8 +120,12 @@ struct TwoStepSolution
 typedef struct _braid_Vector_struct
 {
 
-    /* Solution lists for time steps n and n-1 */
+    /* Pointer to primal Solution lists for time steps n and n-1 */
     TwoStepSolution* Solution;
+
+    /* Shared pointer to adjoint Solution lists at time n and n-1 */
+    std::shared_ptr<TwoStepSolution> Solution_b;
+
 
     /* Flow solution coefficients for time n and time n1*/
     double Total_CLift_n, Total_CLift_n1;
@@ -138,6 +142,11 @@ typedef struct _braid_Vector_struct
     /* Flow residual */
     double residual_dens_n;
     double residual_dens_n1;
+
+    /* Constructor for primal Solution list: Called by my_init */
+    /* Constructor for adjoint Solution list: Called in my_init */
+    /* Destructor for primal Solution list: Called by my_Free */
+    /* Destructor for adjoint Solution list: Called automatically by shared pointer, if no pointer to the struct is left */
 
 } my_Vector;
 
@@ -243,9 +252,11 @@ struct BraidTape_t {
     std::vector<my_Vector*>     primal;   /* Intermediate primal braid vectors that are used in the nonlinear operations */
     std::vector<BraidAction_t>  action;   /* Actions during one xBraid iteration */
 
-    std::vector<std::shared_ptr<my_Vector>> adjoint; /* Intermediate adjoint braid vectors */
-//    std::vector<std::shared_ptr<SolutionVars>> in_Adjoint;
-//    std::vector<std::shared_ptr<SolutionVars>> out_Adjoint;
+    std::vector<std::shared_ptr<TwoStepSolution>> adjoint; /* Intermediate adjoint braid vectors */
+
+    /* Two more tapes that store pointers to xbraid input and output variables in each iteration */
+   std::vector<std::shared_ptr<TwoStepSolution>> braid_input;
+   std::vector<std::shared_ptr<TwoStepSolution>> braid_output;
 
     /* Constructor */
     BraidTape_t() : primal(), action(), adjoint() {}
@@ -271,3 +282,7 @@ void evalAdjointAction( braid_App app, BraidTape_t* braidTape);
 /* Adjoint Action Calls */
 void my_Step_adjoint( BraidAction_t &action, braid_App app );
 void my_Access_adjoint( BraidAction_t &action , braid_App app );
+void my_Sum_adjoint( BraidAction_t &action );
+void my_Clone_adjoint( BraidAction_t &action );
+void my_BufPack_adjoint( BraidAction_t &action, braid_App app );
+void my_BufUnPack_adjoint( BraidAction_t &action, braid_App app );
