@@ -19,27 +19,6 @@ void setupTapeData(){
    braidTape = new BraidTape_t();
 }
 
-/* Deallocate memory of a braid_Vector u */
-void free_braid_Vector( braid_Vector u, size_t nPoint){
-
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        delete [] u->Solution_time_n[iPoint];
-        delete [] u->Solution_time_n1[iPoint];
-    }
-    delete [] u->Solution_time_n;
-    delete [] u->Solution_time_n1;
-}
-
-/* Allocate memory for a braid_Vector u */
-void allocate_braid_Vector( braid_Vector u, size_t nPoint, size_t nVar){
-
-    u->Solution_time_n  = new double*[nPoint];
-    u->Solution_time_n1 = new double*[nPoint];
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        u->Solution_time_n[iPoint]  = new double[nVar];
-        u->Solution_time_n1[iPoint] = new double[nVar];
-    }
-}
 
 /* Make a copy of a Vector. Used for primal taping. */
 braid_Vector deep_copy( braid_App app, braid_Vector u ){
@@ -49,19 +28,15 @@ braid_Vector deep_copy( braid_App app, braid_Vector u ){
     int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
     /* Allocate memory for the new copy v */
-    my_Vector* v;
-    v = new my_Vector;
-    v->Solution_time_n = new double*[nPoint];
-    v->Solution_time_n1 = new double*[nPoint];
+    my_Vector* v = new my_Vector;
+    v->Solution  = new TwoStepSolution(nPoint, nVar);
 
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        v->Solution_time_n[iPoint]  = new double[nVar];
-        v->Solution_time_n1[iPoint] = new double[nVar];
         /* Copy the values from u to v */
         /* TODO: Set the values with the SetSolution(...), Set_solution_time_n(...) and Set_Solution_timen1(...) */
         for (int iVar = 0; iVar < nVar; iVar++){
-            v->Solution_time_n[iPoint][iVar]  = u->Solution_time_n[iPoint][iVar];
-            v->Solution_time_n1[iPoint][iVar] = u->Solution_time_n1[iPoint][iVar];
+            v->Solution->time_n[iPoint][iVar]  = u->Solution->time_n[iPoint][iVar];
+            v->Solution->time_n1[iPoint][iVar] = u->Solution->time_n1[iPoint][iVar];
         }
     }
     return v;
@@ -72,6 +47,11 @@ int my_Step( braid_App        app,
              braid_Vector     fstop,
              braid_Vector     u,
              braid_StepStatus status ){
+
+    /* Print action output */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank == MASTER_NODE) cout << format("My_Step\n");
+    }
 
     /* Push the input braid_vector the primal tape */
     braid_Vector ustore = deep_copy(app, u);
@@ -94,9 +74,9 @@ int my_Step( braid_App        app,
 
     /* Trick the su2 solver with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n[iPoint]);
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution_time_n[iPoint]);
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution_time_n1[iPoint]);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
     }
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt  -1 */
@@ -170,8 +150,8 @@ int my_Step( braid_App        app,
    /* Grab the solution vectors from su2 for both time steps */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
-            u->Solution_time_n[iPoint][iVar]  = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar];
-            u->Solution_time_n1[iPoint][iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar];
+            u->Solution->time_n[iPoint][iVar]  = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar];
+            u->Solution->time_n1[iPoint][iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar];
         }
     }
 
@@ -214,36 +194,35 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     bool incompressible = (app->config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
     bool freesurface = (app->config_container[ZONE_0]->GetKind_Regime() == FREESURFACE);
 
+    /* Print action output */
     if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
-      /* Print information output */
       if (app->su2rank == MASTER_NODE) cout << format("My_Init at time %1.4f\n", t);
     }
 
     /* Allocate memory for the primal braid vector */
-    my_Vector* u;
-    u = new my_Vector;
-    allocate_braid_Vector(u, nPoint, nVar);
+    my_Vector* u = new my_Vector;
+    u->Solution  = new TwoStepSolution(nPoint, nVar);
 
     /* Set the initial values */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
 
         /* Initialize the solution with the freestream values */
         if (compressible) {
-			u->Solution_time_n[iPoint][0]  = Density_Inf;
-			u->Solution_time_n1[iPoint][0] = Density_Inf;
+			u->Solution->time_n[iPoint][0]  = Density_Inf;
+			u->Solution->time_n1[iPoint][0] = Density_Inf;
 			for (int iDim = 0; iDim < nDim; iDim++) {
-				u->Solution_time_n[iPoint][iDim+1]  = Density_Inf*Velocity_Inf[iDim];
-				u->Solution_time_n1[iPoint][iDim+1] = Density_Inf*Velocity_Inf[iDim];
+				u->Solution->time_n[iPoint][iDim+1]  = Density_Inf*Velocity_Inf[iDim];
+				u->Solution->time_n1[iPoint][iDim+1] = Density_Inf*Velocity_Inf[iDim];
 			}
-			u->Solution_time_n[iPoint][nVar-1]  = Density_Inf*Energy_Inf;
-            u->Solution_time_n1[iPoint][nVar-1] = Density_Inf*Energy_Inf;
+			u->Solution->time_n[iPoint][nVar-1]  = Density_Inf*Energy_Inf;
+            u->Solution->time_n1[iPoint][nVar-1] = Density_Inf*Energy_Inf;
 		}
         if (incompressible || freesurface) {
-			u->Solution_time_n[iPoint][0]  = Pressure_Inf;
-			u->Solution_time_n1[iPoint][0] = Pressure_Inf;
+			u->Solution->time_n[iPoint][0]  = Pressure_Inf;
+			u->Solution->time_n1[iPoint][0] = Pressure_Inf;
 			for (int iDim = 0; iDim < nDim; iDim++) {
-				u->Solution_time_n[iPoint][iDim+1]  = Velocity_Inf[iDim]*Density_Inf;
-				u->Solution_time_n1[iPoint][iDim+1] = Velocity_Inf[iDim]*Density_Inf;
+				u->Solution->time_n[iPoint][iDim+1]  = Velocity_Inf[iDim]*Density_Inf;
+				u->Solution->time_n1[iPoint][iDim+1] = Velocity_Inf[iDim]*Density_Inf;
 			}
 		}
 	}
@@ -285,18 +264,14 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     }
 
     /* Allocate memory for the new copy v */
-    my_Vector* v;
-    v = new my_Vector;
-    v->Solution_time_n = new double*[nPoint];
-    v->Solution_time_n1 = new double*[nPoint];
+    my_Vector* v = new my_Vector;
+    v->Solution  = new TwoStepSolution(nPoint, nVar);
 
+    /* Copy the values from u to v */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        v->Solution_time_n[iPoint]  = new double[nVar];
-        v->Solution_time_n1[iPoint] = new double[nVar];
-        /* Copy the values from u to v */
         for (int iVar = 0; iVar < nVar; iVar++){
-            v->Solution_time_n[iPoint][iVar]  = u->Solution_time_n[iPoint][iVar];
-            v->Solution_time_n1[iPoint][iVar] = u->Solution_time_n1[iPoint][iVar];
+            v->Solution->time_n[iPoint][iVar]  = u->Solution->time_n[iPoint][iVar];
+            v->Solution->time_n1[iPoint][iVar] = u->Solution->time_n1[iPoint][iVar];
         }
     }
 
@@ -319,20 +294,17 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
 int my_Free( braid_App app, braid_Vector u ){
 
     /* Grab variables from the app */
-    int nPoint      = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
+    /* Print action information */
     if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
-      /* Print information output */
       if (app->su2rank == MASTER_NODE) cout << format("My_Free\n");
     }
 
-    free_braid_Vector( u, nPoint );
+    /* Delete the solution lists (calls destructor of TwoStepSolution) */
+    delete u->Solution;
 
-//    /* Delete the flow residual */
-//    delete [] u->residual_flow_n;
-//    delete [] u->residual_flow_n1;
-
-    /* Delete braid vector */
+    /* Delete the braid_Vector */
     delete u;
 
     /* Push the braid action to the action tape */
@@ -362,10 +334,10 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
         /* Loop over all variables */
         for (int iVar = 0; iVar < nVar; iVar++){
             /* Compute the sum y = alpha x + beta y at time n and time n-1 */
-            y->Solution_time_n[iPoint][iVar]  = alpha * x->Solution_time_n[iPoint][iVar]
-                                              + beta  * y->Solution_time_n[iPoint][iVar];
-            y->Solution_time_n1[iPoint][iVar] = alpha * x->Solution_time_n1[iPoint][iVar]
-                                              + beta  * y->Solution_time_n1[iPoint][iVar];
+            y->Solution->time_n[iPoint][iVar]  = alpha * x->Solution->time_n[iPoint][iVar]
+                                              + beta  * y->Solution->time_n[iPoint][iVar];
+            y->Solution->time_n1[iPoint][iVar] = alpha * x->Solution->time_n1[iPoint][iVar]
+                                              + beta  * y->Solution->time_n1[iPoint][iVar];
         }
     }
 
@@ -401,8 +373,8 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         /* Loop over all variables */
         for (int iVar = 0; iVar < nVar; iVar++){
-            norm += pow(u->Solution_time_n[iPoint][iVar], 2);
-            norm += pow(u->Solution_time_n1[iPoint][iVar], 2);
+            norm += pow(u->Solution->time_n[iPoint][iVar], 2);
+            norm += pow(u->Solution->time_n1[iPoint][iVar], 2);
         }
     }
 
@@ -443,7 +415,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
       /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
       for (int iPoint = 0; iPoint < nPoint; iPoint++){
-          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n[iPoint]);
+          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
       }
 
       /* Compute the primitive Variables from the conservative ones */
@@ -483,7 +455,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
       /* Trick SU2 with the current solution for output */
       for (int iPoint = 0; iPoint < nPoint; iPoint++){
-          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution_time_n1[iPoint]);
+          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n1[iPoint]);
       }
 
       /* Compute the primitive Variables from the conservative ones */
@@ -560,10 +532,10 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
           /* Write Solution at current time to the buffer */
-          dbuffer[ibuffer] = u->Solution_time_n[iPoint][iVar];
+          dbuffer[ibuffer] = u->Solution->time_n[iPoint][iVar];
           ibuffer++;
           /* Write Solution at previous time to the buffer */
-          dbuffer[ibuffer] = u->Solution_time_n1[iPoint][iVar];
+          dbuffer[ibuffer] = u->Solution->time_n1[iPoint][iVar];
           ibuffer++;
         }
     }
@@ -599,22 +571,17 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     int ibuffer = 0;
 
     /* Allocate memory for the new braid Vector */
-    my_Vector* u;
-    u = new my_Vector;
-    u->Solution_time_n  = new double*[nPoint];
-    u->Solution_time_n1 = new double*[nPoint];
+    my_Vector* u = new my_Vector;
+    u->Solution  = new TwoStepSolution(nPoint, nVar);
 
+    /* Unpack the buffer and write solution at current and previous time */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        u->Solution_time_n[iPoint]  = new double[nVar];
-        u->Solution_time_n1[iPoint] = new double[nVar];
-
-        /* Unpack the buffer and write solution to current and previous time */
         for (int iVar = 0; iVar < nVar; iVar++){
           /* Unpack Solution at current time from the buffer */
-          u->Solution_time_n[iPoint][iVar] = dbuffer[ibuffer];
+          u->Solution->time_n[iPoint][iVar] = dbuffer[ibuffer];
           ibuffer++;
           /* Unpack Solution at previous time from the buffer */
-          u->Solution_time_n1[iPoint][iVar] = dbuffer[ibuffer];
+          u->Solution->time_n1[iPoint][iVar] = dbuffer[ibuffer];
           ibuffer++;
         }
     }
@@ -695,9 +662,9 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   braidTape->primal.pop_back(); /* Pop the pointer */
 
   /* Free the memory of the intermediate primal vectors. */
-  free_braid_Vector( u_out , nPoint );
-  free_braid_Vector( u_in , nPoint );
+  delete u_out->Solution;
   delete u_out;
+  delete u_in->Solution;
   delete u_in;
 
   /* Set the Time step that was used in the primal xbraid run */
@@ -727,7 +694,7 @@ void my_Access_adjoint( BraidAction_t &action , braid_App app ){
     /* TODO: Implement adjoint action */
 
     /* Free the memory of the intermediate primal vector. */
-    free_braid_Vector( u_in , nPoint );
+    delete u_in->Solution;
     delete u_in;
 
 }

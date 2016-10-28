@@ -80,6 +80,38 @@ typedef struct _braid_App_struct
 
 } my_App;
 
+struct TwoStepSolution
+{
+    /* Dimensions of the solution lists */
+    int nPoint;
+    int nVar;
+    /* Solution lists for all grid points and for all nVars*/
+    double **time_n;    /*!<\brief List of solutions at time n for each point in space. */
+    double **time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
+
+    /* Constructor */
+    TwoStepSolution(int Point, int Var){
+      nPoint = Point;
+      nVar   = Var;
+      /* Allocate memory for the solution lists */
+      time_n  = new double*[nPoint];
+      time_n1 = new double*[nPoint];
+      for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          time_n[iPoint]  = new double[nVar];
+          time_n1[iPoint] = new double[nVar];
+      }
+    }
+
+    /* Destructor */
+    ~TwoStepSolution(){
+        for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          delete [] time_n[iPoint];
+          delete [] time_n1[iPoint];
+        }
+        delete [] time_n;
+        delete [] time_n1;
+    }
+};
 
 
 /*!
@@ -87,10 +119,9 @@ typedef struct _braid_App_struct
   */
 typedef struct _braid_Vector_struct
 {
-    /* Solution lists for all grid points and for all nVars*/
-    double **Solution_time_n;    /*!<\brief List of solutions at time n for each point in space. */
-    double **Solution_time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
 
+    /* Solution lists for time steps n and n-1 */
+    TwoStepSolution* Solution;
 
     /* Flow solution coefficients for time n and time n1*/
     double Total_CLift_n, Total_CLift_n1;
@@ -122,18 +153,6 @@ void setupTapeData();
  * \return braid_Vector copy
  */
 braid_Vector deep_copy( braid_App app, braid_Vector u );
-
-/*!
- * \brief Deallocate the memory of a braid_Vector (Solution_time_n and Solution_time_n1)
- * \param braid_Vector u that is to be free'd
- * \param Size of the Solution list.
- */
-void free_braid_Vector( braid_Vector u, size_t nPoint);
-
-/*!
- * \brief Allocate memory for a braid_Vector
- */
-void allocate_braid_Vector( braid_Vector u, size_t nPoint, size_t nVar);
 
 
 /*!
