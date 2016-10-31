@@ -375,9 +375,9 @@ int main(int argc, char *argv[]) {
     app->interpolator_container = interpolator_container;
     app->transfer_container     = transfer_container;
 
-    app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
-    app->initialstart  = config_container[ZONE_0]->GetCurrent_UnstTime();
-    app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
+    app->tstart        = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
+    app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
+    app->initialDT     = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDelta_UnstTimeND());
 
     /* Prepare history file for output of CDrag, CLift etc. */
     stringstream histstream;
@@ -426,7 +426,7 @@ int main(int argc, char *argv[]) {
     if (config_container[ZONE_0]->GetBraid_NRelax0() > -1) {
        braid_SetNRelax(core,  0, config_container[ZONE_0]->GetBraid_NRelax0() );
     }
-    braid_SetAbsTol( core, config_container[ZONE_0]->GetBraid_Tol() );
+    braid_SetAbsTol( core, SU2_TYPE::GetValue(config_container[ZONE_0]->GetBraid_Tol()) );
     braid_SetCFactor( core, -1, config_container[ZONE_0]->GetBraid_CFactor() );
     braid_SetMinCoarse( core, config_container[ZONE_0]->GetBraid_Min_Coarse() );
     braid_SetMaxIter( core, config_container[ZONE_0]->GetBraid_Max_Iter() );
