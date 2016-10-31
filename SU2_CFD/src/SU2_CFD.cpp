@@ -443,7 +443,27 @@ int main(int argc, char *argv[]) {
     /* Get the Grid Distribution for each processor */
     _braid_GetDistribution(core, &app->ilower, &app->iupper);
     _braid_Grid **grids = _braid_CoreElt(core, grids);
-    braid_Int ncpoints  = _braid_GridElt(grids[0], ncpoints);
+    app->ncpoints  = _braid_GridElt(grids[0], ncpoints);
+
+    /* Initialize the adjoint vector of the optimization with zeros */
+    for (int i=0; i<app->ncpoints; i++)
+    {
+      /* Allocate memory */
+      int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+      int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+      TwoStepSolution* Solution_b = new TwoStepSolution(nPoint, nVar);
+      /* Set to zero */
+      for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        for (int iVar = 0; iVar < nVar; iVar++){
+          Solution_b->time_n[iPoint][iVar] = 0.0;
+        }
+      }
+      /* Push the pointer to the vector */
+      app->optimadjoint.push_back(Solution_b);
+    }
+
+    /* Fix the vector size of the adjoints that correspond to braid output variables */
+    braidTape->braid_output_b.resize(app->ncpoints);
 
 
 
@@ -481,8 +501,6 @@ int main(int argc, char *argv[]) {
         /* Clear the action tape */
         braidTape->action.clear();
 
-        std::cout<< format("vector sizes %d %d\n", braidTape->adjoint.size(), braidTape->primal.size());
-
         /* --- Primal xBraid computation ---*/
 
         /* Run one primal xBraid iteration */
@@ -506,8 +524,8 @@ int main(int argc, char *argv[]) {
         /* Evaluate the Action tape in reverse order. */
         evalAdjointAction(app, braidTape);
 
-        /* TODO: Check the size of the primal and the adjoint tapes */
-        std::cout<< format("vector sizes %d %d %d\n", braidTape->adjoint.size(), braidTape->primal.size(), braidTape->braid_input.size());
+        /* Check the size of the primal and the adjoint tapes */
+        std::cout<< format("vector sizes %d %d %d %d %d\n", braidTape->adjoint.size(), braidTape->primal.size(), braidTape->braid_input_b.size(), braidTape->braid_output_b.size(), app->optimadjoint.size());
 
 
         /* Output */

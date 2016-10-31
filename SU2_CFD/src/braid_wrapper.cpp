@@ -228,7 +228,7 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     /* Set the pointer */
     *u_ptr = u;
 
-    /* Allocate memory for the adjoint Solution and initialize with zero */
+    /* Allocate memory for the adjoints of the braid input variables and initialize with zero */
     (u->Solution_b).reset(new TwoStepSolution(nPoint, nVar));
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
       for (int iVar = 0; iVar < nVar; iVar++){
@@ -237,7 +237,7 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     }
     cout<< format("u_b %1.14e\n", u->Solution_b->time_n[1][1]);
     /* Store a pointer to the adjoint on the braid_input tape */
-    braidTape->braid_input.push_back(u->Solution_b);
+    braidTape->braid_input_b.push_back(u->Solution_b);
 
 
     /* Push the braid action to the action tape */

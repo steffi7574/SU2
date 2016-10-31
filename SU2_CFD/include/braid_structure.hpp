@@ -24,6 +24,42 @@
 #include "../../Common/include/mpi_structure.hpp"
 #include <memory>
 
+/*!
+* \brief Structure that holds the Solution lists at time n and time n-1
+*/
+struct TwoStepSolution
+{
+    /* Dimensions of the solution lists */
+    int nPoint;
+    int nVar;
+    /* Solution lists for all grid points and for all nVars*/
+    double **time_n;    /*!<\brief List of solutions at time n for each point in space. */
+    double **time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
+
+    /* Constructor */
+    TwoStepSolution(int Point, int Var){
+      nPoint = Point;
+      nVar   = Var;
+      /* Allocate memory for the solution lists */
+      time_n  = new double*[nPoint];
+      time_n1 = new double*[nPoint];
+      for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          time_n[iPoint]  = new double[nVar];
+          time_n1[iPoint] = new double[nVar];
+      }
+    }
+
+    /* Destructor */
+    ~TwoStepSolution(){
+        for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          delete [] time_n[iPoint];
+          delete [] time_n1[iPoint];
+        }
+        delete [] time_n;
+        delete [] time_n1;
+    }
+};
+
 
 /*!
  * \brief XBraid structure that holds additional information needed to carry out an unseady simulation step.
@@ -76,43 +112,16 @@ typedef struct _braid_App_struct
   double redgrad        = 0.0;    // Gradient of the costfunction wrt beta
   double redgrad_norm   = 0.0;    // Norm of the gradient
   int optimiter;                // Iteration number of outer optimization loop.
+  int ncpoints;                  // Number of coarse grid points on that processor
+
+  /* Adjoint optimization variables */
+  std::vector<TwoStepSolution*> optimadjoint;
+
+  /* Constructor */
+  _braid_App_struct() : optimadjoint() {}
 
 
 } my_App;
-
-struct TwoStepSolution
-{
-    /* Dimensions of the solution lists */
-    int nPoint;
-    int nVar;
-    /* Solution lists for all grid points and for all nVars*/
-    double **time_n;    /*!<\brief List of solutions at time n for each point in space. */
-    double **time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
-
-    /* Constructor */
-    TwoStepSolution(int Point, int Var){
-      nPoint = Point;
-      nVar   = Var;
-      /* Allocate memory for the solution lists */
-      time_n  = new double*[nPoint];
-      time_n1 = new double*[nPoint];
-      for (int iPoint = 0; iPoint < nPoint; iPoint++){
-          time_n[iPoint]  = new double[nVar];
-          time_n1[iPoint] = new double[nVar];
-      }
-    }
-
-    /* Destructor */
-    ~TwoStepSolution(){
-        for (int iPoint = 0; iPoint < nPoint; iPoint++){
-          delete [] time_n[iPoint];
-          delete [] time_n1[iPoint];
-        }
-        delete [] time_n;
-        delete [] time_n1;
-    }
-};
-
 
 /*!
  * \brief XBraid structure that defines a state vector at a certain time value and any information related to this vector which is needed to evolve the vector to the next time value, like mesh information.
@@ -256,8 +265,8 @@ struct BraidTape_t {
     std::vector<std::shared_ptr<TwoStepSolution>> adjoint; /* Intermediate adjoint braid vectors */
 
     /* Two more tapes that store pointers to xbraid input and output variables in each iteration */
-   std::vector<std::shared_ptr<TwoStepSolution>> braid_input;
-   std::vector<std::shared_ptr<TwoStepSolution>> braid_output;
+   std::vector<std::shared_ptr<TwoStepSolution>> braid_input_b;
+   std::vector<std::shared_ptr<TwoStepSolution>> braid_output_b;
 
     /* Constructor */
     BraidTape_t() : primal(), action(), adjoint() {}
