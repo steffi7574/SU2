@@ -491,12 +491,12 @@ int main(int argc, char *argv[]) {
 
       /* --- OPTIMIZATION LOOP --- */
       for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
+
         /* Reset the app */
-        app->Total_Cd_avg = 0.0;
-        app->Total_Cd_avg = 1.0;
-        app->redgrad = 0.0;
-        app->optimiter = optimiter;
-//        app->globalIndexCount = ncpoints;
+        app->Total_Cd_avg   = 0.0;
+        app->Total_Cd_avg_b = 1.0;
+        app->redgrad        = 0.0;
+        app->optimiter      = optimiter;
 
         /* Clear the action tape */
         braidTape->action.clear();
