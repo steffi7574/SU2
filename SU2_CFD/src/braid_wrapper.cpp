@@ -716,14 +716,30 @@ void my_Access_adjoint( BraidAction_t &action , braid_App app ){
   (braidTape->adjoint).pop_back();
 
 
-  /* TODO: If CPoint: Set the adjoint seed from previous iteration */
+  /* If CPoint: Set the adjoint seed from previous iteration */
+  int cfactor = app->config_container[ZONE_0]->GetBraid_CFactor();
+  if (_braid_IsCPoint(iExtIter/2,cfactor) ) // Divide by two because 2-Step XBraid !
+  {
+    /* Store the pointer in the braid_output_b vector */
+    cout<< format("iExtIter of cpoint %d\n", iExtIter);
+    int pos = (int) (iExtIter/2 - app->ilower) / cfactor;
+    braidTape->braid_output_b[pos] = usol_b;
 
+    /* Set the adjoint seed */
+    for (int iPoint=0; iPoint < nPoint; iPoint++){
+      for (int iVar=0; iVar < nVar; iVar++){
+        usol_b->time_n[iPoint][iVar]  = app->optimadjoint[pos]->time_n[iPoint][iVar];
+        usol_b->time_n1[iPoint][iVar] = app->optimadjoint[pos]->time_n1[iPoint][iVar];
+      }
+    }
+  }
+
+  /* Compute the adjoint of cost function if iExtIter>0 */
   if (iExtIter>0){
-
     /* Load the primal braid vector that was used in the primal xbraid run */
     my_Vector* u_in = braidTape->primal.back();
     braidTape->primal.pop_back();
-    /* TODO: Implement adjoint of cost function */
+    /* TODO: Implement adjoint of cost function with CoDiPack */
 
     /* Free the memory of the intermediate primal vector. */
     delete u_in->Solution;
