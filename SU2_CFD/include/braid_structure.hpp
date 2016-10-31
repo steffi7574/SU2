@@ -119,6 +119,7 @@ typedef struct _braid_App_struct
 
   /* Information for optimization */
   double primal_norm    = 0.0;    // Norm of primal xBraid residual
+  double adjoint_norm   = 0.0;    // Norm of the adjoint xBraid residual
   double Total_Cd_avg   = 0.0;    // Time-averaged objective funtion
   double Total_Cd_avg_b = 1.0;    // Seed for adjoint sensitivity computation
   double redgrad        = 0.0;    // Gradient of the costfunction wrt beta
@@ -146,13 +147,6 @@ typedef struct _braid_Vector_struct
 
     /* Shared pointer to adjoint Solution lists at time n and n-1 */
     std::shared_ptr<TwoStepSolution> Solution_b;
-
-
-
-
-    /* Flow residual */
-    double residual_dens_n;
-    double residual_dens_n1;
 
     /* Constructor for primal Solution list: Called by my_init */
     /* Constructor for adjoint Solution list: Called in my_init */

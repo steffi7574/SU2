@@ -524,9 +524,41 @@ int main(int argc, char *argv[]) {
         /* Evaluate the Action tape in reverse order. */
         evalAdjointAction(app, braidTape);
 
-        /* Check the size of the primal and the adjoint tapes */
-        std::cout<< format("vector sizes %d %d %d %d %d\n", braidTape->adjoint.size(), braidTape->primal.size(), braidTape->braid_input_b.size(), braidTape->braid_output_b.size(), app->optimadjoint.size());
+        /* Compute adjoint residuum */
+        double my_norm = 0.0;
+        for (int i = 0; i < app->ncpoints; i++)
+        {
+          /* TODO: COMPUTE THE NORM! */
+          // if (myid != 0 || i !=0 )
+          // {
+            // my_norm += pow(getValue(braidTape->braid_input_b[i]->y) - getValue(app->optim->adjoint[i]->y), 2);
+          // }
+        }
+        MPI_Allreduce(&my_norm, &app->adjoint_norm, 1, MPI_DOUBLE, MPI_SUM, comm);
+        app->adjoint_norm = sqrt(app->adjoint_norm);
+        // if (optimiter == 0) app->optim_adjoint_norm0 = app_optim->adjoint_norm;
 
+        /* Compute the reduced gradient */
+        double MyRedGrad = app->redgrad;
+        app->redgrad= 0.0;
+        MPI_Allreduce(&MyRedGrad, &app->redgrad, 1, MPI_DOUBLE, MPI_SUM, comm);
+
+        /* Store the adjoints into the Optim structure */
+        for (int i=0; i < app->ncpoints; i++)
+        {
+          /* TODO: Store the adjoint in optimadjoint
+          // app->optim->adjoint[i]->y = braidTape->in_Adjoint[i]->y;
+          /* Delete the pointer */
+          braidTape->braid_input_b[i].reset();
+        }
+
+        /* Move pointers from braid_output_b to braid_input_b */
+        // Because braid output of current iteration is braid input of next iteration
+        for (int i=0; i<app->ncpoints; i++)
+        {
+          braidTape->braid_input_b[i] = braidTape->braid_output_b[i];
+          braidTape->braid_output_b[i].reset();
+        }
 
         /* Output */
         if (rank == MASTER_NODE){

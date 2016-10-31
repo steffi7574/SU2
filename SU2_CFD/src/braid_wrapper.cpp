@@ -709,7 +709,6 @@ void my_Access_adjoint( BraidAction_t &action , braid_App app ){
   if (_braid_IsCPoint(iExtIter/2,cfactor) ) // Divide by two because 2-Step XBraid !
   {
     /* Store the pointer in the braid_output_b vector */
-    cout<< format("iExtIter of cpoint %d\n", iExtIter);
     int pos = (int) (iExtIter/2 - app->ilower) / cfactor;
     braidTape->braid_output_b[pos] = usol_b;
 
