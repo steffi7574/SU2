@@ -83,7 +83,7 @@ int my_Step( braid_App        app,
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Print information output */
-    if (app->su2rank == MASTER_NODE) cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", app->braidrank, deltat, tstart, tstop);
+    // if (app->su2rank == MASTER_NODE) cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", app->braidrank, deltat, tstart, tstop);
 
     /* Take the first time step to tstart + deltat */
     app->driver->Run(app->iteration_container, app->output, app->integration_container,
@@ -412,7 +412,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
        /* Print Action Information */
        if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
-          if (app->su2rank == MASTER_NODE) cout << format("My_Access at t = %1.4f\n", t);
+          if (app->su2rank == MASTER_NODE) cout << format("My_Access at iExtIter = %d\n", iExtIter);
        }
 
       /* Push the input braid_vector the primal tape */
@@ -431,7 +431,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
 //    /* Call the SU2 output routine */
-      if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
+      // if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
       app->output->SetResult_Files(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
 
@@ -497,15 +497,16 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       /* Add to objective function. */
       app->Total_Cd_avg += u->Total_CDrag_n + u->Total_CDrag_n1;
 
-
-      /* Push the braid action to the action tape*/
-      BraidAction_t* action = new BraidAction_t();
-      action->braidCall = BraidCall_t::ACCESS;
-      action->optimiter = app->optimiter;
-      braidTape->action.push_back(*action);
-      delete action;
-
     }
+
+    /* Push the braid action to the action tape*/
+    BraidAction_t* action = new BraidAction_t();
+    action->braidCall = BraidCall_t::ACCESS;
+    action->time = t;
+    action->optimiter = app->optimiter;
+    braidTape->action.push_back(*action);
+    delete action;
+
 
     return 0;
 }
@@ -631,7 +632,7 @@ void evalAdjointAction( braid_App app, BraidTape_t* braidTape){
           break;
         }
         case BraidCall_t::CLONE : {
-          my_Clone_adjoint(*action);
+          my_Clone_adjoint(*action, app);
           break;
         }
         case BraidCall_t::FREE : {
@@ -639,7 +640,7 @@ void evalAdjointAction( braid_App app, BraidTape_t* braidTape){
           break;
         }
         case BraidCall_t::SUM : {
-          my_Sum_adjoint(*action);
+          my_Sum_adjoint(*action, app);
           break;
         }
         case BraidCall_t::ACCESS : {
@@ -707,29 +708,39 @@ void my_Access_adjoint( BraidAction_t &action , braid_App app ){
   /* Grab variables from the app */
   int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
   int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+  /* Compute the time step iExtIter = (t - t0)/dt which is used for naming the restart file */
+  int iExtIter = (int) round( ( action.time - app->initialstart ) / app->initialDT) ;
 
   /* Pop the adjoint from the tape */
   std::shared_ptr<TwoStepSolution> usol_b = (braidTape->adjoint).back();
   (braidTape->adjoint).pop_back();
 
-  /* Load the primal braid vector that was used in the primal xbraid run */
-  my_Vector* u_in = braidTape->primal.back();
-  braidTape->primal.pop_back();
 
   /* TODO: If CPoint: Set the adjoint seed from previous iteration */
-  /* TODO: Implement adjoint action */
+
+  if (iExtIter>0){
+
+    /* Load the primal braid vector that was used in the primal xbraid run */
+    my_Vector* u_in = braidTape->primal.back();
+    braidTape->primal.pop_back();
+    /* TODO: Implement adjoint of cost function */
+
+    /* Free the memory of the intermediate primal vector. */
+    delete u_in->Solution;
+    delete u_in;
+  }
 
   /* Delete the shared pointer */
   usol_b.reset();
 
-  /* Free the memory of the intermediate primal vector. */
-  delete u_in->Solution;
-  delete u_in;
-
 }
 
 
-void my_Sum_adjoint( BraidAction_t &action ){
+void my_Sum_adjoint( BraidAction_t &action, braid_App app ){
+
+  if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank==MASTER_NODE) std::cout << format("%d: SUM adj\n", app->braidrank);
+  }
 
   /* Get the coefficients of the sum */
   double alpha = action.sum_alpha;
@@ -750,16 +761,21 @@ void my_Sum_adjoint( BraidAction_t &action ){
 }
 
 
-void my_Clone_adjoint( BraidAction_t &action ){
+void my_Clone_adjoint( BraidAction_t &action, braid_App app ){
   /* my_Clone:        v  = u;
    * my_Clone_adj:  u_b += v_b;
    *                v_b  = 0      */
+
+  if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank==MASTER_NODE) std::cout << format("%d: Clone adj\n", app->braidrank);
+  }
 
   /* Pop the adjoint from the tape */
   std::shared_ptr<TwoStepSolution> vsol_b = (braidTape->adjoint).back();
   (braidTape->adjoint).pop_back();
   std::shared_ptr<TwoStepSolution> usol_b = (braidTape->adjoint).back();
   (braidTape->adjoint).pop_back();
+
 
   /* TODO: Implement the adjoint actions */
 
@@ -774,6 +790,9 @@ void my_BufPack_adjoint( BraidAction_t &action, braid_App app ){
  *                   MPI_Isend(buffer);
  * my_BufPack_adj:   MPI_recv(buffer);
  *                   u_b = buffer;    */
+  if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank==MASTER_NODE) std::cout << format("%d: BufPack adj\n", app->braidrank);
+  }
 
  /* Pop the adjoint from the tape */
  std::shared_ptr<TwoStepSolution> usol_b = (braidTape->adjoint).back();
@@ -790,6 +809,10 @@ void my_BufUnPack_adjoint( BraidAction_t &action, braid_App app ){
    *                     u = buffer;
    * my_BufUnpack_adj:   buffer = u_b;
    *                     MPI_send(buffer);   */
+
+  if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank==MASTER_NODE) std::cout << format("%d: BufUnPack adj\n", app->braidrank);
+  }
 
    /* Pop the adjoint from the tape */
    std::shared_ptr<TwoStepSolution> usol_b = (braidTape->adjoint).back();

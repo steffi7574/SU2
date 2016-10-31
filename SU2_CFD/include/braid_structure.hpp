@@ -239,6 +239,7 @@ struct BraidAction_t {
     braid_StepStatus  StepStatus;        /* The status of xBraid for Phi Calls */
     double            sum_alpha;        /* First coefficient of the sum */
     double            sum_beta;         /* Second coefficient of the sum */
+    double            time;         /* Current number of time step, needed for access_adjoint */
     int               send_recv_rank;   /* Processor rank of the sender / receiver */
     int               optimiter;       /* Iteration number of xBraid */
     int               myid;             /* Processors id */
@@ -282,7 +283,7 @@ void evalAdjointAction( braid_App app, BraidTape_t* braidTape);
 /* Adjoint Action Calls */
 void my_Step_adjoint( BraidAction_t &action, braid_App app );
 void my_Access_adjoint( BraidAction_t &action , braid_App app );
-void my_Sum_adjoint( BraidAction_t &action );
-void my_Clone_adjoint( BraidAction_t &action );
+void my_Sum_adjoint( BraidAction_t &action, braid_App app );
+void my_Clone_adjoint( BraidAction_t &action, braid_App app );
 void my_BufPack_adjoint( BraidAction_t &action, braid_App app );
 void my_BufUnPack_adjoint( BraidAction_t &action, braid_App app );

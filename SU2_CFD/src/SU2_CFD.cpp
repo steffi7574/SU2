@@ -481,6 +481,7 @@ int main(int argc, char *argv[]) {
         /* Clear the action tape */
         braidTape->action.clear();
 
+        std::cout<< format("vector sizes %d %d\n", braidTape->adjoint.size(), braidTape->primal.size());
 
         /* --- Primal xBraid computation ---*/
 
@@ -504,6 +505,10 @@ int main(int argc, char *argv[]) {
 
         /* Evaluate the Action tape in reverse order. */
         evalAdjointAction(app, braidTape);
+
+        /* TODO: Check the size of the primal and the adjoint tapes */
+        std::cout<< format("vector sizes %d %d %d\n", braidTape->adjoint.size(), braidTape->primal.size(), braidTape->braid_input.size());
+
 
         /* Output */
         if (rank == MASTER_NODE){
