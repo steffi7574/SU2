@@ -36,6 +36,18 @@ struct TwoStepSolution
     double **time_n;    /*!<\brief List of solutions at time n for each point in space. */
     double **time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
 
+    /* Flow solution coefficients for time n and time n1*/
+    double Total_CLift_n, Total_CLift_n1;
+    double Total_CDrag_n, Total_CDrag_n1;
+    double Total_CSideForce_n, Total_CSideForce_n1;
+    double Total_CEff_n, Total_CEff_n1;
+    double Total_CMx_n, Total_CMx_n1;
+    double Total_CMy_n, Total_CMy_n1;
+    double Total_CMz_n, Total_CMz_n1;
+    double Total_CFx_n, Total_CFx_n1;
+    double Total_CFy_n, Total_CFy_n1;
+    double Total_CFz_n, Total_CFz_n1;
+
     /* Constructor */
     TwoStepSolution(int Point, int Var){
       nPoint = Point;
@@ -136,17 +148,7 @@ typedef struct _braid_Vector_struct
     std::shared_ptr<TwoStepSolution> Solution_b;
 
 
-    /* Flow solution coefficients for time n and time n1*/
-    double Total_CLift_n, Total_CLift_n1;
-    double Total_CDrag_n, Total_CDrag_n1;
-    double Total_CSideForce_n, Total_CSideForce_n1;
-    double Total_CEff_n, Total_CEff_n1;
-    double Total_CMx_n, Total_CMx_n1;
-    double Total_CMy_n, Total_CMy_n1;
-    double Total_CMz_n, Total_CMz_n1;
-    double Total_CFx_n, Total_CFx_n1;
-    double Total_CFy_n, Total_CFy_n1;
-    double Total_CFz_n, Total_CFz_n1;
+
 
     /* Flow residual */
     double residual_dens_n;
