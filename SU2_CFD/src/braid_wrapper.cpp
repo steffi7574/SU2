@@ -784,7 +784,8 @@ void my_Sum_adjoint( BraidAction_t &action, braid_App app ){
 void my_Clone_adjoint( BraidAction_t &action, braid_App app ){
   /* my_Clone:        v  = u;
    * my_Clone_adj:  u_b += v_b;
-   *                v_b  = 0      */
+   *                v_b  = 0
+   */
 
   if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
       if (app->su2rank==MASTER_NODE) std::cout << format("%d: Clone adj\n", app->braidrank);
@@ -796,10 +797,23 @@ void my_Clone_adjoint( BraidAction_t &action, braid_App app ){
   std::shared_ptr<TwoStepSolution> usol_b = (braidTape->adjoint).back();
   (braidTape->adjoint).pop_back();
 
+  /* Grab variables from the app */
+  int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+  int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
-  /* TODO: Implement the adjoint actions */
+  /* Perform adjoint steps for all points */
+  for (int iPoint = 0; iPoint < nPoint; iPoint++){
+    for (int iVar = 0; iVar < nVar; iVar++){
+      /* Time n */
+      usol_b->time_n[iPoint][iVar] += vsol_b->time_n[iPoint][iVar];
+      vsol_b->time_n[iPoint][iVar] = 0.0;
+      /* Time n-1 */
+      usol_b->time_n1[iPoint][iVar] += vsol_b->time_n1[iPoint][iVar];
+      vsol_b->time_n1[iPoint][iVar] = 0.0;
+    }
+  }
 
-  /* Remove the shared pointer */
+  /* Delete the shared pointer */
   usol_b.reset();
   vsol_b.reset();
 }
