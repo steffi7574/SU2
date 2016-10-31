@@ -737,12 +737,22 @@ void my_Access_adjoint( BraidAction_t &action , braid_App app ){
 
 
 void my_Sum_adjoint( BraidAction_t &action, braid_App app ){
+  /*
+  * my_Sum:        y = alpha x + beta y;
+  * my_sum_adj:     x_b += alpha y_b;
+  *                 y_b = beta y_b;
+  */
 
+  /* Print action information */
   if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
       if (app->su2rank==MASTER_NODE) std::cout << format("%d: SUM adj\n", app->braidrank);
   }
 
-  /* Get the coefficients of the sum */
+  /* Grab variables from the app */
+  int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+  int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+  /* Get the coefficients of the sum from the action */
   double alpha = action.sum_alpha;
   double beta  = action.sum_beta;
 
@@ -752,7 +762,17 @@ void my_Sum_adjoint( BraidAction_t &action, braid_App app ){
   std::shared_ptr<TwoStepSolution> xsol_b = (braidTape->adjoint).back();
   (braidTape->adjoint).pop_back();
 
-  /* TODO: Implement the adjoint action  */
+  /* Perform adjoint steps for all points */
+  for (int iPoint = 0; iPoint < nPoint; iPoint++){
+    for (int iVar = 0; iVar < nVar; iVar++){
+      /* Time n */
+      xsol_b->time_n[iPoint][iVar] += alpha * ysol_b->time_n[iPoint][iVar];
+      ysol_b->time_n[iPoint][iVar] = beta * ysol_b->time_n[iPoint][iVar];
+      /* Time n-1 */
+      xsol_b->time_n1[iPoint][iVar] += alpha * ysol_b->time_n1[iPoint][iVar];
+      ysol_b->time_n1[iPoint][iVar] = beta * ysol_b->time_n1[iPoint][iVar];
+    }
+  }
 
   /* Delete the shared pointer */
   xsol_b.reset();
