@@ -98,6 +98,7 @@ int my_Step( braid_App        app,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
+    cout<< format("primal: Obj_Func first step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
 //      /* Grab the flow coefficient values for that time step and store it at time n-1 */
@@ -114,7 +115,14 @@ int my_Step( braid_App        app,
     }
 
     /*  Store the primal output Braid Vector on the primal tape */
-    braid_Vector ustore_tmp = deep_copy(app, u);
+    my_Vector* ustore_tmp = new my_Vector;
+    ustore_tmp->Solution = new TwoStepSolution(nPoint, nVar);
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        for (int iVar = 0; iVar < nVar; iVar++){
+            ustore_tmp->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar]);
+            ustore_tmp->Solution->time_n1[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
+        }
+    }
     braidTape->primal.push_back(ustore_tmp);
 
     /* Trick SU2 with the next iExtIter */
@@ -126,6 +134,8 @@ int my_Step( braid_App        app,
                    app->geometry_container, app->solver_container, app->numerics_container,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
+
+    cout<< format("primal: Obj_Func second step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
 
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
@@ -150,6 +160,7 @@ int my_Step( braid_App        app,
             u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
         }
     }
+
 
     /* Tell XBraid no refinement */
     braid_StepStatusSetRFactor(status, 1);
@@ -719,7 +730,7 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   }
   app->geometry_container[ZONE_0][MESH_0]->RegisterCoordinates(app->config_container[ZONE_0]);
 
-  /* Tape the updated geometry */
+  /* Tape updating the geometry */
   app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
 
   /* Record the time step that has been done in primal run */
@@ -729,6 +740,8 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
                  app->interpolator_container, app->transfer_container);
   /* Get objective function */
   su2double Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
+
+  cout<< format("adjoint: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
   /* Register Output variables */
   AD::RegisterOutput(Obj_Func);
@@ -754,8 +767,8 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     delete [] cast_n;
     delete [] cast_n1;
   }
-  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n1);
-  usol_b->Total_CDrag_n1 = 0.0;
+  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
+  usol_b->Total_CDrag_n = 0.0;
 
   /* Evaluate the tape */
   AD::ComputeAdjoint();
@@ -824,6 +837,8 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   /* Get objective function */
   Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
 
+  cout<< format("adjoint: Obj_Func n %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
+
   /* Register Output variables */
   AD::RegisterOutput(Obj_Func);
   for (int iPoint=0; iPoint < nPoint; iPoint++){
@@ -841,8 +856,8 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n(app->tmpadj_n[iPoint]);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n1(app->tmpadj_n1[iPoint]);
   }
-  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
-  usol_b->Total_CDrag_n = 0.0;
+  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n1);
+  usol_b->Total_CDrag_n1 = 0.0;
 
   /* Evaluate the tape */
   AD::ComputeAdjoint();
