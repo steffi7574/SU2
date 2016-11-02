@@ -126,7 +126,7 @@ typedef struct _braid_App_struct
   int ncpoints;                  // Number of coarse grid points on that processor
 
   /* Reduced gradient */
-  su2double** redgrad;
+  double** redgrad;
 
   /* Adjoint optimization variables */
   std::vector<TwoStepSolution*> optimadjoint;

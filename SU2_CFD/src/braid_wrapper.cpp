@@ -719,6 +719,22 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     delete [] cast_n1;
   }
 
+
+  /* Print the sensitivity of a surface point */
+  /* For finite differencing only!! */
+  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
+    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
+      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
+      cout<< format("Perturb coordinate %d \n", iPoint_vertex0);
+      su2double* Coord;
+      su2double EPS = 1e-5;
+      Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint_vertex0]->GetCoord();
+      Coord[0] += EPS;
+    }
+  }
+
   /* Start CoDi taping. */
   AD::StartRecording();
 
@@ -767,7 +783,8 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     delete [] cast_n;
     delete [] cast_n1;
   }
-  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
+  // SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
+  SU2_TYPE::SetDerivative(Obj_Func, 1.0);
   usol_b->Total_CDrag_n = 0.0;
 
   /* Evaluate the tape */
@@ -786,7 +803,18 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
     Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord();
     for (int iDim=0; iDim < nDim; iDim++){
-      app->redgrad[iPoint][iDim] += SU2_TYPE::GetDerivative(Coord[iDim]);
+      app->redgrad[iPoint][iDim] = SU2_TYPE::GetDerivative(Coord[iDim]);
+    }
+  }
+
+  /* Print the sensitivity of a surface point */
+  /* For finite differencing only!! */
+  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
+    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
+      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
+      cout<< format("grad surface %d %1.14e\n", iPoint_vertex0, app->redgrad[iPoint_vertex0][0]);
     }
   }
 

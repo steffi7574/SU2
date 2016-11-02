@@ -472,9 +472,12 @@ int main(int argc, char *argv[]) {
     /* Allocate memory for reduced gradient */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nDim   = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
-    app->redgrad = new su2double*[nPoint];
+    app->redgrad = new double*[nPoint];
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-      app->redgrad[iPoint] = new su2double[nDim];
+      app->redgrad[iPoint] = new double[nDim];
+      for (int iDim = 0; iDim < nDim; iDim++){
+        app->redgrad[iPoint][iDim] = 0.0;
+      }
     }
 
     /* Fix the vector size of the adjoints that correspond to braid output variables */
