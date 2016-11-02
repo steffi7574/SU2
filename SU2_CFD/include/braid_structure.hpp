@@ -72,7 +72,6 @@ struct TwoStepSolution
     }
 };
 
-
 /*!
  * \brief XBraid structure that holds additional information needed to carry out an unseady simulation step.
  */
@@ -122,13 +121,20 @@ typedef struct _braid_App_struct
   double adjoint_norm   = 0.0;    // Norm of the adjoint xBraid residual
   double Total_Cd_avg   = 0.0;    // Time-averaged objective funtion
   double Total_Cd_avg_b = 1.0;    // Seed for adjoint sensitivity computation
-  double redgrad        = 0.0;    // Gradient of the costfunction wrt beta
   double redgrad_norm   = 0.0;    // Norm of the gradient
   int optimiter;                // Iteration number of outer optimization loop.
   int ncpoints;                  // Number of coarse grid points on that processor
 
+  /* Reduced gradient */
+  su2double** redgrad;
+
   /* Adjoint optimization variables */
   std::vector<TwoStepSolution*> optimadjoint;
+
+  /* Temprary adjoint variables used inside step_adjoint */
+  su2double** tmpadj;
+  su2double** tmpadj_n;
+  su2double** tmpadj_n1;
 
   /* Constructor */
   _braid_App_struct() : optimadjoint() {}

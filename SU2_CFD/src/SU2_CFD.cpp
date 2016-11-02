@@ -448,22 +448,40 @@ int main(int argc, char *argv[]) {
     /* Initialize the adjoint vector of the optimization with zeros */
     for (int i=0; i<app->ncpoints; i++)
     {
-      /* Allocate memory */
       int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
       int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
       TwoStepSolution* Solution_b = new TwoStepSolution(nPoint, nVar);
-      /* Set to zero */
+      app->tmpadj    = new su2double*[nPoint];
+      app->tmpadj_n  = new su2double*[nPoint];
+      app->tmpadj_n1 = new su2double*[nPoint];
       for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        app->tmpadj[iPoint]    = new su2double[nVar];
+        app->tmpadj_n[iPoint]  = new su2double[nVar];
+        app->tmpadj_n1[iPoint] = new su2double[nVar];
         for (int iVar = 0; iVar < nVar; iVar++){
           Solution_b->time_n[iPoint][iVar] = 0.0;
+          Solution_b->time_n1[iPoint][iVar] = 0.0;
+          app->tmpadj[iPoint][iVar]    = 0.0;
+          app->tmpadj_n[iPoint][iVar]  = 0.0;
+          app->tmpadj_n1[iPoint][iVar] = 0.0;
         }
       }
       /* Push the pointer to the vector */
       app->optimadjoint.push_back(Solution_b);
     }
 
+    /* Allocate memory for reduced gradient */
+    int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nDim   = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
+    app->redgrad = new su2double*[nPoint];
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      app->redgrad[iPoint] = new su2double[nDim];
+    }
+
     /* Fix the vector size of the adjoints that correspond to braid output variables */
     braidTape->braid_output_b.resize(app->ncpoints);
+
+    cout<< format("Tape sizes %d\n", braidTape->braid_output_b.size());
 
 
 
@@ -495,8 +513,8 @@ int main(int argc, char *argv[]) {
         /* Reset the app */
         app->Total_Cd_avg   = 0.0;
         app->Total_Cd_avg_b = 1.0;
-        app->redgrad        = 0.0;
         app->optimiter      = optimiter;
+
 
         /* Clear the action tape */
         braidTape->action.clear();
@@ -517,6 +535,13 @@ int main(int argc, char *argv[]) {
 
 
         /* --- Adjoint sensitivity computation --- */
+
+        /* Reset the reduced gradient */
+        for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          for (int iDim = 0; iDim < nDim; iDim++){
+            app->redgrad[iPoint][iDim] = 0.0;
+          }
+        }
 
         /* Adjoint of computing the time-average. */
          app->Total_Cd_avg_b = 1.0/(app->ntime-1) * app->Total_Cd_avg_b;
@@ -539,9 +564,9 @@ int main(int argc, char *argv[]) {
         // if (optimiter == 0) app->optim_adjoint_norm0 = app_optim->adjoint_norm;
 
         /* Compute the reduced gradient */
-        double MyRedGrad = app->redgrad;
-        app->redgrad= 0.0;
-        MPI_Allreduce(&MyRedGrad, &app->redgrad, 1, MPI_DOUBLE, MPI_SUM, comm);
+        // double MyRedGrad = app->redgrad;
+        // app->redgrad= 0.0;
+        // MPI_Allreduce(&MyRedGrad, &app->redgrad, 1, MPI_DOUBLE, MPI_SUM, comm);
 
         /* Store the adjoints into the Optim structure */
         for (int i=0; i < app->ncpoints; i++)
