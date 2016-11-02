@@ -417,7 +417,6 @@ int main(int argc, char *argv[]) {
             my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
             my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
 
-
     // Set XBraid options
     braid_SetPrintLevel( core, config_container[ZONE_0]->GetBraid_Print_Level() );
     braid_SetAccessLevel( core, config_container[ZONE_0]->GetBraid_Access_Level() );
@@ -523,6 +522,7 @@ int main(int argc, char *argv[]) {
 
         /* Run one primal xBraid iteration */
         braid_Drive(core);
+
 
         /* Get the primal xBraid residuum */
         _braid_GetRNorm(core, -1, &app->primal_norm);
