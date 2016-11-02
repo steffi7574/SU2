@@ -719,6 +719,9 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   }
   app->geometry_container[ZONE_0][MESH_0]->RegisterCoordinates(app->config_container[ZONE_0]);
 
+  /* Tape the updated geometry */
+  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
+
   /* Record the time step that has been done in primal run */
   app->driver->Run(app->iteration_container, app->output, app->integration_container,
                  app->geometry_container, app->solver_container, app->numerics_container,
@@ -776,6 +779,101 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
   /* Reset the CoDi Tape */
   AD::Reset();
+
+
+
+  /* --- Do the same FIRST step that was done in the in the primal run and record. --- */
+
+  /* Set the deltat and iExtIter that were used in the primal xbraid run */
+  app->config_container[ZONE_0]->SetExtIter(iExtIter);
+
+  /* Cast the state vector that was used in primal run to su2double and give it to SU2 */
+  for (int iPoint=0; iPoint < nPoint; iPoint++){
+    su2double* cast_n  = new su2double[nVar];
+    su2double* cast_n1 = new su2double[nVar];
+    for (int iVar = 0; iVar < nVar; iVar++){
+      cast_n[iVar]  = u_in->Solution->time_n[iPoint][iVar];
+      cast_n1[iVar] = u_in->Solution->time_n1[iPoint][iVar];
+    }
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
+    delete [] cast_n;
+    delete [] cast_n1;
+  }
+
+  /* Start CoDi taping. */
+  AD::StartRecording();
+
+  /* Register input variables */
+  for (int iPoint=0; iPoint < nPoint; iPoint++){
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution(true);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution_time_n(true);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution_time_n1(true);
+  }
+  app->geometry_container[ZONE_0][MESH_0]->RegisterCoordinates(app->config_container[ZONE_0]);
+
+  /* Tape the updated geometry */
+  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
+
+  /* Record the time step that has been done in primal run */
+  app->driver->Run(app->iteration_container, app->output, app->integration_container,
+                 app->geometry_container, app->solver_container, app->numerics_container,
+                 app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+                 app->interpolator_container, app->transfer_container);
+  /* Get objective function */
+  Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
+
+  /* Register Output variables */
+  AD::RegisterOutput(Obj_Func);
+  for (int iPoint=0; iPoint < nPoint; iPoint++){
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution(false);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution_time_n(false);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution_time_n1(false);
+  }
+
+  /* Stop CoDi Taping */
+  AD::StopRecording();
+
+  /* Set the adjoint values of the output variables to the temporary adjoints */
+  for (int iPoint=0; iPoint < nPoint; iPoint++){
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n(app->tmpadj[iPoint]);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n(app->tmpadj_n[iPoint]);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n1(app->tmpadj_n1[iPoint]);
+  }
+  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
+  usol_b->Total_CDrag_n = 0.0;
+
+  /* Evaluate the tape */
+  AD::ComputeAdjoint();
+
+  /* Get the adjoints from the input variables and store them in the xbraid adjoints. */
+  for (int iPoint=0; iPoint < nPoint; iPoint++){
+    su2double* cast_n  = new su2double[nVar];
+    su2double* cast_n1 = new su2double[nVar];
+    /* Use the same order as when registering the input */
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution(cast_n);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution_time_n(cast_n);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution_time_n1(cast_n1);
+    for (int iVar = 0; iVar < nVar; iVar++){
+      usol_b->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(cast_n[iVar]);
+      usol_b->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(cast_n1[iVar]);
+    }
+  }
+
+  /* Get the reduced gradient. */
+  for (int iPoint = 0; iPoint < nPoint; iPoint++){
+    Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord();
+    for (int iDim=0; iDim < nDim; iDim++){
+      app->redgrad[iPoint][iDim] += SU2_TYPE::GetDerivative(Coord[iDim]);
+    }
+  }
+
+  /* Reset the CoDi Tape */
+  AD::Reset();
+
+
+
 
 
   /* Free the memory of the intermediate primal vectors. */
