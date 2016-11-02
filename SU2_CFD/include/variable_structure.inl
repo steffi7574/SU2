@@ -1103,14 +1103,24 @@ inline void CVariable::RegisterSolution(bool input) {
       AD::RegisterOutput(Solution[iVar]);}
 }
 
-inline void CVariable::RegisterSolution_time_n(){
-  for (unsigned short iVar = 0; iVar < nVar; iVar++)
+inline void CVariable::RegisterSolution_time_n(bool input){
+  if(input){
+    for (unsigned short iVar = 0; iVar < nVar; iVar++)
     AD::RegisterInput(Solution_time_n[iVar]);
+  }
+  else { for (unsigned short iVar = 0; iVar < nVar; iVar++)
+    AD::RegisterOutput(Solution_time_n[iVar]);
+  }
 }
 
-inline void CVariable::RegisterSolution_time_n1(){
-  for (unsigned short iVar = 0; iVar < nVar; iVar++)
+inline void CVariable::RegisterSolution_time_n1(bool input){
+  if (input){
+    for (unsigned short iVar = 0; iVar < nVar; iVar++)
     AD::RegisterInput(Solution_time_n1[iVar]);
+  }
+  else { for (unsigned short iVar = 0; iVar < nVar; iVar++)
+    AD::RegisterOutput(Solution_time_n1[iVar]);
+  }
 }
 
 inline void CVariable::SetAdjointSolution(su2double *adj_sol){

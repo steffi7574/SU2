@@ -246,12 +246,12 @@ void CDiscAdjSolver::RegisterSolution(CGeometry *geometry, CConfig *config){
   }
   if (time_n_needed){
     for (iPoint = 0; iPoint < nPoint; iPoint++){
-      direct_solver->node[iPoint]->RegisterSolution_time_n();
+      direct_solver->node[iPoint]->RegisterSolution_time_n(input);
     }
   }
   if (time_n1_needed){
     for (iPoint = 0; iPoint < nPoint; iPoint++){
-      direct_solver->node[iPoint]->RegisterSolution_time_n1();
+      direct_solver->node[iPoint]->RegisterSolution_time_n1(input);
     }
   }
 }
@@ -270,7 +270,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
     Temperature            = config->GetTemperature_FreeStreamND();
 
     su2double SoundSpeed = 0.0;
-    
+
     if (nDim == 2) { SoundSpeed = config->GetVelocity_FreeStreamND()[0]*Velocity_Ref/(cos(Alpha)*Mach); }
     if (nDim == 3) { SoundSpeed = config->GetVelocity_FreeStreamND()[0]*Velocity_Ref/(cos(Alpha)*cos(Beta)*Mach); }
 
