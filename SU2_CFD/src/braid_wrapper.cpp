@@ -68,14 +68,17 @@ int my_Step( braid_App        app,
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
 //    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
+    /* Declare and allocate intermediate casting variables */
+    su2double* cast_n  = new su2double[nVar];
+    su2double* cast_n1 = new su2double[nVar];
+
+
     /* Trick SU2 with xBraid's DeltaT / 2 */
     double deltat = ( tstop - tstart ) / 2.0;
     app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
 
     /* Trick the su2 solver with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-      su2double* cast_n  = new su2double[nVar];
-      su2double* cast_n1 = new su2double[nVar];
       for (int iVar = 0; iVar < nVar; iVar++){
         cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
         cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
@@ -98,7 +101,7 @@ int my_Step( braid_App        app,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
-    cout<< format("primal: Obj_Func first step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
+    // cout<< format("primal: Obj_Func first step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
 //      /* Grab the flow coefficient values for that time step and store it at time n-1 */
@@ -135,7 +138,7 @@ int my_Step( braid_App        app,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
-    cout<< format("primal: Obj_Func second step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
+    // cout<< format("primal: Obj_Func second step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
 
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
@@ -161,6 +164,9 @@ int my_Step( braid_App        app,
         }
     }
 
+    /* Free memory of the intermediate casting variables */
+    delete [] cast_n;
+    delete [] cast_n1;
 
     /* Tell XBraid no refinement */
     braid_StepStatusSetRFactor(status, 1);
@@ -404,6 +410,9 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
+    /* Allocate memory for the casting variable */
+    su2double* cast = new su2double[nVar];
+
     /* Retrieve xBraid time information from status object */
     double t;
     braid_AccessStatusGetT(astatus, &t);
@@ -428,11 +437,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
       /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
       for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        su2double* cast_n = new su2double[nVar];
         for (int iVar = 0.0; iVar < nVar; iVar++){
-          cast_n[iVar] = u->Solution->time_n[iPoint][iVar];
+          cast[iVar] = u->Solution->time_n[iPoint][iVar];
         }
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
       }
 
       /* Compute the primitive Variables from the conservative ones */
@@ -473,11 +481,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
       /* Trick SU2 with the current solution for output */
       for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        su2double* cast_n1 = new su2double[nVar];
         for (int iVar = 0.0; iVar < nVar; iVar++){
-          cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
+          cast[iVar] = u->Solution->time_n1[iPoint][iVar];
         }
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n1);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
       }
 
       /* Compute the primitive Variables from the conservative ones */
@@ -512,6 +519,9 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       app->Total_Cd_avg += u->Solution->Total_CDrag_n + u->Solution->Total_CDrag_n1;
 
     }
+
+    /* Free memory for the intermediat casting variable */
+    delete [] cast;
 
     /* Push the braid action to the action tape*/
     BraidAction_t* action = new BraidAction_t();
@@ -686,6 +696,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   int nDim   = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
   int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
+  /* Allocate memory for intermediate casting variables */
+  su2double* cast_n  = new su2double[nVar];
+  su2double* cast_n1 = new su2double[nVar];
+
   /* Load the primal vector that was the output  and the input of the xBraid Step function */
   braid_Vector u_out = braidTape->primal.back();
   braidTape->primal.pop_back(); /* Pop the pointer */
@@ -706,8 +720,6 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
   /* Cast the state vector that was used in primal run to su2double and give it to SU2 */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
-    su2double* cast_n  = new su2double[nVar];
-    su2double* cast_n1 = new su2double[nVar];
     for (int iVar = 0; iVar < nVar; iVar++){
       cast_n[iVar]  = u_tmp->Solution->time_n[iPoint][iVar];
       cast_n1[iVar] = u_tmp->Solution->time_n1[iPoint][iVar];
@@ -715,24 +727,6 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
-    delete [] cast_n;
-    delete [] cast_n1;
-  }
-
-
-  /* Print the sensitivity of a surface point */
-  /* For finite differencing only!! */
-  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
-    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
-        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
-        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
-      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
-      cout<< format("Perturb coordinate %d \n", iPoint_vertex0);
-      su2double* Coord;
-      su2double EPS = 1e-5;
-      Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint_vertex0]->GetCoord();
-      Coord[0] += EPS;
-    }
   }
 
   /* Start CoDi taping. */
@@ -757,7 +751,7 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   /* Get objective function */
   su2double Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
 
-  cout<< format("adjoint: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
+  // cout<< format("adjoint: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
   /* Register Output variables */
   AD::RegisterOutput(Obj_Func);
@@ -770,21 +764,20 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   /* Stop CoDi Taping */
   AD::StopRecording();
 
+  AD::globalTape.printStatistics();
+
   /* Set the adjoint values of the output variables */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
-    su2double* cast_n  = new su2double[nVar];
-    su2double* cast_n1 = new su2double[nVar];
     for (int iVar = 0; iVar < nVar; iVar++){
       cast_n[iVar]  = usol_b->time_n[iPoint][iVar];
       cast_n1[iVar] = usol_b->time_n1[iPoint][iVar];
     }
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n(cast_n);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n1(cast_n1);
-    delete [] cast_n;
-    delete [] cast_n1;
   }
-  // SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
-  SU2_TYPE::SetDerivative(Obj_Func, 1.0);
+
+  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
+  // SU2_TYPE::SetDerivative(Obj_Func, 1.0);
   usol_b->Total_CDrag_n = 0.0;
 
   /* Evaluate the tape */
@@ -803,20 +796,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
     Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord();
     for (int iDim=0; iDim < nDim; iDim++){
-      app->redgrad[iPoint][iDim] = SU2_TYPE::GetDerivative(Coord[iDim]);
+      app->redgrad[iPoint][iDim] += SU2_TYPE::GetDerivative(Coord[iDim]);
     }
   }
 
-  /* Print the sensitivity of a surface point */
-  /* For finite differencing only!! */
-  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
-    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
-        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
-        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
-      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
-      cout<< format("grad surface %d %1.14e\n", iPoint_vertex0, app->redgrad[iPoint_vertex0][0]);
-    }
-  }
 
   /* Reset the CoDi Tape */
   AD::Reset();
@@ -830,8 +813,6 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
   /* Cast the state vector that was used in primal run to su2double and give it to SU2 */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
-    su2double* cast_n  = new su2double[nVar];
-    su2double* cast_n1 = new su2double[nVar];
     for (int iVar = 0; iVar < nVar; iVar++){
       cast_n[iVar]  = u_in->Solution->time_n[iPoint][iVar];
       cast_n1[iVar] = u_in->Solution->time_n1[iPoint][iVar];
@@ -839,12 +820,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
-    delete [] cast_n;
-    delete [] cast_n1;
   }
 
   /* Start CoDi taping. */
-  AD::StartRecording();
+  // AD::StartRecording();
 
   /* Register input variables */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
@@ -865,7 +844,7 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   /* Get objective function */
   Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
 
-  cout<< format("adjoint: Obj_Func n %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
+  // cout<< format("adjoint: Obj_Func n %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
   /* Register Output variables */
   AD::RegisterOutput(Obj_Func);
@@ -876,7 +855,7 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   }
 
   /* Stop CoDi Taping */
-  AD::StopRecording();
+  // AD::StopRecording();
 
   /* Set the adjoint values of the output variables to the temporary adjoints */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
@@ -888,12 +867,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   usol_b->Total_CDrag_n1 = 0.0;
 
   /* Evaluate the tape */
-  AD::ComputeAdjoint();
+  // AD::ComputeAdjoint();
 
   /* Get the adjoints from the input variables and store them in the xbraid adjoints. */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
-    su2double* cast_n  = new su2double[nVar];
-    su2double* cast_n1 = new su2double[nVar];
     /* Use the same order as when registering the input */
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution(cast_n);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution_time_n(cast_n);
@@ -916,8 +893,9 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   AD::Reset();
 
 
-
-
+  /* Free memory of the intermediate casting vectors */
+  delete [] cast_n;
+  delete [] cast_n1;
 
   /* Free the memory of the intermediate primal vectors. */
   delete u_out->Solution;
@@ -963,18 +941,20 @@ void my_Access_adjoint( BraidAction_t &action , braid_App app ){
 
   /* If CPoint: Set the adjoint seed from previous iteration */
   int cfactor = app->config_container[ZONE_0]->GetBraid_CFactor();
-  if (_braid_IsCPoint(iExtIter/2,cfactor) ) // Divide by two because 2-Step XBraid !
-  { /* ATTENTION: THIS IS A BUGGY, IF MINCOARSE FORCES TO DO SERIAL RUN, then ncpoint = 1 */
+  if (app->ncpoints > 1){
+    if (_braid_IsCPoint(iExtIter/2,cfactor) ) // Divide by two because 2-Step XBraid !
+    { /* ATTENTION: THIS IS A BUGGY, IF MINCOARSE FORCES TO DO SERIAL RUN, then ncpoint = 1 */
 
-    /* Store the pointer in the braid_output_b vector */
-    int pos = (int) (iExtIter/2 - app->ilower) / cfactor;
-    braidTape->braid_output_b[pos] = usol_b;
+      /* Store the pointer in the braid_output_b vector */
+      int pos = (int) (iExtIter/2 - app->ilower) / cfactor;
+      braidTape->braid_output_b[pos] = usol_b;
 
-    /* Set the adjoint seed */
-    for (int iPoint=0; iPoint < nPoint; iPoint++){
-      for (int iVar=0; iVar < nVar; iVar++){
-        usol_b->time_n[iPoint][iVar]  = app->optimadjoint[pos]->time_n[iPoint][iVar];
-        usol_b->time_n1[iPoint][iVar] = app->optimadjoint[pos]->time_n1[iPoint][iVar];
+      /* Set the adjoint seed */
+      for (int iPoint=0; iPoint < nPoint; iPoint++){
+        for (int iVar=0; iVar < nVar; iVar++){
+          usol_b->time_n[iPoint][iVar]  = app->optimadjoint[pos]->time_n[iPoint][iVar];
+          usol_b->time_n1[iPoint][iVar] = app->optimadjoint[pos]->time_n1[iPoint][iVar];
+        }
       }
     }
   }

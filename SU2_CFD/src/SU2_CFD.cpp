@@ -498,7 +498,22 @@ int main(int argc, char *argv[]) {
     StartTime = MPI_Wtime();
   #endif
 
-
+  /* For finite differencing only!! */
+  /* Perturb a surface point */
+  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
+    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
+      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
+      su2double* Coord;
+      su2double EPS = 0e-6;
+      Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint_vertex0]->GetCoord();
+      Coord[0] += EPS;
+      cout<< format("Perturb coordinate %d with eps %1.1e\n", iPoint_vertex0, EPS);
+    }
+  }
+  /* Update the geomerty */
+  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
 
 
      // RUN XBRAID
@@ -535,9 +550,11 @@ int main(int argc, char *argv[]) {
         app->Total_Cd_avg = 0.0;
         MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
         app->Total_Cd_avg = 1.0/(app->ntime-1) * app->Total_Cd_avg;
+        cout<< format("Total_Cd_avg %1.14e\n", app->Total_Cd_avg);
 
 
         /* --- Adjoint sensitivity computation --- */
+        cout<< "ADJONT\n";
 
         /* Reset the reduced gradient */
         for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -608,6 +625,18 @@ int main(int argc, char *argv[]) {
       std::cout<<format("\n\nTurn warm_restart option on for One-Shot!!\n\n");
       return -1;
     }
+
+
+  /* Print the sensitivity of a surface point */
+  /* For finite differencing only!! */
+  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
+    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
+      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
+      cout<< format("grad surface %d %1.14e\n", iPoint_vertex0, app->redgrad[iPoint_vertex0][0]);
+    }
+  }
 
 
 //    std::ofstream out;
