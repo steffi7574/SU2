@@ -398,6 +398,7 @@ int main(int argc, char *argv[]) {
     }
     /* From XBraid 2.0 on, substract one here!! */
     app->ntime = app->ntime-1;
+    cout<< format("app->ntime %d\n", app->ntime);
 
     /* Set tstop */
     app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
@@ -506,10 +507,10 @@ int main(int argc, char *argv[]) {
         || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
       int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
       su2double* Coord;
-      su2double EPS = 0e-6;
+      su2double EPS = app->config_container[ZONE_0]->GetCauchy_Eps();
       Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint_vertex0]->GetCoord();
       Coord[0] += EPS;
-      cout<< format("Perturb coordinate %d with eps %1.1e\n", iPoint_vertex0, EPS);
+      cout<< format("Perturb coordinate %d with eps %1.1e\n", iPoint_vertex0, SU2_TYPE::GetValue(EPS));
     }
   }
   /* Update the geomerty */
