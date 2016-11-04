@@ -92,6 +92,8 @@ int my_Step( braid_App        app,
     int iExtIter = (int) round( ( tstart + deltat - app->initialstart ) / app->initialDT) ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
+    cout << format("Take 2-step at %d\n", iExtIter);
+
     /* Print information output */
     // if (app->su2rank == MASTER_NODE) cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", app->braidrank, deltat, tstart, tstop);
 
@@ -101,7 +103,7 @@ int my_Step( braid_App        app,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
-    // cout<< format("primal: Obj_Func first step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
+    cout<< format("primal: Obj_Func first step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
 //      /* Grab the flow coefficient values for that time step and store it at time n-1 */
@@ -138,7 +140,7 @@ int my_Step( braid_App        app,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                    app->interpolator_container, app->transfer_container);
 
-    // cout<< format("primal: Obj_Func second step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
+    cout<< format("primal: Obj_Func second step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
 
     /* Grab the history values from SU2's master node. */
     if (app->su2rank == MASTER_NODE){
@@ -697,6 +699,7 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
   /* Allocate memory for intermediate casting variables */
+  su2double* cast    = new su2double[nVar];
   su2double* cast_n  = new su2double[nVar];
   su2double* cast_n1 = new su2double[nVar];
 
@@ -710,6 +713,11 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
   /* Pop the adjoint shared pointer from the tape */
   std::shared_ptr<TwoStepSolution> usol_b = braidTape->adjoint.back();
+
+  int iPoint = 0;
+  int iVar   = 0;
+  // cout<< format("Test usol_b in %d %d %1.14e %1.14e\n", iPoint, iVar, usol_b->time_n[iPoint][iVar], usol_b->time_n1[iPoint][iVar]);
+
 
   /* --- Do the same SECOND step that was dont in the in the primal run and record. --- */
 
@@ -751,10 +759,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   /* Get objective function */
   su2double Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
 
-  // cout<< format("adjoint: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
+  cout<< format("adjoint: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
   /* Register Output variables */
-  AD::RegisterOutput(Obj_Func);
+  if (app->su2rank == MASTER_NODE) AD::RegisterOutput(Obj_Func);
   for (int iPoint=0; iPoint < nPoint; iPoint++){
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution(false);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution_time_n(false);
@@ -764,7 +772,9 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   /* Stop CoDi Taping */
   AD::StopRecording();
 
-  AD::globalTape.printStatistics();
+  /* Initialize the adjoint of the objective function */
+  if (app->su2rank == MASTER_NODE) SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
+  usol_b->Total_CDrag_n = 0.0;
 
   /* Set the adjoint values of the output variables */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
@@ -776,9 +786,6 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n1(cast_n1);
   }
 
-  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n);
-  // SU2_TYPE::SetDerivative(Obj_Func, 1.0);
-  usol_b->Total_CDrag_n = 0.0;
 
   /* Evaluate the tape */
   AD::ComputeAdjoint();
@@ -796,7 +803,9 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
     Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord();
     for (int iDim=0; iDim < nDim; iDim++){
-      app->redgrad[iPoint][iDim] += SU2_TYPE::GetDerivative(Coord[iDim]);
+      double sens = SU2_TYPE::GetDerivative(Coord[iDim]);
+      if (iPoint == 8737 && iDim == 0) cout<< format("sens %1.14e\n", sens);
+      app->redgrad[iPoint][iDim] += sens;
     }
   }
 
@@ -822,8 +831,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
   }
 
+
   /* Start CoDi taping. */
-  // AD::StartRecording();
+  AD::StartRecording();
+
 
   /* Register input variables */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
@@ -844,10 +855,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   /* Get objective function */
   Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
 
-  // cout<< format("adjoint: Obj_Func n %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
+  cout<< format("adjoint: Obj_Func n %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
   /* Register Output variables */
-  AD::RegisterOutput(Obj_Func);
+  if (app->su2rank == MASTER_NODE) AD::RegisterOutput(Obj_Func);
   for (int iPoint=0; iPoint < nPoint; iPoint++){
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution(false);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->RegisterSolution_time_n(false);
@@ -855,29 +866,32 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   }
 
   /* Stop CoDi Taping */
-  // AD::StopRecording();
+  AD::StopRecording();
+
+  /* Initialize the adjoint of the objective function */
+  if (app->su2rank == MASTER_NODE) SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n1);
+  usol_b->Total_CDrag_n1 = 0.0;
 
   /* Set the adjoint values of the output variables to the temporary adjoints */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n(app->tmpadj[iPoint]);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution(app->tmpadj[iPoint]);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n(app->tmpadj_n[iPoint]);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetAdjointSolution_time_n1(app->tmpadj_n1[iPoint]);
   }
-  SU2_TYPE::SetDerivative(Obj_Func, usol_b->Total_CDrag_n1);
-  usol_b->Total_CDrag_n1 = 0.0;
 
   /* Evaluate the tape */
-  // AD::ComputeAdjoint();
+  AD::ComputeAdjoint();
 
   /* Get the adjoints from the input variables and store them in the xbraid adjoints. */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
     /* Use the same order as when registering the input */
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution(cast_n);
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution(cast);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution_time_n(cast_n);
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetAdjointSolution_time_n1(cast_n1);
     for (int iVar = 0; iVar < nVar; iVar++){
-      usol_b->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(cast_n[iVar]);
       usol_b->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(cast_n1[iVar]);
+      usol_b->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(cast_n[iVar]);
+      usol_b->time_n[iPoint][iVar] += SU2_TYPE::GetValue(cast_n[iVar]);
     }
   }
 
@@ -885,15 +899,22 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
     Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord();
     for (int iDim=0; iDim < nDim; iDim++){
-      app->redgrad[iPoint][iDim] += SU2_TYPE::GetDerivative(Coord[iDim]);
+      double sens = SU2_TYPE::GetDerivative(Coord[iDim]);
+      app->redgrad[iPoint][iDim] += sens;
+      if (iPoint == 8737 && iDim == 0) cout<< format("sens %1.14e\n", sens);
     }
   }
+
+  iPoint = 0;
+  iVar   = 0;
+  // cout<< format("Test usol_b out %d %d %1.14e %1.14e\n", iPoint, iVar, usol_b->time_n[iPoint][iVar], usol_b->time_n1[iPoint][iVar]);
 
   /* Reset the CoDi Tape */
   AD::Reset();
 
 
   /* Free memory of the intermediate casting vectors */
+  delete [] cast;
   delete [] cast_n;
   delete [] cast_n1;
 
