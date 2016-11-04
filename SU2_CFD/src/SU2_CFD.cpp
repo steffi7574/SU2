@@ -549,7 +549,7 @@ int main(int argc, char *argv[]) {
         double MyTotalAvg = app->Total_Cd_avg;
         app->Total_Cd_avg = 0.0;
         MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
-        app->Total_Cd_avg = 1.0/(app->ntime-1) * app->Total_Cd_avg;
+        app->Total_Cd_avg = 1.0/(app->ntime * 2) * app->Total_Cd_avg;
         cout<< format("Total_Cd_avg %1.14e\n", app->Total_Cd_avg);
 
 
@@ -564,7 +564,7 @@ int main(int argc, char *argv[]) {
         }
 
         /* Adjoint of computing the time-average. */
-         app->Total_Cd_avg_b = 1.0/(app->ntime-1) * app->Total_Cd_avg_b;
+         app->Total_Cd_avg_b = 1.0/(app->ntime * 2 ) * app->Total_Cd_avg_b;
 
         /* Evaluate the Action tape in reverse order. */
         evalAdjointAction(app, braidTape);
@@ -607,7 +607,7 @@ int main(int argc, char *argv[]) {
 
         /* Output */
         if (rank == MASTER_NODE){
-          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.8e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
+          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
         }
 
         /* Stopping criterion */

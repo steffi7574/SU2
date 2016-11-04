@@ -38,7 +38,8 @@ struct TwoStepSolution
 
     /* Flow solution coefficients for time n and time n1*/
     double Total_CLift_n, Total_CLift_n1;
-    double Total_CDrag_n, Total_CDrag_n1;
+    double Total_CDrag_n = 0.0;
+    double Total_CDrag_n1 = 0.0;
     double Total_CSideForce_n, Total_CSideForce_n1;
     double Total_CEff_n, Total_CEff_n1;
     double Total_CMx_n, Total_CMx_n1;
