@@ -104,17 +104,19 @@ int my_Step( braid_App        app,
                   //  app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
                   //  app->interpolator_container, app->transfer_container);
 
-  /* test upddate*/
+
   su2double Obj_Func = 0.0;
   double beta = 0.5 + SU2_TYPE::GetValue(app->config_container[ZONE_0]->GetCauchy_Eps());
+  /* update test upddate*/
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
-    for (int iDim = 0; iDim < nDim; iDim++){
-      /* Compute at Solution */
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iDim, beta * app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iDim]);
-      /* Shift in time */
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution());
+    /* Compute at Solution */
+    for (int iVar = 0; iVar < nVar; iVar++){
+      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iVar, app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0] * app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
     }
+    /* Shift in time */
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
+    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution());
+
     Obj_Func += app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[0];
   }
   app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetTotal_CDrag(Obj_Func);
@@ -882,8 +884,10 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
       AD::globalTape.registerInput(cast_n1[iPoint][iVar]);
     }
   }
-  /* Register test param */
-  AD::globalTape.registerInput(beta);
+  /* Register coordinates */
+  for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      AD::globalTape.registerInput(app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0]);
+  }
 
   /* Set the solution from the casting variables */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
@@ -896,7 +900,7 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
     /* Compute at Solution */
     for (int iVar = 0; iVar < nVar; iVar++){
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iVar, beta * app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
+      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iVar, app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0] * app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
     }
     /* Shift in time */
     app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
@@ -944,10 +948,11 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   }
 
   /* Get the test reduced gradient. */
-  double sens = beta.getGradient();
-  // double sens = SU2_TYPE::GetDerivative(beta);
-  app->redgrad[0][0] += sens;
-  cout<< format("beta_b %1.14e\n", sens);
+  for (int iPoint = 0; iPoint < nPoint; iPoint++){
+    double localsens = (app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0]).getGradient();
+    if (iPoint == 8737 ) cout<< format("sens %1.14e\n", localsens);
+    app->redgrad[iPoint][0] += localsens;
+  }
 
   // cout<< format("Test usol_b out %d %d %1.14e %1.14e\n", iPoint, iVar, usol_b->time_n[iPoint][iVar], usol_b->time_n1[iPoint][iVar]);
 

@@ -499,23 +499,23 @@ int main(int argc, char *argv[]) {
     StartTime = MPI_Wtime();
   #endif
 
-  // /* For finite differencing only!! */
-  // /* Perturb a surface point */
-  // for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
-  //   if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
-  //       || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
-  //       || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
-  //     int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
-  //     su2double* Coord;
-  //     su2double EPS = app->config_container[ZONE_0]->GetCauchy_Eps();
-  //     Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint_vertex0]->GetCoord();
-  //     Coord[0] += EPS;
-  //     cout<< format("Perturb coordinate %d with eps %1.1e\n", iPoint_vertex0, SU2_TYPE::GetValue(EPS));
-  //   }
-  // }
-  // /* Update the geomerty */
-  // app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
-  //
+  /* For finite differencing only!! */
+  /* Perturb a surface point */
+  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
+    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
+        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
+      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
+      su2double EPS = app->config_container[ZONE_0]->GetCauchy_Eps();
+      su2double* Coord;
+      Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint_vertex0]->GetCoord();
+      Coord[0] += EPS;
+      cout<< format("Perturb coordinate %d with eps %1.1e\n", iPoint_vertex0, SU2_TYPE::GetValue(EPS));
+    }
+  }
+  /* Update the geomerty */
+  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
+
 
      // RUN XBRAID
     if ( config_container[ZONE_0]->GetBraid_Warm_Restart() ) {
@@ -638,8 +638,6 @@ int main(int argc, char *argv[]) {
       cout<< format("grad surface %d %1.14e\n", iPoint_vertex0, app->redgrad[iPoint_vertex0][0]);
     }
   }
-
-  cout<< format("grad beta %1.14e\n", app->redgrad[0][0]);
 
 
 //    std::ofstream out;
