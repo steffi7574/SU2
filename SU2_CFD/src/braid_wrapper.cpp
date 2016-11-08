@@ -105,9 +105,8 @@ int my_Step( braid_App        app,
                   //  app->interpolator_container, app->transfer_container);
 
 
-  su2double Obj_Func = 0.0;
-  double beta = 0.5 + SU2_TYPE::GetValue(app->config_container[ZONE_0]->GetCauchy_Eps());
   /* update test upddate*/
+  su2double Obj_Func = 0.0;
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
     /* Compute at Solution */
     for (int iVar = 0; iVar < nVar; iVar++){
@@ -870,10 +869,6 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
     }
   }
 
-  /* Test param */
-  su2double beta = 0.5 + SU2_TYPE::GetValue(app->config_container[ZONE_0]->GetCauchy_Eps());
-  su2double Obj_Func = 0.0;
-
   /* Start CoDi taping. */
   AD::StartRecording();
 
@@ -897,6 +892,7 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   }
 
   /* Record an update test upddate*/
+  su2double Obj_Func = 0.0;
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
     /* Compute at Solution */
     for (int iVar = 0; iVar < nVar; iVar++){
