@@ -99,27 +99,14 @@ int my_Step( braid_App        app,
     // if (app->su2rank == MASTER_NODE) cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", app->braidrank, deltat, tstart, tstop);
 
     /* Take the first time step to tstart + deltat */
-    // app->driver->Run(app->iteration_container, app->output, app->integration_container,
-                  //  app->geometry_container, app->solver_container, app->numerics_container,
-                  //  app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
-                  //  app->interpolator_container, app->transfer_container);
+    app->driver->Run(app->iteration_container, app->output, app->integration_container,
+                   app->geometry_container, app->solver_container, app->numerics_container,
+                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+                   app->interpolator_container, app->transfer_container);
 
-
-  /* update test upddate*/
-  su2double Obj_Func = 0.0;
-  for (int iPoint = 0; iPoint < nPoint; iPoint++){
-    /* Compute at Solution */
-    for (int iVar = 0; iVar < nVar; iVar++){
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iVar, app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0] * app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
-    }
-    /* Shift in time */
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution());
-
-    Obj_Func += app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[0];
-  }
-  app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetTotal_CDrag(Obj_Func);
-  cout<< format("primal: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
+    /* Get the objective function */
+    su2double Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
+    cout<< format("primal: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
     // cout<< format("primal: Obj_Func first step %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag()));
 
@@ -891,21 +878,17 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
       app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1[iPoint]);
   }
 
-  /* Record an update test upddate*/
-  su2double Obj_Func = 0.0;
-  for (int iPoint = 0; iPoint < nPoint; iPoint++){
-    /* Compute at Solution */
-    for (int iVar = 0; iVar < nVar; iVar++){
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iVar, app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0] * app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
-    }
-    /* Shift in time */
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n());
-    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution());
 
-    Obj_Func += app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[0];
-  }
+  /* Record an update */
+  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
+  app->driver->Run(app->iteration_container, app->output, app->integration_container,
+                   app->geometry_container, app->solver_container, app->numerics_container,
+                   app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
+                   app->interpolator_container, app->transfer_container);
 
-  cout<< format("adjoint: Obj_Func n %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
+  /* Get the objective function */
+  su2double Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
+  cout<< format("adjoint: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
   /* Register Output variables */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
