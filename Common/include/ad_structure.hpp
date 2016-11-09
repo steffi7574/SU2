@@ -117,16 +117,16 @@ namespace AD{
 /*--- Macro to begin and end sections with a passive tape ---*/
 
 #ifdef CODI_REVERSE_TYPE
-#define AD_BEGIN_PASSIVE         \
-  if(AD::globalTape.isActive()) {\
-     AD::globalTape.setPassive();\
-     AD::Status = true;          \
-  }
-#define AD_END_PASSIVE           \
-  if(AD::Status) {               \
-     AD::globalTape.setActive(); \
-     AD::Status = false;         \
-  }
+#define AD_BEGIN_PASSIVE         
+  // if(AD::globalTape.isActive()) {
+     //AD::globalTape.setPassive();
+     //AD::Status = true;
+  // }
+#define AD_END_PASSIVE
+  // if(AD::Status) {
+    //  AD::globalTape.setActive();
+    //  AD::Status = false;
+  // }
 #else
 #define AD_BEGIN_PASSIVE
 #define AD_END_PASSIVE
