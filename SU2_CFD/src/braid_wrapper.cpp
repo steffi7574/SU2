@@ -845,6 +845,9 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
   /* --- Do the same FIRST step that was done in the in the primal run and record. --- */
 
+  /* Reset the CoDi Tape */
+  AD::Reset();
+
   /* Set the deltat and iExtIter that were used in the primal xbraid run */
   app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
@@ -868,8 +871,13 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
   }
   /* Register coordinates */
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
-      AD::globalTape.registerInput(app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0]);
+      for (int iDim = 0; iDim < nDim; iDim ++){
+        AD::globalTape.registerInput(app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[iDim]);
+    }
   }
+
+  /* Record updating the geometry */
+  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
 
   /* Set the solution from the casting variables */
   for (int iPoint=0; iPoint < nPoint; iPoint++){
@@ -880,7 +888,6 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
 
   /* Record an update */
-  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
   app->driver->Run(app->iteration_container, app->output, app->integration_container,
                    app->geometry_container, app->solver_container, app->numerics_container,
                    app->config_container, app->surface_movement, app->grid_movement, app->FFDBox,
@@ -928,15 +935,15 @@ void my_Step_adjoint( BraidAction_t &action, braid_App app ){
 
   /* Get the test reduced gradient. */
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
-    double localsens = (app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[0]).getGradient();
-    if (iPoint == 8737 ) cout<< format("sens %1.14e\n", localsens);
-    app->redgrad[iPoint][0] += localsens;
+    for (int iDim = 0; iDim < nDim; iDim++){
+      double localsens = (app->geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord()[iDim]).getGradient();
+      if (iPoint == 8737 ) cout<< format("sens %1.14e\n", localsens);
+      app->redgrad[iPoint][iDim] += localsens;
+    }
   }
 
   // cout<< format("Test usol_b out %d %d %1.14e %1.14e\n", iPoint, iVar, usol_b->time_n[iPoint][iVar], usol_b->time_n1[iPoint][iVar]);
 
-  /* Reset the CoDi Tape */
-  AD::Reset();
 
   /* Free memory of the intermediate casting vectors */
   for (int iPoint = 0; iPoint < nPoint; iPoint++){
