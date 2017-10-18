@@ -3,18 +3,20 @@
 ## \file configure.py
 #  \brief An extended configuration script.
 #  \author T. Albring
-#  \version 4.1.0 "Cardinal"
+#  \version 5.0.0 "Raven"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Original Developers: Dr. Francisco D. Palacios.
+#                          Dr. Thomas D. Economon.
 #
 # SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
 #                 Prof. Piero Colonna's group at Delft University of Technology.
 #                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
 #                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
 #                 Prof. Rafael Palacios' group at Imperial College London.
+#                 Prof. Edwin van der Weide's group at the University of Twente.
+#                 Prof. Vincent Terrapon's group at the University of Liege.
 #
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright (C) 2012-2017 SU2, the open-source CFD code.
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -69,6 +71,8 @@ def main():
     parser.add_option("--with-ad", action="store",  type = "string",  help="AD Tool, CODI/ADOLC", default="CODI", dest="adtool")
     parser.add_option("--enable-mpi", action="store_true",
                       help="Enable mpi support", dest="mpi_enabled", default=False)
+    parser.add_option("--enable-PY_WRAPPER", action="store_true",
+                      help="Enable Python wrapper compilation", dest="py_wrapper_enabled", default=False)
     parser.add_option("--disable-normal", action="store_true",
                       help="Disable normal mode support", dest="normal_mode", default=False)
     parser.add_option("-c" , "--check", action="store_true",
@@ -105,7 +109,6 @@ def main():
               'SU2_DIRECTDIFF' : adtool_dd ,
               'SU2_AD'    : adtool_da }
 
-
     # Create a dictionary from the arguments
     argument_dict = dict(zip(args[::2],args[1::2]))
 
@@ -120,6 +123,7 @@ def main():
         configure(argument_dict,
                   conf_environ,
                   options.mpi_enabled,
+		  options.py_wrapper_enabled,
                   modes,
                   made_adolc,
                   made_codi)
@@ -278,7 +282,7 @@ def init_codi(argument_dict, modes, mpi_support = False, update = False):
     
     # This information of the modules is used if projects was not cloned using git
     # The sha tag must be maintained manually to point to the correct commit
-    sha_version_codi = 'c2d20c161f21a895702d00d6a9f5098b69adab28'
+    sha_version_codi = '2ec7cccf3ccd4b052f9d4ef95d6dc69244484f13'
     github_repo_codi = 'https://github.com/scicompkl/CoDiPack'
     sha_version_ampi = '31b2267c3a55a391a37d830369f2e0dba09008d1'
     github_repo_ampi = 'https://github.com/michel2323/AdjointMPI'
@@ -420,6 +424,7 @@ def download_module(name, alt_name, git_repo, commit_sha, logfile, errorfile):
 def configure(argument_dict,
               conf_environ,
               mpi_support,
+	      py_wrapper,
               modes,
               made_adolc,
               made_codi):
@@ -434,6 +439,8 @@ def configure(argument_dict,
     configure_mode = ''
     if mpi_support:
         configure_base = configure_base + ' --enable-mpi'
+    if py_wrapper:
+	configure_base = configure_base + ' --enable-PY_WRAPPER'
 
     build_dirs = ''
 
@@ -560,13 +567,13 @@ def header():
 
     print '-------------------------------------------------------------------------\n'\
           '|    ___ _   _ ___                                                      | \n'\
-          '|   / __| | | |_  )   Release 4.1.0 \'Cardinal\'                          | \n'\
+          '|   / __| | | |_  )   Release 5.0.0 \'Raven\'                             | \n'\
           '|   \__ \ |_| |/ /                                                      | \n'\
           '|   |___/\___//___|   Pre-configuration Script                          | \n'\
           '|                                                                       | \n'\
           '------------------------------------------------------------------------- \n'\
-          '| SU2 Lead Dev.: Dr. Francisco Palacios, Francisco.D.Palacios@boeing.com| \n'\
-          '|                Dr. Thomas D. Economon, economon@stanford.edu          | \n'\
+          '| SU2 Original Developers: Dr. Francisco D. Palacios.                   | \n'\
+          '|                          Dr. Thomas D. Economon.                      | \n'\
           '------------------------------------------------------------------------- \n'\
           '| SU2 Developers:                                                       | \n'\
           '| - Prof. Juan J. Alonso\'s group at Stanford University.                | \n'\
@@ -574,8 +581,10 @@ def header():
           '| - Prof. Nicolas R. Gauger\'s group at Kaiserslautern U. of Technology. | \n'\
           '| - Prof. Alberto Guardone\'s group at Polytechnic University of Milan.  | \n'\
           '| - Prof. Rafael Palacios\' group at Imperial College London.            | \n'\
+          '| - Prof. Edwin van der Weide\'s group at the University of Twente.      | \n'\
+          '| - Prof. Vincent Terrapon\'s group at the University of Liege.          | \n'\
           '------------------------------------------------------------------------- \n'\
-          '| Copyright (C) 2012-2015 SU2, the open-source CFD code.                | \n'\
+          '| Copyright (C) 2012-2017 SU2, the open-source CFD code.                | \n'\
           '|                                                                       | \n'\
           '| SU2 is free software; you can redistribute it and/or                  | \n'\
           '| modify it under the terms of the GNU Lesser General Public            | \n'\
