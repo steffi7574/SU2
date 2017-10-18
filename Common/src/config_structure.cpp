@@ -134,7 +134,7 @@ unsigned short CConfig::GetnZone(string val_mesh_filename, unsigned short val_fo
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::comm, &rank);
 #endif
   
   /*--- Search the mesh file for the 'NZONE' keyword. ---*/
@@ -153,8 +153,8 @@ unsigned short CConfig::GetnZone(string val_mesh_filename, unsigned short val_fo
 #ifndef HAVE_MPI
         exit(EXIT_FAILURE);
 #else
-        MPI_Barrier(MPI_COMM_WORLD);
-        MPI_Abort(MPI_COMM_WORLD,1);
+        MPI_Barrier(SU2_MPI::comm);
+        MPI_Abort(SU2_MPI::comm,1);
         MPI_Finalize();
 #endif
       }

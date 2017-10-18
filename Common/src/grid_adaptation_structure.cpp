@@ -222,8 +222,8 @@ void CGridAdaptation::GetAdjSolution(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
       exit(EXIT_FAILURE);
 #else
-      MPI_Barrier(MPI_COMM_WORLD);
-      MPI_Abort(MPI_COMM_WORLD,1);
+      MPI_Barrier(SU2_MPI::comm);
+      MPI_Abort(SU2_MPI::comm,1);
       MPI_Finalize();
 #endif
 }

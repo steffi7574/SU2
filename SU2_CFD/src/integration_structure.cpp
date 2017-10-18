@@ -941,7 +941,7 @@ void CIntegration::Convergence_Monitoring_FSI(CGeometry *fea_geometry, CConfig *
     else sbuf_conv[0] = 0;
   }
   
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::comm);
   
   if (sbuf_conv[0] == 1) { Convergence_FSI = true; }
   else { Convergence_FSI = false; }

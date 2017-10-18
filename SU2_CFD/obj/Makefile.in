@@ -161,6 +161,7 @@ am__libSU2Core_a_SOURCES_DIST = ../include/definition_structure.hpp \
 	../include/numerics_structure.hpp \
 	../include/numerics_structure.inl \
 	../include/output_structure.hpp \
+	../include/output_structure.inl \
 	../include/solver_structure.hpp \
 	../include/solver_structure.inl ../include/SU2_CFD.hpp \
 	../include/transport_model.hpp ../include/transport_model.inl \
@@ -168,20 +169,11 @@ am__libSU2Core_a_SOURCES_DIST = ../include/definition_structure.hpp \
 	../include/variable_structure.inl \
 	../include/transfer_structure.hpp \
 	../include/transfer_structure.inl \
-<<<<<<< HEAD
 	../include/braid_structure.hpp ../src/definition_structure.cpp \
 	../src/fluid_model.cpp ../src/fluid_model_pig.cpp \
 	../src/fluid_model_pvdw.cpp ../src/fluid_model_ppr.cpp \
 	../src/integration_structure.cpp ../src/integration_time.cpp \
 	../src/driver_structure.cpp ../src/iteration_structure.cpp \
-	../src/numerics_adjoint_levelset.cpp \
-=======
-	../src/definition_structure.cpp ../src/fluid_model.cpp \
-	../src/fluid_model_pig.cpp ../src/fluid_model_pvdw.cpp \
-	../src/fluid_model_ppr.cpp ../src/integration_structure.cpp \
-	../src/integration_time.cpp ../src/driver_structure.cpp \
-	../src/iteration_structure.cpp \
->>>>>>> SU2_original/develop
 	../src/numerics_adjoint_mean.cpp \
 	../src/numerics_adjoint_mean_inc.cpp \
 	../src/numerics_adjoint_turbulent.cpp \
@@ -223,78 +215,9 @@ am__libSU2Core_a_SOURCES_DIST = ../include/definition_structure.hpp \
 	../src/variable_direct_transition.cpp \
 	../src/variable_direct_turbulent.cpp \
 	../src/variable_direct_wave.cpp \
-<<<<<<< HEAD
-	../src/variable_fem_elasticity.cpp \
+	../src/variable_direct_elasticity.cpp \
 	../src/variable_structure.cpp ../src/variable_template.cpp \
 	../src/braid_wrapper.cpp
-am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = ../src/___bin_SU2_CFD-definition_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-fluid_model.$(OBJEXT) \
-	../src/___bin_SU2_CFD-fluid_model_pig.$(OBJEXT) \
-	../src/___bin_SU2_CFD-fluid_model_pvdw.$(OBJEXT) \
-	../src/___bin_SU2_CFD-fluid_model_ppr.$(OBJEXT) \
-	../src/___bin_SU2_CFD-integration_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-integration_time.$(OBJEXT) \
-	../src/___bin_SU2_CFD-driver_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-iteration_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_adjoint_levelset.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_adjoint_mean.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_adjoint_turbulent.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_direct_poisson.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_direct_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_direct_heat.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_direct_mean.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_direct_transition.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_direct_turbulent.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_direct_wave.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_fem_nonlinear_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_fem_linear_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_fem_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-numerics_template.$(OBJEXT) \
-	../src/___bin_SU2_CFD-output_cgns.$(OBJEXT) \
-	../src/___bin_SU2_CFD-output_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-output_tecplot.$(OBJEXT) \
-	../src/___bin_SU2_CFD-output_fieldview.$(OBJEXT) \
-	../src/___bin_SU2_CFD-output_su2.$(OBJEXT) \
-	../src/___bin_SU2_CFD-output_paraview.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_adjoint_levelset.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_adjoint_mean.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_adjoint_turbulent.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_adjoint_discrete.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_direct_poisson.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_direct_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_direct_heat.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_direct_mean.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_direct_transition.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_direct_turbulent.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_direct_wave.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_fem_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-solver_template.$(OBJEXT) \
-	../src/___bin_SU2_CFD-transfer_physics.$(OBJEXT) \
-	../src/___bin_SU2_CFD-transfer_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-SU2_CFD.$(OBJEXT) \
-	../src/___bin_SU2_CFD-transport_model.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_adjoint_levelset.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_adjoint_mean.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_adjoint_turbulent.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_adjoint_discrete.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_direct_poisson.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_direct_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_direct_heat.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_direct_mean.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_direct_transition.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_direct_turbulent.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_direct_wave.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_fem_elasticity.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_structure.$(OBJEXT) \
-	../src/___bin_SU2_CFD-variable_template.$(OBJEXT) \
-	../src/___bin_SU2_CFD-braid_wrapper.$(OBJEXT)
-@BUILD_NORMAL_TRUE@am____bin_SU2_CFD_OBJECTS = $(am__objects_1)
-=======
-	../src/variable_direct_elasticity.cpp \
-	../src/variable_structure.cpp ../src/variable_template.cpp
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = ../src/libSU2Core_a-definition_structure.$(OBJEXT) \
 	../src/libSU2Core_a-fluid_model.$(OBJEXT) \
@@ -357,7 +280,8 @@ am__objects_1 = ../src/libSU2Core_a-definition_structure.$(OBJEXT) \
 	../src/libSU2Core_a-variable_direct_wave.$(OBJEXT) \
 	../src/libSU2Core_a-variable_direct_elasticity.$(OBJEXT) \
 	../src/libSU2Core_a-variable_structure.$(OBJEXT) \
-	../src/libSU2Core_a-variable_template.$(OBJEXT)
+	../src/libSU2Core_a-variable_template.$(OBJEXT) \
+	../src/libSU2Core_a-braid_wrapper.$(OBJEXT)
 @BUILD_NORMAL_TRUE@am_libSU2Core_a_OBJECTS = $(am__objects_1)
 libSU2Core_a_OBJECTS = $(am_libSU2Core_a_OBJECTS)
 @BUILD_NORMAL_TRUE@am__EXEEXT_1 = ../bin/SU2_CFD$(EXEEXT)
@@ -370,7 +294,6 @@ am_____bin_SU2_CFD_SOURCES_DIST = ../include/SU2_CFD.hpp \
 	../src/SU2_CFD.cpp
 am__objects_2 = ../src/___bin_SU2_CFD-SU2_CFD.$(OBJEXT)
 @BUILD_NORMAL_TRUE@am____bin_SU2_CFD_OBJECTS = $(am__objects_2)
->>>>>>> SU2_original/develop
 ___bin_SU2_CFD_OBJECTS = $(am____bin_SU2_CFD_OBJECTS)
 @BUILD_NORMAL_TRUE@___bin_SU2_CFD_DEPENDENCIES = libSU2Core.a \
 @BUILD_NORMAL_TRUE@	../../Common/lib/libSU2.a \
@@ -387,6 +310,7 @@ am_____bin_SU2_CFD_AD_SOURCES_DIST = ../include/SU2_CFD.hpp \
 	../include/numerics_structure.hpp \
 	../include/numerics_structure.inl \
 	../include/output_structure.hpp \
+	../include/output_structure.inl \
 	../include/solver_structure.hpp \
 	../include/solver_structure.inl ../include/transport_model.hpp \
 	../include/transport_model.inl \
@@ -394,20 +318,11 @@ am_____bin_SU2_CFD_AD_SOURCES_DIST = ../include/SU2_CFD.hpp \
 	../include/variable_structure.inl \
 	../include/transfer_structure.hpp \
 	../include/transfer_structure.inl \
-<<<<<<< HEAD
 	../include/braid_structure.hpp ../src/definition_structure.cpp \
 	../src/fluid_model.cpp ../src/fluid_model_pig.cpp \
 	../src/fluid_model_pvdw.cpp ../src/fluid_model_ppr.cpp \
 	../src/integration_structure.cpp ../src/integration_time.cpp \
 	../src/driver_structure.cpp ../src/iteration_structure.cpp \
-	../src/numerics_adjoint_levelset.cpp \
-=======
-	../src/definition_structure.cpp ../src/fluid_model.cpp \
-	../src/fluid_model_pig.cpp ../src/fluid_model_pvdw.cpp \
-	../src/fluid_model_ppr.cpp ../src/integration_structure.cpp \
-	../src/integration_time.cpp ../src/driver_structure.cpp \
-	../src/iteration_structure.cpp \
->>>>>>> SU2_original/develop
 	../src/numerics_adjoint_mean.cpp \
 	../src/numerics_adjoint_mean_inc.cpp \
 	../src/numerics_adjoint_turbulent.cpp \
@@ -449,17 +364,11 @@ am_____bin_SU2_CFD_AD_SOURCES_DIST = ../include/SU2_CFD.hpp \
 	../src/variable_direct_transition.cpp \
 	../src/variable_direct_turbulent.cpp \
 	../src/variable_direct_wave.cpp \
-<<<<<<< HEAD
-	../src/variable_fem_elasticity.cpp \
+	../src/variable_direct_elasticity.cpp \
 	../src/variable_structure.cpp ../src/variable_template.cpp \
 	../src/braid_wrapper.cpp
-am__objects_2 =  \
-=======
-	../src/variable_direct_elasticity.cpp \
-	../src/variable_structure.cpp ../src/variable_template.cpp
 am__objects_3 = ../src/___bin_SU2_CFD_AD-SU2_CFD.$(OBJEXT)
 am__objects_4 =  \
->>>>>>> SU2_original/develop
 	../src/___bin_SU2_CFD_AD-definition_structure.$(OBJEXT) \
 	../src/___bin_SU2_CFD_AD-fluid_model.$(OBJEXT) \
 	../src/___bin_SU2_CFD_AD-fluid_model_pig.$(OBJEXT) \
@@ -521,15 +430,10 @@ am__objects_4 =  \
 	../src/___bin_SU2_CFD_AD-variable_direct_wave.$(OBJEXT) \
 	../src/___bin_SU2_CFD_AD-variable_direct_elasticity.$(OBJEXT) \
 	../src/___bin_SU2_CFD_AD-variable_structure.$(OBJEXT) \
-<<<<<<< HEAD
 	../src/___bin_SU2_CFD_AD-variable_template.$(OBJEXT) \
 	../src/___bin_SU2_CFD_AD-braid_wrapper.$(OBJEXT)
-@BUILD_REVERSE_TRUE@am____bin_SU2_CFD_AD_OBJECTS = $(am__objects_2)
-=======
-	../src/___bin_SU2_CFD_AD-variable_template.$(OBJEXT)
 @BUILD_REVERSE_TRUE@am____bin_SU2_CFD_AD_OBJECTS = $(am__objects_3) \
 @BUILD_REVERSE_TRUE@	$(am__objects_4)
->>>>>>> SU2_original/develop
 ___bin_SU2_CFD_AD_OBJECTS = $(am____bin_SU2_CFD_AD_OBJECTS)
 @BUILD_REVERSE_TRUE@___bin_SU2_CFD_AD_DEPENDENCIES =  \
 @BUILD_REVERSE_TRUE@	../../Common/lib/libSU2_AD.a \
@@ -546,6 +450,7 @@ am_____bin_SU2_CFD_DIRECTDIFF_SOURCES_DIST = ../include/SU2_CFD.hpp \
 	../include/numerics_structure.hpp \
 	../include/numerics_structure.inl \
 	../include/output_structure.hpp \
+	../include/output_structure.inl \
 	../include/solver_structure.hpp \
 	../include/solver_structure.inl ../include/transport_model.hpp \
 	../include/transport_model.inl \
@@ -553,20 +458,11 @@ am_____bin_SU2_CFD_DIRECTDIFF_SOURCES_DIST = ../include/SU2_CFD.hpp \
 	../include/variable_structure.inl \
 	../include/transfer_structure.hpp \
 	../include/transfer_structure.inl \
-<<<<<<< HEAD
 	../include/braid_structure.hpp ../src/definition_structure.cpp \
 	../src/fluid_model.cpp ../src/fluid_model_pig.cpp \
 	../src/fluid_model_pvdw.cpp ../src/fluid_model_ppr.cpp \
 	../src/integration_structure.cpp ../src/integration_time.cpp \
 	../src/driver_structure.cpp ../src/iteration_structure.cpp \
-	../src/numerics_adjoint_levelset.cpp \
-=======
-	../src/definition_structure.cpp ../src/fluid_model.cpp \
-	../src/fluid_model_pig.cpp ../src/fluid_model_pvdw.cpp \
-	../src/fluid_model_ppr.cpp ../src/integration_structure.cpp \
-	../src/integration_time.cpp ../src/driver_structure.cpp \
-	../src/iteration_structure.cpp \
->>>>>>> SU2_original/develop
 	../src/numerics_adjoint_mean.cpp \
 	../src/numerics_adjoint_mean_inc.cpp \
 	../src/numerics_adjoint_turbulent.cpp \
@@ -608,17 +504,11 @@ am_____bin_SU2_CFD_DIRECTDIFF_SOURCES_DIST = ../include/SU2_CFD.hpp \
 	../src/variable_direct_transition.cpp \
 	../src/variable_direct_turbulent.cpp \
 	../src/variable_direct_wave.cpp \
-<<<<<<< HEAD
-	../src/variable_fem_elasticity.cpp \
+	../src/variable_direct_elasticity.cpp \
 	../src/variable_structure.cpp ../src/variable_template.cpp \
 	../src/braid_wrapper.cpp
-am__objects_3 = ../src/___bin_SU2_CFD_DIRECTDIFF-definition_structure.$(OBJEXT) \
-=======
-	../src/variable_direct_elasticity.cpp \
-	../src/variable_structure.cpp ../src/variable_template.cpp
 am__objects_5 = ../src/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.$(OBJEXT)
 am__objects_6 = ../src/___bin_SU2_CFD_DIRECTDIFF-definition_structure.$(OBJEXT) \
->>>>>>> SU2_original/develop
 	../src/___bin_SU2_CFD_DIRECTDIFF-fluid_model.$(OBJEXT) \
 	../src/___bin_SU2_CFD_DIRECTDIFF-fluid_model_pig.$(OBJEXT) \
 	../src/___bin_SU2_CFD_DIRECTDIFF-fluid_model_pvdw.$(OBJEXT) \
@@ -919,6 +809,7 @@ libSU2Core_sources = \
   ../include/numerics_structure.hpp \
   ../include/numerics_structure.inl \
   ../include/output_structure.hpp \
+  ../include/output_structure.inl \
   ../include/solver_structure.hpp \
   ../include/solver_structure.inl \
   ../include/SU2_CFD.hpp \
@@ -1002,18 +893,12 @@ libSU2Core_libadd =
 
 # always link to built dependencies from ./externals
 
-<<<<<<< HEAD
-# if BUILD_CGNS
-# endif
-
 # if BUILD_XBRAID
 # endif
 #
 # if BUILD_AD_TOOLBOX
 # endif
 
-=======
->>>>>>> SU2_original/develop
 # if BUILD_MUTATIONPP
 # endif
 
@@ -1027,19 +912,11 @@ libSU2Core_libadd =
 # endif
 
 # if BUILD_ZLIB
-<<<<<<< HEAD
-su2_cfd_cxx_flags = @su2_externals_INCLUDES@ @CGNS_CXX@ @XBRAID_CXX@ \
+su2_cfd_cxx_flags = @su2_externals_INCLUDES@ @XBRAID_CXX@ \
 	@AD_TOOLBOX_CXX@ @MUTATIONPP_CXX@ @JSONCPP_CXX@ @HDF5_CXX@ \
 	@SZIP_CXX@ @ZLIB_CXX@ $(am__empty)
-su2_cfd_ldadd = @su2_externals_LIBS@ @CGNS_LD@ @XBRAID_LD@ \
-	@MUTATIONPP_LD@ @JSONCPP_LD@ @HDF5_LD@ @SZIP_LD@ @ZLIB_LD@ \
-	$(am__empty)
-=======
-su2_cfd_cxx_flags = @su2_externals_INCLUDES@ @MUTATIONPP_CXX@ \
-	@JSONCPP_CXX@ @HDF5_CXX@ @SZIP_CXX@ @ZLIB_CXX@ $(am__empty)
-su2_cfd_ldadd = @su2_externals_LIBS@ @MUTATIONPP_LD@ @JSONCPP_LD@ \
-	@HDF5_LD@ @SZIP_LD@ @ZLIB_LD@ $(am__empty)
->>>>>>> SU2_original/develop
+su2_cfd_ldadd = @su2_externals_LIBS@ @XBRAID_LD@ @MUTATIONPP_LD@ \
+	@JSONCPP_LD@ @HDF5_LD@ @SZIP_LD@ @ZLIB_LD@ $(am__empty)
 # endif
 @BUILD_NORMAL_TRUE@libSU2Core_a_SOURCES = $(libSU2Core_sources)
 @BUILD_NORMAL_TRUE@libSU2Core_a_CXXFLAGS = $(libSU2Core_cxx_flags)
@@ -1086,54 +963,9 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-<<<<<<< HEAD
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
-	fi; \
-	for p in $$list; do echo "$$p $$p"; done | \
-	sed 's/$(EXEEXT)$$//' | \
-	while read p p1; do if test -f $$p \
-	  ; then echo "$$p"; echo "$$p"; else :; fi; \
-	done | \
-	sed -e 'p;s,.*/,,;n;h' \
-	    -e 's|.*|.|' \
-	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
-	sed 'N;N;N;s,\n, ,g' | \
-	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
-	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
-	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
-	    else { print "f", $$3 "/" $$4, $$1; } } \
-	  END { for (d in files) print "f", d, files[d] }' | \
-	while read type dir files; do \
-	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
-	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
-	    } \
-	; done
-
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	files=`for p in $$list; do echo "$$p"; done | \
-	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
-	      -e 's/$$/$(EXEEXT)/' \
-	`; \
-	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(bindir)" && rm -f $$files
-
-clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-=======
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
->>>>>>> SU2_original/develop
 ../src/$(am__dirstamp):
 	@$(MKDIR_P) ../src
 	@: > ../src/$(am__dirstamp)
@@ -1264,9 +1096,9 @@ clean-noinstLIBRARIES:
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-variable_template.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
-<<<<<<< HEAD
-../src/___bin_SU2_CFD-braid_wrapper.$(OBJEXT): ../src/$(am__dirstamp) \
-=======
+../src/libSU2Core_a-braid_wrapper.$(OBJEXT): ../src/$(am__dirstamp) \
+	../src/$(DEPDIR)/$(am__dirstamp)
+
 libSU2Core.a: $(libSU2Core_a_OBJECTS) $(libSU2Core_a_DEPENDENCIES) $(EXTRA_libSU2Core_a_DEPENDENCIES) 
 	$(AM_V_at)-rm -f libSU2Core.a
 	$(AM_V_AR)$(libSU2Core_a_AR) libSU2Core.a $(libSU2Core_a_OBJECTS) $(libSU2Core_a_LIBADD)
@@ -1280,10 +1112,11 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	fi; \
 	for p in $$list; do echo "$$p $$p"; done | \
 	sed 's/$(EXEEXT)$$//' | \
-	while read p p1; do if test -f $$p; \
-	  then echo "$$p"; echo "$$p"; else :; fi; \
+	while read p p1; do if test -f $$p \
+	  ; then echo "$$p"; echo "$$p"; else :; fi; \
 	done | \
-	sed -e 'p;s,.*/,,;n;h' -e 's|.*|.|' \
+	sed -e 'p;s,.*/,,;n;h' \
+	    -e 's|.*|.|' \
 	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
 	sed 'N;N;N;s,\n, ,g' | \
 	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
@@ -1304,7 +1137,8 @@ uninstall-binPROGRAMS:
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
 	files=`for p in $$list; do echo "$$p"; done | \
 	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
-	      -e 's/$$/$(EXEEXT)/' `; \
+	      -e 's/$$/$(EXEEXT)/' \
+	`; \
 	test -n "$$list" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(bindir)" && rm -f $$files
@@ -1312,7 +1146,6 @@ uninstall-binPROGRAMS:
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 ../src/___bin_SU2_CFD-SU2_CFD.$(OBJEXT): ../src/$(am__dirstamp) \
->>>>>>> SU2_original/develop
 	../src/$(DEPDIR)/$(am__dirstamp)
 ../bin/$(am__dirstamp):
 	@$(MKDIR_P) ../bin
@@ -1594,71 +1427,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-SU2_CFD.Po@am__quote@
-<<<<<<< HEAD
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-braid_wrapper.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-definition_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-driver_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-fluid_model.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-fluid_model_pig.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-fluid_model_ppr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-fluid_model_pvdw.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-integration_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-integration_time.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-iteration_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_adjoint_levelset.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_adjoint_mean.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_adjoint_turbulent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_direct_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_direct_heat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_direct_mean.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_direct_poisson.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_direct_transition.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_direct_turbulent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_direct_wave.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_fem_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_fem_linear_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_fem_nonlinear_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-numerics_template.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-output_cgns.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-output_fieldview.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-output_paraview.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-output_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-output_su2.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-output_tecplot.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_adjoint_discrete.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_adjoint_levelset.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_adjoint_mean.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_adjoint_turbulent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_direct_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_direct_heat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_direct_mean.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_direct_poisson.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_direct_transition.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_direct_turbulent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_direct_wave.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_fem_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-solver_template.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-transfer_physics.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-transfer_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-transport_model.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_adjoint_discrete.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_adjoint_levelset.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_adjoint_mean.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_adjoint_turbulent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_direct_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_direct_heat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_direct_mean.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_direct_poisson.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_direct_transition.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_direct_turbulent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_direct_wave.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_fem_elasticity.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_structure.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD-variable_template.Po@am__quote@
-=======
->>>>>>> SU2_original/develop
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD_AD-SU2_CFD.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD_AD-braid_wrapper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD_AD-definition_structure.Po@am__quote@
@@ -1787,6 +1555,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD_DIRECTDIFF-variable_direct_wave.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD_DIRECTDIFF-variable_structure.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/___bin_SU2_CFD_DIRECTDIFF-variable_template.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-braid_wrapper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-definition_structure.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-driver_structure.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-fluid_model.Po@am__quote@
@@ -2734,6 +2503,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-variable_template.obj `if test -f '../src/variable_template.cpp'; then $(CYGPATH_W) '../src/variable_template.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_template.cpp'; fi`
 
+../src/libSU2Core_a-braid_wrapper.o: ../src/braid_wrapper.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-braid_wrapper.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-braid_wrapper.Tpo -c -o ../src/libSU2Core_a-braid_wrapper.o `test -f '../src/braid_wrapper.cpp' || echo '$(srcdir)/'`../src/braid_wrapper.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-braid_wrapper.Tpo ../src/$(DEPDIR)/libSU2Core_a-braid_wrapper.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/braid_wrapper.cpp' object='../src/libSU2Core_a-braid_wrapper.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-braid_wrapper.o `test -f '../src/braid_wrapper.cpp' || echo '$(srcdir)/'`../src/braid_wrapper.cpp
+
+../src/libSU2Core_a-braid_wrapper.obj: ../src/braid_wrapper.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-braid_wrapper.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-braid_wrapper.Tpo -c -o ../src/libSU2Core_a-braid_wrapper.obj `if test -f '../src/braid_wrapper.cpp'; then $(CYGPATH_W) '../src/braid_wrapper.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/braid_wrapper.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-braid_wrapper.Tpo ../src/$(DEPDIR)/libSU2Core_a-braid_wrapper.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/braid_wrapper.cpp' object='../src/libSU2Core_a-braid_wrapper.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-braid_wrapper.obj `if test -f '../src/braid_wrapper.cpp'; then $(CYGPATH_W) '../src/braid_wrapper.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/braid_wrapper.cpp'; fi`
+
 ../src/___bin_SU2_CFD-SU2_CFD.o: ../src/SU2_CFD.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_CXXFLAGS) $(CXXFLAGS) -MT ../src/___bin_SU2_CFD-SU2_CFD.o -MD -MP -MF ../src/$(DEPDIR)/___bin_SU2_CFD-SU2_CFD.Tpo -c -o ../src/___bin_SU2_CFD-SU2_CFD.o `test -f '../src/SU2_CFD.cpp' || echo '$(srcdir)/'`../src/SU2_CFD.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/___bin_SU2_CFD-SU2_CFD.Tpo ../src/$(DEPDIR)/___bin_SU2_CFD-SU2_CFD.Po
@@ -2761,20 +2544,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/SU2_CFD.cpp' object='../src/___bin_SU2_CFD_AD-SU2_CFD.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_AD_CXXFLAGS) $(CXXFLAGS) -c -o ../src/___bin_SU2_CFD_AD-SU2_CFD.obj `if test -f '../src/SU2_CFD.cpp'; then $(CYGPATH_W) '../src/SU2_CFD.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/SU2_CFD.cpp'; fi`
-
-../src/___bin_SU2_CFD-braid_wrapper.o: ../src/braid_wrapper.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_CXXFLAGS) $(CXXFLAGS) -MT ../src/___bin_SU2_CFD-braid_wrapper.o -MD -MP -MF ../src/$(DEPDIR)/___bin_SU2_CFD-braid_wrapper.Tpo -c -o ../src/___bin_SU2_CFD-braid_wrapper.o `test -f '../src/braid_wrapper.cpp' || echo '$(srcdir)/'`../src/braid_wrapper.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/___bin_SU2_CFD-braid_wrapper.Tpo ../src/$(DEPDIR)/___bin_SU2_CFD-braid_wrapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/braid_wrapper.cpp' object='../src/___bin_SU2_CFD-braid_wrapper.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_CXXFLAGS) $(CXXFLAGS) -c -o ../src/___bin_SU2_CFD-braid_wrapper.o `test -f '../src/braid_wrapper.cpp' || echo '$(srcdir)/'`../src/braid_wrapper.cpp
-
-../src/___bin_SU2_CFD-braid_wrapper.obj: ../src/braid_wrapper.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_CXXFLAGS) $(CXXFLAGS) -MT ../src/___bin_SU2_CFD-braid_wrapper.obj -MD -MP -MF ../src/$(DEPDIR)/___bin_SU2_CFD-braid_wrapper.Tpo -c -o ../src/___bin_SU2_CFD-braid_wrapper.obj `if test -f '../src/braid_wrapper.cpp'; then $(CYGPATH_W) '../src/braid_wrapper.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/braid_wrapper.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/___bin_SU2_CFD-braid_wrapper.Tpo ../src/$(DEPDIR)/___bin_SU2_CFD-braid_wrapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/braid_wrapper.cpp' object='../src/___bin_SU2_CFD-braid_wrapper.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_CXXFLAGS) $(CXXFLAGS) -c -o ../src/___bin_SU2_CFD-braid_wrapper.obj `if test -f '../src/braid_wrapper.cpp'; then $(CYGPATH_W) '../src/braid_wrapper.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/braid_wrapper.cpp'; fi`
 
 ../src/___bin_SU2_CFD_AD-definition_structure.o: ../src/definition_structure.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_AD_CXXFLAGS) $(CXXFLAGS) -MT ../src/___bin_SU2_CFD_AD-definition_structure.o -MD -MP -MF ../src/$(DEPDIR)/___bin_SU2_CFD_AD-definition_structure.Tpo -c -o ../src/___bin_SU2_CFD_AD-definition_structure.o `test -f '../src/definition_structure.cpp' || echo '$(srcdir)/'`../src/definition_structure.cpp
@@ -3644,7 +3413,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_AD_CXXFLAGS) $(CXXFLAGS) -c -o ../src/___bin_SU2_CFD_AD-variable_template.obj `if test -f '../src/variable_template.cpp'; then $(CYGPATH_W) '../src/variable_template.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_template.cpp'; fi`
 
-<<<<<<< HEAD
 ../src/___bin_SU2_CFD_AD-braid_wrapper.o: ../src/braid_wrapper.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_AD_CXXFLAGS) $(CXXFLAGS) -MT ../src/___bin_SU2_CFD_AD-braid_wrapper.o -MD -MP -MF ../src/$(DEPDIR)/___bin_SU2_CFD_AD-braid_wrapper.Tpo -c -o ../src/___bin_SU2_CFD_AD-braid_wrapper.o `test -f '../src/braid_wrapper.cpp' || echo '$(srcdir)/'`../src/braid_wrapper.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/___bin_SU2_CFD_AD-braid_wrapper.Tpo ../src/$(DEPDIR)/___bin_SU2_CFD_AD-braid_wrapper.Po
@@ -3658,7 +3426,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/braid_wrapper.cpp' object='../src/___bin_SU2_CFD_AD-braid_wrapper.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_AD_CXXFLAGS) $(CXXFLAGS) -c -o ../src/___bin_SU2_CFD_AD-braid_wrapper.obj `if test -f '../src/braid_wrapper.cpp'; then $(CYGPATH_W) '../src/braid_wrapper.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/braid_wrapper.cpp'; fi`
-=======
+
 ../src/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.o: ../src/SU2_CFD.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_DIRECTDIFF_CXXFLAGS) $(CXXFLAGS) -MT ../src/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.o -MD -MP -MF ../src/$(DEPDIR)/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.Tpo -c -o ../src/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.o `test -f '../src/SU2_CFD.cpp' || echo '$(srcdir)/'`../src/SU2_CFD.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.Tpo ../src/$(DEPDIR)/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.Po
@@ -3672,7 +3440,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/SU2_CFD.cpp' object='../src/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_DIRECTDIFF_CXXFLAGS) $(CXXFLAGS) -c -o ../src/___bin_SU2_CFD_DIRECTDIFF-SU2_CFD.obj `if test -f '../src/SU2_CFD.cpp'; then $(CYGPATH_W) '../src/SU2_CFD.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/SU2_CFD.cpp'; fi`
->>>>>>> SU2_original/develop
 
 ../src/___bin_SU2_CFD_DIRECTDIFF-definition_structure.o: ../src/definition_structure.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___bin_SU2_CFD_DIRECTDIFF_CXXFLAGS) $(CXXFLAGS) -MT ../src/___bin_SU2_CFD_DIRECTDIFF-definition_structure.o -MD -MP -MF ../src/$(DEPDIR)/___bin_SU2_CFD_DIRECTDIFF-definition_structure.Tpo -c -o ../src/___bin_SU2_CFD_DIRECTDIFF-definition_structure.o `test -f '../src/definition_structure.cpp' || echo '$(srcdir)/'`../src/definition_structure.cpp
@@ -4750,36 +4517,21 @@ uninstall-am: uninstall-binPROGRAMS
 
 .MAKE: install-am install-strip
 
-<<<<<<< HEAD
 .PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
-	clean-binPROGRAMS clean-generic cscopelist-am ctags ctags-am \
-	distclean distclean-compile distclean-generic distclean-tags \
-	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-binPROGRAMS install-data install-data-am \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS
+	clean-binPROGRAMS clean-generic clean-noinstLIBRARIES \
+	cscopelist-am ctags ctags-am distclean distclean-compile \
+	distclean-generic distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
+	uninstall-am uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
-=======
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-noinstLIBRARIES cscopelist ctags distclean \
-	distclean-compile distclean-generic distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS
->>>>>>> SU2_original/develop
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
