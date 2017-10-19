@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
   SU2_MPI::Init(&argc, &argv);
   MPI_Buffer_attach( malloc(BUFSIZE), BUFSIZE );
   SU2_Comm MPICommunicator(MPI_COMM_WORLD);
+  SU2_MPI::comm = MPI_COMM_WORLD;
 #else
   SU2_Comm MPICommunicator(0);
 #endif
@@ -125,6 +126,10 @@ int main(int argc, char *argv[]) {
     } else if (turbo) {
 
       driver = new CTurbomachineryDriver(config_file_name, nZone, nDim, MPICommunicator);
+
+    } else if (config->GetBraid_Run()){
+
+        driver = new CXBraidDriver(config_file_name, nZone, nDim, MPICommunicator);
 
     } else {
 

@@ -902,3 +902,48 @@ public:
   void Update(unsigned short zoneFlow, unsigned short zoneStruct);
   using CDriver::Update;
 };
+
+
+/*!
+ * \class CXBraidDriver
+ * \brief Class for parallel-in-time integration
+ * \author S. Günther
+ * \version 5.0.0 "Raven"
+ */
+class CXBraidDriver: public CDriver{
+
+protected:
+  CIteration** direct_iteration; /*!< \brief A pointer to the direct iteration.*/
+
+public:
+
+  /*!
+    * \brief Constructor of the class.
+    * \param[in] confFile - Configuration file name.
+    * \param[in] val_nZone - Total number of zones.
+    * \param[in] val_nDim - Number of dimensions.
+    */
+  CXBraidDriver(char* confFile,
+                unsigned short val_nZone,
+                unsigned short val_nDim,
+                SU2_Comm MPICommunicator);
+
+  /*!
+   * \brief Destructor of the class.
+   */
+  ~CXBraidDriver(void);
+
+  /*!
+   * \brief Perform one iteration of the parallel-in-time solver.
+   */
+
+  void Run();
+
+  /*!
+   * \brief Run one time-step of the direct solver. It is virtual because it depends on the kind of physics.
+   */
+  virtual void DirectRun();
+
+};
+
+

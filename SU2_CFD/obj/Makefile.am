@@ -159,7 +159,9 @@ libSU2Core_cxx_flags += @su2_externals_INCLUDES@
 
 # if BUILD_XBRAID
 su2_cfd_cxx_flags += @XBRAID_CXX@
+libSU2Core_cxx_flags += @XBRAID_CXX@
 su2_cfd_ldadd += @XBRAID_LD@
+libSU2Core_libadd += @XBRAID_LD@
 # endif
 #
 # if BUILD_AD_TOOLBOX

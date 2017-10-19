@@ -50,9 +50,9 @@
 #include "../include/definition_structure.hpp"
 #include "../include/iteration_structure.hpp"
 #include "../include/transfer_structure.hpp"
-#include "../include/braid_structure.hpp"
 #include "../include/util.hpp"
 
-#include "braid.hpp"
+//#include "../include/braid_structure.hpp"
+//#include "braid.hpp"
 
 using namespace std;

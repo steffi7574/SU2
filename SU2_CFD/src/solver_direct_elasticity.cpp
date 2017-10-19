@@ -3952,7 +3952,6 @@ void CFEM_ElasticitySolver::Update_StructSolution(CGeometry **fea_geometry,
     valSolutionPred = fea_solution[MESH_0][FEA_SOL]->node[iPoint]->GetSolution_Pred();
     
     fea_solution[MESH_0][FEA_SOL]->node[iPoint]->SetSolution(valSolutionPred);
-    SU2_MPI::comm
   }
   
   /*--- Perform the MPI communication of the solution, displacements only ---*/
