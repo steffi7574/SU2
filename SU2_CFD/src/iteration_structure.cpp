@@ -63,7 +63,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- Perform mesh movement depending on specified type ---*/
@@ -574,7 +574,7 @@ void CFluidIteration::SetWind_GustField(CConfig *config_container, CGeometry **g
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   if (rank == MASTER_NODE)
@@ -634,8 +634,8 @@ void CFluidIteration::SetWind_GustField(CConfig *config_container, CGeometry **g
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
   }
@@ -1083,7 +1083,7 @@ void CFEM_StructuralAnalysis::Iterate(COutput *output,
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   su2double loadIncrement;
@@ -1394,7 +1394,7 @@ void CAdjFluidIteration::Preprocess(COutput *output,
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   /*--- For the unsteady adjoint, load a new direct solution from a restart file. ---*/
@@ -1617,7 +1617,7 @@ void CDiscAdjFluidIteration::Preprocess(COutput *output,
 
 #ifdef HAVE_MPI
   int rank;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
 
@@ -1773,7 +1773,7 @@ void CDiscAdjFluidIteration::LoadUnsteady_Solution(CGeometry ***geometry_contain
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   if (val_DirectIter >= 0) {
@@ -1991,7 +1991,7 @@ void FEM_StructuralIteration(COutput *output, CIntegration ***integration_contai
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
 

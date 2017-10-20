@@ -41,7 +41,7 @@ CAdjTurbSolver::CAdjTurbSolver(CGeometry *geometry, CConfig *config, unsigned sh
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-	MPI_Comm_rank(SU2_MPI::comm, &rank);
+	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   nDim = geometry->GetnDim();
@@ -146,8 +146,8 @@ CAdjTurbSolver::CAdjTurbSolver(CGeometry *geometry, CConfig *config, unsigned sh
 #ifndef HAVE_MPI
       exit(EXIT_FAILURE);
 #else
-      MPI_Barrier(SU2_MPI::comm);
-      MPI_Abort(SU2_MPI::comm,1);
+      MPI_Barrier(SU2_MPI::comm_x);
+      MPI_Abort(SU2_MPI::comm_x,1);
       MPI_Finalize();
 #endif
     }
@@ -188,7 +188,7 @@ CAdjTurbSolver::CAdjTurbSolver(CGeometry *geometry, CConfig *config, unsigned sh
 #ifndef HAVE_MPI
     rbuf_NotMatching = sbuf_NotMatching;
 #else
-    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
 #endif
     if (rbuf_NotMatching != 0) {
       if (rank == MASTER_NODE) {
@@ -198,8 +198,8 @@ CAdjTurbSolver::CAdjTurbSolver(CGeometry *geometry, CConfig *config, unsigned sh
 #ifndef HAVE_MPI
       exit(EXIT_FAILURE);
 #else
-      MPI_Barrier(SU2_MPI::comm);
-      MPI_Abort(SU2_MPI::comm,1);
+      MPI_Barrier(SU2_MPI::comm_x);
+      MPI_Abort(SU2_MPI::comm_x,1);
       MPI_Finalize();
 #endif
     }
@@ -264,7 +264,7 @@ void CAdjTurbSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
 
       /*--- Send/Receive information using Sendrecv ---*/
     SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                               Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                               Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
 #else
       
       /*--- Receive information without MPI ---*/
@@ -339,7 +339,7 @@ void CAdjTurbSolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *config) 
 
       /*--- Send/Receive information using Sendrecv ---*/
     SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                               Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                               Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
       
 #else
       
@@ -420,7 +420,7 @@ void CAdjTurbSolver::Set_MPI_Solution_Gradient(CGeometry *geometry, CConfig *con
       
       /*--- Send/Receive information using Sendrecv ---*/
     SU2_MPI::Sendrecv(Buffer_Send_Gradient, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                               Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                               Buffer_Receive_Gradient, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
 #else
       
       /*--- Receive information without MPI ---*/

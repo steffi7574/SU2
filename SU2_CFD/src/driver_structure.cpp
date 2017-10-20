@@ -51,8 +51,8 @@ CDriver::CDriver(char* confFile,
   int rank = MASTER_NODE;
   int size = SINGLE_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
 #endif
 
   /*--- Create pointers to all of the classes that may be used throughout
@@ -113,33 +113,12 @@ CDriver::CDriver(char* confFile,
     config_container[iZone] = new CConfig(config_file_name, SU2_CFD, iZone, nZone, nDim, VERB_HIGH);
 
 
+
+
+
     /*--- Set the MPI communicator ---*/
 
     config_container[iZone]->SetMPICommunicator(MPICommunicator);
-
-
-    /* --- Preprocess the processor grid --- */
-
-    if ( config_container[ZONE_0]->GetBraid_Run() ){
-      if ( size % config_container[ZONE_0]->GetBraid_NProc_Time() != 0 ){
-        if( rank == 0 ) cout << "\n\nError: px*pt does not equal the number of processors!\n\n";
-        exit(EXIT_FAILURE);
-    } else {
-        /* Split communicators for the time and space dimensions */
-        int px = size / config_container[ZONE_0]->GetBraid_NProc_Time();
-        MPI_Comm comm_x, comm_t;
-        braid_SplitCommworld(&(SU2_MPI::comm), px, &comm_x, &comm_t);
-        /* Pass the spatial communicator to SU2 */
-        SU2_MPI::comm = comm_x;
-        /* Get the rank and size of braid and su2 processors */
-//        MPI_Comm_size(comm_t, &braidsize);
-//        MPI_Comm_size(comm_x, &su2size);
-//        MPI_Comm_rank(comm_t, &braidrank);
-//        MPI_Comm_rank(comm_x, &su2rank);
-    }
-}
-
-
 
 
     /*--- Definition of the geometry class to store the primal grid in the
@@ -605,8 +584,8 @@ void CDriver::Postprocessing() {
   int size = SINGLE_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
 #endif
 
     /*--- Output some information to the console. ---*/
@@ -760,7 +739,7 @@ void CDriver::Geometrical_Preprocessing() {
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   for (iZone = 0; iZone < nZone; iZone++) {
@@ -922,7 +901,7 @@ void CDriver::Solver_Preprocessing(CSolver ***solver_container, CGeometry **geom
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- Initialize some useful booleans ---*/
@@ -1149,8 +1128,8 @@ void CDriver::Solver_Preprocessing(CSolver ***solver_container, CGeometry **geom
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
   }
@@ -2443,7 +2422,7 @@ void CDriver::Iteration_Preprocessing() {
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- Initial print to console for this zone. ---*/
@@ -2590,7 +2569,7 @@ void CDriver::Interface_Preprocessing() {
 
         /*--- We gather a vector in MASTER_NODE that determines if the boundary is not on the processor because of the partition or because the zone does not include it ---*/
 
-        SU2_MPI::Gather(&markDonor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+        SU2_MPI::Gather(&markDonor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
       if (rank == MASTER_NODE) {
         for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -2602,9 +2581,9 @@ void CDriver::Interface_Preprocessing() {
           }
         }
 
-        SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+        SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
-        SU2_MPI::Gather(&markTarget, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+        SU2_MPI::Gather(&markTarget, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
       if (rank == MASTER_NODE){
         for (iRank = 0; iRank < nProcessor; iRank++){
@@ -2616,7 +2595,7 @@ void CDriver::Interface_Preprocessing() {
           }
         }
 
-        SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+        SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
 #else
       Donor_check  = markDonor;
@@ -2776,7 +2755,7 @@ void CDriver::InitStaticMeshMovement(){
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   for (iZone = 0; iZone < nZone; iZone++) {
@@ -2852,7 +2831,7 @@ void CDriver::TurbomachineryPreprocessing(){
   bool discrete_adjoint = config_container[ZONE_0]->GetDiscrete_Adjoint();
   su2double areaIn, areaOut, nBlades, flowAngleIn, flowAngleOut;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- Create turbovertex structure ---*/
@@ -3149,7 +3128,7 @@ void CDriver::StartSolver() {
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- Main external loop of the solver. Within this loop, each iteration ---*/
@@ -3240,7 +3219,7 @@ void CDriver::PreprocessExtIter(unsigned long ExtIter) {
   }
 
 #ifdef HAVE_MPI
-  MPI_Barrier(SU2_MPI::comm);
+  MPI_Barrier(SU2_MPI::comm_x);
 #endif
 
 }
@@ -3308,7 +3287,7 @@ void CDriver::Output(unsigned long ExtIter) {
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   /*--- Solution output. Determine whether a solution needs to be written
@@ -3955,7 +3934,7 @@ void CGeneralDriver::StaticMeshUpdate() {
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   if(rank == MASTER_NODE) cout << " Deforming the volume grid." << endl;
@@ -4063,7 +4042,7 @@ void CFluidDriver::Transfer_Data(unsigned short donorZone, unsigned short target
 
 #ifdef HAVE_MPI
   int rank;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   bool MatchingMesh = config_container[targetZone]->GetMatchingMesh();
@@ -4191,7 +4170,7 @@ void CFluidDriver::StaticMeshUpdate() {
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   for(iZone = 0; iZone < nZone; iZone++) {
@@ -4245,7 +4224,7 @@ void CTurbomachineryDriver::Run() {
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
 
@@ -4328,7 +4307,7 @@ bool CTurbomachineryDriver::Monitor(unsigned long ExtIter) {
   int rank = MASTER_NODE;
   bool print;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- Synchronization point after a single solver iteration. Compute the
@@ -4687,7 +4666,7 @@ void CDiscAdjFluidDriver::SetRecording(unsigned short kind_recording){
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   AD::Reset();
@@ -4774,7 +4753,7 @@ void CDiscAdjFluidDriver::SetAdj_ObjFunction(){
   }
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   if (rank == MASTER_NODE){
@@ -4789,7 +4768,7 @@ void CDiscAdjFluidDriver::SetObjFunction(){
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   ObjFunc = 0.0;
@@ -4842,7 +4821,7 @@ void CDiscAdjFluidDriver::DirectRun(){
 
 #ifdef HAVE_MPI
   int rank = MASTER_NODE;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
 
@@ -4901,7 +4880,7 @@ void CDiscAdjTurbomachineryDriver::DirectRun(){
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
 
@@ -4945,7 +4924,7 @@ void CDiscAdjTurbomachineryDriver::SetObjFunction(){
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetTotal_ComboObj(0.0);
@@ -5100,7 +5079,7 @@ void CHBDriver::SetHarmonicBalance(unsigned short iZone) {
 
 #ifdef HAVE_MPI
   int rank = MASTER_NODE;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   unsigned short iVar, jZone, iMGlevel;
@@ -5422,7 +5401,7 @@ void CFSIDriver::Run() {
 
 #ifdef HAVE_MPI
   int rank = MASTER_NODE;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- If there is a restart, we need to get the old geometry from the fluid field ---*/
@@ -5561,7 +5540,7 @@ void CFSIDriver::Predict_Displacements(unsigned short donorZone, unsigned short 
 
 #ifdef HAVE_MPI
 	int rank;
-	MPI_Comm_rank(SU2_MPI::comm, &rank);
+	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   solver_container[donorZone][MESH_0][FEA_SOL]->PredictStruct_Displacement(geometry_container[donorZone], config_container[donorZone],
@@ -5582,7 +5561,7 @@ void CFSIDriver::Transfer_Displacements(unsigned short donorZone, unsigned short
 
 #ifdef HAVE_MPI
 	int rank;
-	MPI_Comm_rank(SU2_MPI::comm, &rank);
+	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   bool MatchingMesh = config_container[targetZone]->GetMatchingMesh();
@@ -5653,7 +5632,7 @@ void CFSIDriver::Transfer_Tractions(unsigned short donorZone, unsigned short tar
 
 #ifdef HAVE_MPI
 	int rank;
-	MPI_Comm_rank(SU2_MPI::comm, &rank);
+	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   bool MatchingMesh = config_container[donorZone]->GetMatchingMesh();
@@ -5721,7 +5700,7 @@ void CFSIDriver::Relaxation_Displacements(unsigned short donorZone, unsigned sho
 
 #ifdef HAVE_MPI
   int rank;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*-------------------- Aitken's relaxation ------------------------*/

@@ -72,7 +72,7 @@ typedef CMPIWrapper SU2_MPI;
 class CMPIWrapper {
 public:
 
-  static MPI_Comm comm;
+  static MPI_Comm comm, comm_x, comm_t;
 
   static void Init(int *argc, char***argv);
 

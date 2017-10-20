@@ -98,7 +98,7 @@ CFEM_ElasticitySolver::CFEM_ElasticitySolver(CGeometry *geometry, CConfig *confi
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   su2double E = config->GetElasticyMod();
@@ -448,7 +448,7 @@ void CFEM_ElasticitySolver::Set_MPI_Solution(CGeometry *geometry, CConfig *confi
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
       
 #else
       
@@ -550,7 +550,7 @@ void CFEM_ElasticitySolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *c
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
       
 #else
       
@@ -635,7 +635,7 @@ void CFEM_ElasticitySolver::Set_MPI_Solution_DispOnly(CGeometry *geometry, CConf
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
       
 #else
       
@@ -717,7 +717,7 @@ void CFEM_ElasticitySolver::Set_MPI_Solution_Pred(CGeometry *geometry, CConfig *
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
       
 #else
       
@@ -804,7 +804,7 @@ void CFEM_ElasticitySolver::Set_MPI_Solution_Pred_Old(CGeometry *geometry, CConf
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
       
 #else
       
@@ -857,7 +857,7 @@ void CFEM_ElasticitySolver::Set_Prestretch(CGeometry *geometry, CConfig *config)
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   
@@ -918,7 +918,7 @@ void CFEM_ElasticitySolver::Set_Prestretch(CGeometry *geometry, CConfig *config)
 #ifndef HAVE_MPI
   rbuf_NotMatching = sbuf_NotMatching;
 #else
-  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
 #endif
   if (rbuf_NotMatching != 0) {
     if (rank == MASTER_NODE) {
@@ -928,8 +928,8 @@ void CFEM_ElasticitySolver::Set_Prestretch(CGeometry *geometry, CConfig *config)
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
   }
@@ -1510,7 +1510,7 @@ void CFEM_ElasticitySolver::Compute_NodalStress(CGeometry *geometry, CSolver **s
   /*--- Compute MaxVonMises_Stress using all the nodes ---*/
   
   su2double MyMaxVonMises_Stress = MaxVonMises_Stress; MaxVonMises_Stress = 0.0;
-  SU2_MPI::Allreduce(&MyMaxVonMises_Stress, &MaxVonMises_Stress, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&MyMaxVonMises_Stress, &MaxVonMises_Stress, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
   
 #endif
   
@@ -1882,7 +1882,7 @@ void CFEM_ElasticitySolver::Postprocessing(CGeometry *geometry, CSolver **solver
   
 #ifdef HAVE_MPI
   int rank = MASTER_NODE;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   if (nonlinear_analysis) {
@@ -1915,7 +1915,7 @@ void CFEM_ElasticitySolver::Postprocessing(CGeometry *geometry, CSolver **solver
       
 #ifdef HAVE_MPI
       /*--- We sum the squares of the norms across the different processors ---*/
-      SU2_MPI::Allreduce(&solNorm, &solNorm_recv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+      SU2_MPI::Allreduce(&solNorm, &solNorm_recv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
 #else
       solNorm_recv         = solNorm;
 #endif
@@ -3272,8 +3272,8 @@ void CFEM_ElasticitySolver::SetFEA_Load(CSolver ***flow_solution, CGeometry **fe
   int rank = MASTER_NODE;
   int size = SINGLE_NODE;
   
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
   
   unsigned long nLocalVertexStruct = 0, nLocalVertexFlow = 0;
   
@@ -3366,14 +3366,14 @@ void CFEM_ElasticitySolver::SetFEA_Load(CSolver ***flow_solution, CGeometry **fe
     if (rank == MASTER_NODE) Buffer_Recv_nVertexFlow = new unsigned long[size];     // Allocate memory to receive how many vertices are on each rank on the fluid side
     
     /*--- We receive MaxLocalVertexFEA as the maximum number of vertices in one single processor on the structural side---*/
-    SU2_MPI::Allreduce(&nLocalVertexStruct, &MaxLocalVertexStruct, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexStruct, &MaxLocalVertexStruct, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
     /*--- We receive MaxLocalVertexFlow as the maximum number of vertices in one single processor on the fluid side ---*/
-    SU2_MPI::Allreduce(&nLocalVertexFlow, &MaxLocalVertexFlow, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexFlow, &MaxLocalVertexFlow, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
     
     /*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the structural side ---*/
-    SU2_MPI::Gather(&Buffer_Send_nVertexStruct, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexStruct, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Buffer_Send_nVertexStruct, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexStruct, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
     /*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the fluid side ---*/
-    SU2_MPI::Gather(&Buffer_Send_nVertexFlow, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexFlow, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Buffer_Send_nVertexFlow, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexFlow, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
     
     /*--- We will be gathering the structural coordinates into the master node ---*/
     /*--- Then we will distribute them using a scatter operation into the appropriate fluid processor ---*/
@@ -3508,8 +3508,8 @@ void CFEM_ElasticitySolver::SetFEA_Load(CSolver ***flow_solution, CGeometry **fe
     }
     
     /*--- Once all the messages have been sent, we gather them all into the MASTER_NODE ---*/
-    SU2_MPI::Gather(Buffer_Send_FlowTraction, nBuffer_FlowTraction, MPI_DOUBLE, Buffer_Recv_FlowTraction, nBuffer_FlowTraction, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(Buffer_Send_FlowTraction, nBuffer_FlowTraction, MPI_DOUBLE, Buffer_Recv_FlowTraction, nBuffer_FlowTraction, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
     
     //    if (rank == MASTER_NODE) {
     //      cout << endl << "-----------------------------------------------------------" << endl;
@@ -3632,8 +3632,8 @@ void CFEM_ElasticitySolver::SetFEA_Load(CSolver ***flow_solution, CGeometry **fe
     }
     
     /*--- Once all the messages have been prepared, we scatter them all from the MASTER_NODE ---*/
-    SU2_MPI::Scatter(Buffer_Send_StructTraction, nBuffer_StructTraction, MPI_DOUBLE, Buffer_Recv_StructTraction, nBuffer_StructTraction, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Scatter(Buffer_Send_SetIndex, nBuffer_SetIndex, MPI_LONG, Buffer_Recv_SetIndex, nBuffer_SetIndex, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Scatter(Buffer_Send_StructTraction, nBuffer_StructTraction, MPI_DOUBLE, Buffer_Recv_StructTraction, nBuffer_StructTraction, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Scatter(Buffer_Send_SetIndex, nBuffer_SetIndex, MPI_LONG, Buffer_Recv_SetIndex, nBuffer_SetIndex, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
     
     long indexPoint_iVertex, Point_Struct_Check;
     long Point_Struct_Recv;
@@ -3759,7 +3759,7 @@ void CFEM_ElasticitySolver::ComputeAitken_Coefficient(CGeometry **fea_geometry, 
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   ofstream historyFile_FSI;
@@ -3851,8 +3851,8 @@ void CFEM_ElasticitySolver::ComputeAitken_Coefficient(CGeometry **fea_geometry, 
         }
         
 #ifdef HAVE_MPI
-        SU2_MPI::Allreduce(&sbuf_numAitk, &rbuf_numAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
-        SU2_MPI::Allreduce(&sbuf_denAitk, &rbuf_denAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm);
+        SU2_MPI::Allreduce(&sbuf_numAitk, &rbuf_numAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+        SU2_MPI::Allreduce(&sbuf_denAitk, &rbuf_denAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
 #else
         rbuf_numAitk = sbuf_numAitk;
         rbuf_denAitk = sbuf_denAitk;
@@ -3980,7 +3980,7 @@ void CFEM_ElasticitySolver::LoadRestart(CGeometry **geometry, CSolver ***solver,
 
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*--- Skip coordinates ---*/
@@ -4060,7 +4060,7 @@ void CFEM_ElasticitySolver::LoadRestart(CGeometry **geometry, CSolver ***solver,
 #ifndef HAVE_MPI
   rbuf_NotMatching = sbuf_NotMatching;
 #else
-  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
 #endif
   if (rbuf_NotMatching != 0) {
     if (rank == MASTER_NODE) {
@@ -4070,8 +4070,8 @@ void CFEM_ElasticitySolver::LoadRestart(CGeometry **geometry, CSolver ***solver,
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
   }

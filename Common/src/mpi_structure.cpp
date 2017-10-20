@@ -36,6 +36,8 @@
 #ifdef HAVE_MPI
 
 MPI_Comm CMPIWrapper::comm;
+MPI_Comm CMPIWrapper::comm_x;
+MPI_Comm CMPIWrapper::comm_t;
 
 #if defined COMPLEX_TYPE || defined ADOLC_FORWARD_TYPE || defined CODI_FORWARD_TYPE
 std::map<MPI_Request*, CAuxMPIWrapper::CommInfo>

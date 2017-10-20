@@ -53,6 +53,6 @@
 #include "../include/util.hpp"
 
 //#include "../include/braid_structure.hpp"
-//#include "braid.hpp"
+#include "braid.hpp"
 
 using namespace std;

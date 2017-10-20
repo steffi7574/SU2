@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   SU2_Comm MPICommunicator(MPI_COMM_WORLD);
   MPI_Comm_rank(MPICommunicator,&rank);
   MPI_Comm_size(MPICommunicator,&size);
-  SU2_MPI::comm = MPI_COMM_WORLD;
+  SU2_MPI::comm_x = MPI_COMM_WORLD;
 #else
   SU2_Comm MPICommunicator(0);
 #endif

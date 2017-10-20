@@ -938,7 +938,7 @@ void CSysMatrix::SendReceive_Solution(CSysVector & x, CGeometry *geometry, CConf
       /*--- Send/Receive information using Sendrecv ---*/
 
       SU2_MPI::Sendrecv(Buffer_Send, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
 
 #else
 
@@ -1026,7 +1026,7 @@ void CSysMatrix::SendReceive_SolutionTransposed(CSysVector & x, CGeometry *geome
       /*--- Send/Receive information using Sendrecv ---*/
 
       SU2_MPI::Sendrecv(Buffer_Send, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm, &status);
+                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
 
 #else
 
@@ -1372,7 +1372,7 @@ unsigned long CSysMatrix::Jacobi_Smoother(const CSysVector & b, CSysVector & x, 
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*---  Check the number of iterations requested ---*/
@@ -1382,8 +1382,8 @@ unsigned long CSysMatrix::Jacobi_Smoother(const CSysVector & b, CSysVector & x, 
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
   }
@@ -1622,7 +1622,7 @@ unsigned long CSysMatrix::ILU_Smoother(const CSysVector & b, CSysVector & x, CMa
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*---  Check the number of iterations requested ---*/
@@ -1632,8 +1632,8 @@ unsigned long CSysMatrix::ILU_Smoother(const CSysVector & b, CSysVector & x, CMa
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
   }
@@ -1812,7 +1812,7 @@ unsigned long CSysMatrix::LU_SGS_Smoother(const CSysVector & b, CSysVector & x, 
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
   /*---  Check the number of iterations requested ---*/
@@ -1822,8 +1822,8 @@ unsigned long CSysMatrix::LU_SGS_Smoother(const CSysVector & b, CSysVector & x, 
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
   }
@@ -2088,8 +2088,8 @@ unsigned short CSysMatrix::BuildLineletPreconditioner(CGeometry *geometry, CConf
   Global_nPoints = Local_nPoints;
   Global_nLineLets = Local_nLineLets;
 #else
-  SU2_MPI::Allreduce(&Local_nPoints, &Global_nPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
-  SU2_MPI::Allreduce(&Local_nLineLets, &Global_nLineLets, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&Local_nPoints, &Global_nPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&Local_nLineLets, &Global_nLineLets, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
 #endif
 
   MeanPoints = SU2_TYPE::Int(su2double(Global_nPoints)/su2double(Global_nLineLets));
@@ -2134,8 +2134,8 @@ void CSysMatrix::ComputeLineletPreconditioner(const CSysVector & vec, CSysVector
   int size = SINGLE_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
 #endif
 
   if (size == SINGLE_NODE) {
@@ -2235,8 +2235,8 @@ void CSysMatrix::ComputeLineletPreconditioner(const CSysVector & vec, CSysVector
 #ifndef HAVE_MPI
     exit(EXIT_FAILURE);
 #else
-    MPI_Barrier(SU2_MPI::comm);
-    MPI_Abort(SU2_MPI::comm,1);
+    MPI_Barrier(SU2_MPI::comm_x);
+    MPI_Abort(SU2_MPI::comm_x,1);
     MPI_Finalize();
 #endif
 
