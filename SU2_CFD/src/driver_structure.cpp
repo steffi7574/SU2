@@ -50,9 +50,13 @@ CDriver::CDriver(char* confFile,
 
   int rank = MASTER_NODE;
   int size = SINGLE_NODE;
+  int rank_t = MASTER_NODE;
+  int size_t = SINGLE_NODE;
 #ifdef HAVE_MPI
   MPI_Comm_rank(SU2_MPI::comm_x, &rank);
   MPI_Comm_size(SU2_MPI::comm_x, &size);
+  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
+  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
 #endif
 
   /*--- Create pointers to all of the classes that may be used throughout
@@ -215,6 +219,11 @@ CDriver::CDriver(char* confFile,
   }
   else if (nZone == 2 && fsi) {
     if (rank == MASTER_NODE) cout << "A Fluid-Structure Interaction driver has been instantiated." << endl;
+  }
+  else if (config_container[ZONE_0]->GetBraid_Run()){
+    if (rank == MASTER_NODE) cout << "A XBraid driver has been instantiated." << endl;
+    if (rank == MASTER_NODE) cout << "nProcs in Time : " << size_t << endl;
+    if (rank == MASTER_NODE) cout << "nProcs in Space: " << size << endl;
   }
   else {
     if (rank == MASTER_NODE) cout << "A Fluid driver has been instantiated." << endl;
@@ -2932,9 +2941,14 @@ void CDriver::TurbomachineryPreprocessing(){
 void CDriver::StartSolver() {
 
   int rank = MASTER_NODE;
-
+  int rank_t = MASTER_NODE;
+  int size_x = SINGLE_NODE;
+  int size_t = SINGLE_NODE;
 #ifdef HAVE_MPI
   MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
+  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
+  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
 #endif
 
   /*--- Main external loop of the solver. Within this loop, each iteration ---*/
@@ -2998,6 +3012,8 @@ void CDriver::StartSolver() {
 
       /* Time-parallel XBraid iteration */
 
+      if (rank == MASTER_NODE && rank_t == MASTER_NODE)
+            cout<< "Time-parallel processor splitting with " << size_t << " temporal times " << size_x << " spacial cores." << endl;
 
   }
 
