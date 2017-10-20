@@ -41,7 +41,7 @@ CWaveSolver::CWaveSolver(CGeometry *geometry,
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   nPoint = geometry->GetnPoint();

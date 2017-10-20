@@ -114,8 +114,8 @@ void CInterpolator::Determine_ArraySize(bool faces, int markDonor, int markTarge
 #ifdef HAVE_MPI
   int rank = MASTER_NODE;
   int nProcessor = SINGLE_NODE;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
 #endif
 
   for (iVertex = 0; iVertex < nVertexDonor; iVertex++) {
@@ -173,15 +173,15 @@ void CInterpolator::Determine_ArraySize(bool faces, int markDonor, int markTarge
 
   /*--- Send Interface vertex information --*/
 #ifdef HAVE_MPI
-  SU2_MPI::Allreduce(&nLocalVertex_Donor, &MaxLocalVertex_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
-  SU2_MPI::Allgather(Buffer_Send_nVertex_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nVertex_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+  SU2_MPI::Allreduce(&nLocalVertex_Donor, &MaxLocalVertex_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(Buffer_Send_nVertex_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nVertex_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
   if (faces){
-    SU2_MPI::Allreduce(&nLocalFace_Donor, &nGlobalFace_Donor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
-    SU2_MPI::Allreduce(&nLocalFace_Donor, &MaxFace_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
-    SU2_MPI::Allreduce(&nLocalFaceNodes_Donor, &nGlobalFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
-    SU2_MPI::Allreduce(&nLocalFaceNodes_Donor, &MaxFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_nFace_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFace_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalFace_Donor, &nGlobalFace_Donor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&nLocalFace_Donor, &MaxFace_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&nLocalFaceNodes_Donor, &nGlobalFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&nLocalFaceNodes_Donor, &MaxFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_nFace_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFace_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
     MaxFace_Donor++;
   }
 #else
@@ -209,8 +209,8 @@ void CInterpolator::Collect_VertexInfo(bool faces, int markDonor, int markTarget
 #ifdef HAVE_MPI
   int rank;
   int nProcessor = SINGLE_NODE;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
 #endif
 
 
@@ -245,10 +245,10 @@ void CInterpolator::Collect_VertexInfo(bool faces, int markDonor, int markTarget
   nBuffer_Point = MaxLocalVertex_Donor;
 
 #ifdef HAVE_MPI
-  SU2_MPI::Allgather(Buffer_Send_Coord, nBuffer_Coord, MPI_DOUBLE, Buffer_Receive_Coord, nBuffer_Coord, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(Buffer_Send_GlobalPoint, nBuffer_Point, MPI_UNSIGNED_LONG, Buffer_Receive_GlobalPoint, nBuffer_Point, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+  SU2_MPI::Allgather(Buffer_Send_Coord, nBuffer_Coord, MPI_DOUBLE, Buffer_Receive_Coord, nBuffer_Coord, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(Buffer_Send_GlobalPoint, nBuffer_Point, MPI_UNSIGNED_LONG, Buffer_Receive_GlobalPoint, nBuffer_Point, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
   if (faces) {
-    SU2_MPI::Allgather(Buffer_Send_Normal, nBuffer_Coord, MPI_DOUBLE, Buffer_Receive_Normal, nBuffer_Coord, MPI_DOUBLE, SU2_MPI::comm);
+    SU2_MPI::Allgather(Buffer_Send_Normal, nBuffer_Coord, MPI_DOUBLE, Buffer_Receive_Normal, nBuffer_Coord, MPI_DOUBLE, SU2_MPI::comm_x);
   }
 #else
   for (iVertex = 0; iVertex < nBuffer_Coord; iVertex++)
@@ -312,8 +312,8 @@ void CInterpolator::ReconstructBoundary(unsigned long val_zone, int val_marker){
 #ifdef HAVE_MPI
   int nProcessor, iRank;
   unsigned long iTmp2, tmp_index, tmp_index_2;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
 
 #else
 
@@ -400,8 +400,8 @@ void CInterpolator::ReconstructBoundary(unsigned long val_zone, int val_marker){
   /*--- Reconstruct  boundary by gathering data from all ranks ---*/
 
 #ifdef HAVE_MPI
-  SU2_MPI::Allreduce(     &nLocalVertex,      &nGlobalVertex, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
-  SU2_MPI::Allreduce(&nLocalLinkedNodes, &nGlobalLinkedNodes, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
+  SU2_MPI::Allreduce(     &nLocalVertex,      &nGlobalVertex, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&nLocalLinkedNodes, &nGlobalLinkedNodes, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
 #else
   nGlobalVertex      = nLocalVertex;
   nGlobalLinkedNodes = nLocalLinkedNodes;
@@ -436,15 +436,15 @@ void CInterpolator::ReconstructBoundary(unsigned long val_zone, int val_marker){
 
     for(iRank = 1; iRank < nProcessor; iRank++){
        
-      SU2_MPI::Recv(                           &iTmp2,     1, MPI_UNSIGNED_LONG, iRank, 0, SU2_MPI::comm, MPI_STATUS_IGNORE);
-      SU2_MPI::Recv(&Buffer_Receive_LinkedNodes[tmp_index_2], iTmp2, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm, MPI_STATUS_IGNORE);
+      SU2_MPI::Recv(                           &iTmp2,     1, MPI_UNSIGNED_LONG, iRank, 0, SU2_MPI::comm_x, MPI_STATUS_IGNORE);
+      SU2_MPI::Recv(&Buffer_Receive_LinkedNodes[tmp_index_2], iTmp2, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm_x, MPI_STATUS_IGNORE);
 
-      SU2_MPI::Recv(                         &iTmp,         1, MPI_UNSIGNED_LONG, iRank, 0, SU2_MPI::comm, MPI_STATUS_IGNORE);
-      SU2_MPI::Recv(&Buffer_Receive_Coord[tmp_index*nDim], nDim*iTmp,        MPI_DOUBLE, iRank, 1, SU2_MPI::comm, MPI_STATUS_IGNORE);
+      SU2_MPI::Recv(                         &iTmp,         1, MPI_UNSIGNED_LONG, iRank, 0, SU2_MPI::comm_x, MPI_STATUS_IGNORE);
+      SU2_MPI::Recv(&Buffer_Receive_Coord[tmp_index*nDim], nDim*iTmp,        MPI_DOUBLE, iRank, 1, SU2_MPI::comm_x, MPI_STATUS_IGNORE);
       
-      SU2_MPI::Recv(     &Buffer_Receive_GlobalPoint[tmp_index], iTmp, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm, MPI_STATUS_IGNORE);
-      SU2_MPI::Recv(    &Buffer_Receive_nLinkedNodes[tmp_index], iTmp, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm, MPI_STATUS_IGNORE);
-      SU2_MPI::Recv(&Buffer_Receive_StartLinkedNodes[tmp_index], iTmp, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm, MPI_STATUS_IGNORE);
+      SU2_MPI::Recv(     &Buffer_Receive_GlobalPoint[tmp_index], iTmp, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm_x, MPI_STATUS_IGNORE);
+      SU2_MPI::Recv(    &Buffer_Receive_nLinkedNodes[tmp_index], iTmp, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm_x, MPI_STATUS_IGNORE);
+      SU2_MPI::Recv(&Buffer_Receive_StartLinkedNodes[tmp_index], iTmp, MPI_UNSIGNED_LONG, iRank, 1, SU2_MPI::comm_x, MPI_STATUS_IGNORE);
 
       for (iVertex = 0; iVertex < iTmp; iVertex++){
         Buffer_Receive_Proc[ tmp_index + iVertex ] = iRank;
@@ -456,15 +456,15 @@ void CInterpolator::ReconstructBoundary(unsigned long val_zone, int val_marker){
     }
   }
   else{
-    SU2_MPI::Send(     &nLocalLinkedNodes,                 1, MPI_UNSIGNED_LONG, 0, 0, SU2_MPI::comm);
-    SU2_MPI::Send(Buffer_Send_LinkedNodes, nLocalLinkedNodes, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm);
+    SU2_MPI::Send(     &nLocalLinkedNodes,                 1, MPI_UNSIGNED_LONG, 0, 0, SU2_MPI::comm_x);
+    SU2_MPI::Send(Buffer_Send_LinkedNodes, nLocalLinkedNodes, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm_x);
     
-    SU2_MPI::Send(    &nLocalVertex,                   1, MPI_UNSIGNED_LONG, 0, 0, SU2_MPI::comm);
-    SU2_MPI::Send(Buffer_Send_Coord, nDim * nLocalVertex,        MPI_DOUBLE, 0, 1, SU2_MPI::comm);
+    SU2_MPI::Send(    &nLocalVertex,                   1, MPI_UNSIGNED_LONG, 0, 0, SU2_MPI::comm_x);
+    SU2_MPI::Send(Buffer_Send_Coord, nDim * nLocalVertex,        MPI_DOUBLE, 0, 1, SU2_MPI::comm_x);
       
-    SU2_MPI::Send(     Buffer_Send_GlobalPoint, nLocalVertex, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm);
-    SU2_MPI::Send(    Buffer_Send_nLinkedNodes, nLocalVertex, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm);
-    SU2_MPI::Send(Buffer_Send_StartLinkedNodes, nLocalVertex, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm);
+    SU2_MPI::Send(     Buffer_Send_GlobalPoint, nLocalVertex, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm_x);
+    SU2_MPI::Send(    Buffer_Send_nLinkedNodes, nLocalVertex, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm_x);
+    SU2_MPI::Send(Buffer_Send_StartLinkedNodes, nLocalVertex, MPI_UNSIGNED_LONG, 0, 1, SU2_MPI::comm_x);
   }    
 #else
   for (iVertex = 0; iVertex < nDim * nGlobalVertex; iVertex++)
@@ -508,13 +508,13 @@ void CInterpolator::ReconstructBoundary(unsigned long val_zone, int val_marker){
   }
 
 #ifdef HAVE_MPI    
-  SU2_MPI::Bcast(      Buffer_Receive_Coord, nGlobalVertex * nDim,        MPI_DOUBLE, 0, SU2_MPI::comm);
-  SU2_MPI::Bcast(Buffer_Receive_GlobalPoint, nGlobalVertex,        MPI_UNSIGNED_LONG, 0, SU2_MPI::comm);
-  SU2_MPI::Bcast(      Buffer_Receive_Proc, nGlobalVertex,        MPI_UNSIGNED_LONG, 0, SU2_MPI::comm );
+  SU2_MPI::Bcast(      Buffer_Receive_Coord, nGlobalVertex * nDim,        MPI_DOUBLE, 0, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(Buffer_Receive_GlobalPoint, nGlobalVertex,        MPI_UNSIGNED_LONG, 0, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(      Buffer_Receive_Proc, nGlobalVertex,        MPI_UNSIGNED_LONG, 0, SU2_MPI::comm_x );
   
-  SU2_MPI::Bcast(    Buffer_Receive_nLinkedNodes,      nGlobalVertex, MPI_UNSIGNED_LONG, 0, SU2_MPI::comm);
-  SU2_MPI::Bcast(Buffer_Receive_StartLinkedNodes,      nGlobalVertex, MPI_UNSIGNED_LONG, 0, SU2_MPI::comm);
-  SU2_MPI::Bcast(     Buffer_Receive_LinkedNodes, nGlobalLinkedNodes, MPI_UNSIGNED_LONG, 0, SU2_MPI::comm);
+  SU2_MPI::Bcast(    Buffer_Receive_nLinkedNodes,      nGlobalVertex, MPI_UNSIGNED_LONG, 0, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(Buffer_Receive_StartLinkedNodes,      nGlobalVertex, MPI_UNSIGNED_LONG, 0, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(     Buffer_Receive_LinkedNodes, nGlobalLinkedNodes, MPI_UNSIGNED_LONG, 0, SU2_MPI::comm_x);
 #endif
   
   if( Buffer_Send_Coord              != NULL) {delete [] Buffer_Send_Coord;            Buffer_Send_Coord            = NULL;} 
@@ -533,8 +533,8 @@ bool CInterpolator::CheckInterfaceBoundary(int markDonor, int markTarget){
   int *Buffer_Recv_mark = NULL;
   int iRank,  rank, nProcessor;
   
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
   
   if (rank == MASTER_NODE) 
     Buffer_Recv_mark = new int[nProcessor];
@@ -544,7 +544,7 @@ bool CInterpolator::CheckInterfaceBoundary(int markDonor, int markTarget){
 
   /*--- We gather a vector in MASTER_NODE to determine whether the boundary is not on the processor because of the partition or because the zone does not include it ---*/
 
-  SU2_MPI::Gather(&markDonor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+  SU2_MPI::Gather(&markDonor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
   if (rank == MASTER_NODE)
     for (iRank = 0; iRank < nProcessor; iRank++)
@@ -553,10 +553,10 @@ bool CInterpolator::CheckInterfaceBoundary(int markDonor, int markTarget){
         break;
       }
 
-  SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+  SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
 
-  SU2_MPI::Gather(&markTarget, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+  SU2_MPI::Gather(&markTarget, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
   if (rank == MASTER_NODE)
     for (iRank = 0; iRank < nProcessor; iRank++)
@@ -566,7 +566,7 @@ bool CInterpolator::CheckInterfaceBoundary(int markDonor, int markTarget){
       }
 
 
-  SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+  SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
   
   if (rank == MASTER_NODE) 
     delete [] Buffer_Recv_mark;
@@ -620,7 +620,7 @@ void CNearestNeighbor::Set_TransferCoeff(CConfig **config) {
   su2double *Coord_i, *Coord_j, dist, mindist, maxdist;
 
 #ifdef HAVE_MPI
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
 #else
   nProcessor = SINGLE_NODE;
 #endif
@@ -789,8 +789,8 @@ void CIsoparametric::Set_TransferCoeff(CConfig **config) {
   Normal = new su2double[nDim];
 
 #ifdef HAVE_MPI  
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
 #else
   nProcessor = SINGLE_NODE;
 #endif
@@ -951,9 +951,9 @@ void CIsoparametric::Set_TransferCoeff(CConfig **config) {
 
     //Buffer_Send_FaceIndex[nLocalFace_Donor+1] = MaxFaceNodes_Donor*rank+nLocalFaceNodes_Donor;
 #ifdef HAVE_MPI
-    SU2_MPI::Allgather(Buffer_Send_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_FaceProc, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceProc, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+    SU2_MPI::Allgather(Buffer_Send_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_FaceProc, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceProc, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
 #else
     for (iFace=0; iFace<MaxFace_Donor; iFace++) {
       Buffer_Receive_FaceIndex[iFace] = Buffer_Send_FaceIndex[iFace];
@@ -1322,8 +1322,8 @@ void CMirror::Set_TransferCoeff(CConfig **config) {
   int nProcessor = SINGLE_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
 #else
   nProcessor = SINGLE_NODE;
 #endif
@@ -1385,10 +1385,10 @@ void CMirror::Set_TransferCoeff(CConfig **config) {
 
     /*--- Send Interface vertex information --*/
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&nLocalFaceNodes_Donor, &MaxFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
-    SU2_MPI::Allreduce(&nLocalFace_Donor, &MaxFace_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_nFace_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFace_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalFaceNodes_Donor, &MaxFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&nLocalFace_Donor, &MaxFace_Donor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_nFace_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFace_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nFaceNodes_Donor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
     MaxFace_Donor++;
 #else
     nGlobalFace_Donor       = nLocalFace_Donor;
@@ -1448,10 +1448,10 @@ void CMirror::Set_TransferCoeff(CConfig **config) {
     }
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allgather(Buffer_Send_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_GlobalPoint, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG,Buffer_Receive_GlobalPoint, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_Coeff, MaxFaceNodes_Donor, MPI_DOUBLE,Buffer_Receive_Coeff, MaxFaceNodes_Donor, MPI_DOUBLE, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+    SU2_MPI::Allgather(Buffer_Send_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceNodes, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_GlobalPoint, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG,Buffer_Receive_GlobalPoint, MaxFaceNodes_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_Coeff, MaxFaceNodes_Donor, MPI_DOUBLE,Buffer_Receive_Coeff, MaxFaceNodes_Donor, MPI_DOUBLE, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, Buffer_Receive_FaceIndex, MaxFace_Donor, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
 #else
     for (iFace=0; iFace<MaxFace_Donor; iFace++) {
       Buffer_Receive_FaceIndex[iFace] = Buffer_Send_FaceIndex[iFace];
@@ -1605,8 +1605,8 @@ void CSlidingMesh::Set_TransferCoeff(CConfig **config){
 
 #ifdef HAVE_MPI
   int rank, nProcessor;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
 #endif
 
   nDim = donor_geometry->GetnDim();

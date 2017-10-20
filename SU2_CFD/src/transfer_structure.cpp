@@ -106,8 +106,8 @@ void CTransfer::Scatter_InterfaceData(CSolver *donor_solution, CSolver *target_s
   int size = SINGLE_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
   int *Buffer_Recv_mark = NULL, iRank;
 
   if (rank == MASTER_NODE) 
@@ -178,7 +178,7 @@ void CTransfer::Scatter_InterfaceData(CSolver *donor_solution, CSolver *target_s
 
     /*--- We gather a vector in MASTER_NODE that determines if the boundary is not on the processor because of the partition or because the zone does not include it  ---*/
 
-    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -189,9 +189,9 @@ void CTransfer::Scatter_InterfaceData(CSolver *donor_solution, CSolver *target_s
       }
     }
 
-    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
-    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -202,7 +202,7 @@ void CTransfer::Scatter_InterfaceData(CSolver *donor_solution, CSolver *target_s
       }
     }
 
-    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     #else
     Donor_check  = Marker_Donor;
@@ -229,14 +229,14 @@ void CTransfer::Scatter_InterfaceData(CSolver *donor_solution, CSolver *target_s
     if (rank == MASTER_NODE) Buffer_Recv_nVertexTarget = new unsigned long[size];  // Allocate memory to receive how many vertices are on each rank on the fluid side
 #ifdef HAVE_MPI
     /*--- We receive MaxLocalVertexFEA as the maximum number of vertices in one single processor on the structural side---*/
-    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
     /*--- We receive MaxLocalVertexFlow as the maximum number of vertices in one single processor on the fluid side ---*/
-    SU2_MPI::Allreduce(&nLocalVertexTarget, &MaxLocalVertexTarget, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexTarget, &MaxLocalVertexTarget, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
     
     /*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the structural side ---*/
-    SU2_MPI::Gather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
     /*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the fluid side ---*/
-    SU2_MPI::Gather(&Buffer_Send_nVertexTarget, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexTarget, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Buffer_Send_nVertexTarget, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexTarget, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
 #else
     MaxLocalVertexDonor  = nLocalVertexDonor;
     MaxLocalVertexTarget = nLocalVertexTarget;
@@ -320,8 +320,8 @@ void CTransfer::Scatter_InterfaceData(CSolver *donor_solution, CSolver *target_s
     
 #ifdef HAVE_MPI
     /*--- Once all the messages have been sent, we gather them all into the MASTER_NODE ---*/
-    SU2_MPI::Gather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
     
 #else
     for (unsigned long iVariable = 0; iVariable < nBuffer_DonorVariables; iVariable++)
@@ -409,8 +409,8 @@ void CTransfer::Scatter_InterfaceData(CSolver *donor_solution, CSolver *target_s
     
 #ifdef HAVE_MPI
     /*--- Once all the messages have been prepared, we scatter them all from the MASTER_NODE ---*/
-    SU2_MPI::Scatter(Buffer_Send_TargetVariables, nBuffer_TargetVariables, MPI_DOUBLE, Buffer_Recv_TargetVariables, nBuffer_TargetVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Scatter(Buffer_Send_TargetIndices, nBuffer_TargetIndices, MPI_LONG, Buffer_Recv_TargetIndices, nBuffer_TargetIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Scatter(Buffer_Send_TargetVariables, nBuffer_TargetVariables, MPI_DOUBLE, Buffer_Recv_TargetVariables, nBuffer_TargetVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Scatter(Buffer_Send_TargetIndices, nBuffer_TargetIndices, MPI_LONG, Buffer_Recv_TargetIndices, nBuffer_TargetIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
 #else
     for (unsigned long iVariable = 0; iVariable < nBuffer_TargetVariables; iVariable++)
       Buffer_Recv_TargetVariables[iVariable] = Buffer_Send_TargetVariables[iVariable];
@@ -501,8 +501,8 @@ void CTransfer::Broadcast_InterfaceData_Matching(CSolver *donor_solution, CSolve
   int size = SINGLE_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
   int *Buffer_Recv_mark = NULL, iRank;
   
   if (rank == MASTER_NODE) 
@@ -569,7 +569,7 @@ void CTransfer::Broadcast_InterfaceData_Matching(CSolver *donor_solution, CSolve
 
     /*--- We gather a vector in MASTER_NODE that determines if the boundary is not on the processor because of the partition or because the zone does not include it  ---*/
 
-    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -580,9 +580,9 @@ void CTransfer::Broadcast_InterfaceData_Matching(CSolver *donor_solution, CSolve
       }
     }
 
-    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
-    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -593,7 +593,7 @@ void CTransfer::Broadcast_InterfaceData_Matching(CSolver *donor_solution, CSolve
       }
     }
 
-    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     #else
     Donor_check  = Marker_Donor;
@@ -623,11 +623,11 @@ void CTransfer::Broadcast_InterfaceData_Matching(CSolver *donor_solution, CSolve
 
 #ifdef HAVE_MPI
     /*--- We receive MaxLocalVertexDonor as the maximum number of vertices in one single processor on the donor side---*/
-    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
     /*--- We receive TotalVertexDonorOwned as the total (real) number of vertices in one single interface marker on the donor side ---*/
-    SU2_MPI::Allreduce(&nLocalVertexDonorOwned, &TotalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexDonorOwned, &TotalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
     /*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the structural side ---*/
-    SU2_MPI::Gather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
 #else
     MaxLocalVertexDonor         = nLocalVertexDonor;
     TotalVertexDonor            = nLocalVertexDonorOwned;
@@ -691,8 +691,8 @@ void CTransfer::Broadcast_InterfaceData_Matching(CSolver *donor_solution, CSolve
     
 #ifdef HAVE_MPI
     /*--- Once all the messages have been prepared, we gather them all into the MASTER_NODE ---*/
-    SU2_MPI::Gather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
     
 #else
     for (unsigned long iVariable = 0; iVariable < nBuffer_DonorVariables; iVariable++)
@@ -732,8 +732,8 @@ void CTransfer::Broadcast_InterfaceData_Matching(CSolver *donor_solution, CSolve
     }
     
 #ifdef HAVE_MPI
-    SU2_MPI::Bcast(Buffer_Bcast_Variables, nBuffer_BcastVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Bcast(Buffer_Bcast_Indices, nBuffer_BcastIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(Buffer_Bcast_Variables, nBuffer_BcastVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Bcast(Buffer_Bcast_Indices, nBuffer_BcastIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
 #endif
     
     long indexPoint_iVertex, Point_Target_Check=0;
@@ -821,8 +821,8 @@ void CTransfer::Broadcast_InterfaceData_Interpolate(CSolver *donor_solution, CSo
   bool fsi = donor_config->GetFSI_Simulation();
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
   int *Buffer_Recv_mark = NULL, iRank;
 
   if (rank == MASTER_NODE) 
@@ -896,7 +896,7 @@ void CTransfer::Broadcast_InterfaceData_Interpolate(CSolver *donor_solution, CSo
 
     /*--- We gather a vector in MASTER_NODE that determines if the boundary is not on the processor because of the partition or because the zone does not include it  ---*/
 
-    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -907,9 +907,9 @@ void CTransfer::Broadcast_InterfaceData_Interpolate(CSolver *donor_solution, CSo
       }
     }
 
-    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
-    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -920,7 +920,7 @@ void CTransfer::Broadcast_InterfaceData_Interpolate(CSolver *donor_solution, CSo
       }
     }
 
-    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     #else
     Donor_check  = Marker_Donor;
@@ -950,11 +950,11 @@ void CTransfer::Broadcast_InterfaceData_Interpolate(CSolver *donor_solution, CSo
     
 #ifdef HAVE_MPI
     /*--- We receive MaxLocalVertexDonor as the maximum number of vertices in one single processor on the donor side---*/
-    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
     /*--- We receive TotalVertexDonorOwned as the total (real) number of vertices in one single interface marker on the donor side ---*/
-    SU2_MPI::Allreduce(&nLocalVertexDonorOwned, &TotalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexDonorOwned, &TotalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
     /*--- We gather a vector in MASTER_NODE that determines how many elements are there on each processor on the structural side ---*/
-    SU2_MPI::Gather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
 #else
     MaxLocalVertexDonor         = nLocalVertexDonor;
     TotalVertexDonor            = nLocalVertexDonorOwned;
@@ -1018,8 +1018,8 @@ void CTransfer::Broadcast_InterfaceData_Interpolate(CSolver *donor_solution, CSo
       
 #ifdef HAVE_MPI
     /*--- Once all the messages have been prepared, we gather them all into the MASTER_NODE ---*/
-    SU2_MPI::Gather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Gather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
     
 #else
     for (unsigned long iVariable = 0; iVariable < nBuffer_DonorVariables; iVariable++)
@@ -1059,8 +1059,8 @@ void CTransfer::Broadcast_InterfaceData_Interpolate(CSolver *donor_solution, CSo
     }
     
 #ifdef HAVE_MPI
-    SU2_MPI::Bcast(Buffer_Bcast_Variables, nBuffer_BcastVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm);
-    SU2_MPI::Bcast(Buffer_Bcast_Indices, nBuffer_BcastIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(Buffer_Bcast_Variables, nBuffer_BcastVariables, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Bcast(Buffer_Bcast_Indices, nBuffer_BcastIndices, MPI_LONG, MASTER_NODE, SU2_MPI::comm_x);
 #endif
 
     long indexPoint_iVertex, Point_Target_Check=0;
@@ -1178,8 +1178,8 @@ void CTransfer::Allgather_InterfaceData(CSolver *donor_solution, CSolver *target
   
 #ifdef HAVE_MPI
   int rank = MASTER_NODE;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
   int *Buffer_Recv_mark = NULL, iRank;
   
   if (rank == MASTER_NODE) 
@@ -1252,7 +1252,7 @@ void CTransfer::Allgather_InterfaceData(CSolver *donor_solution, CSolver *target
 
     /*--- We gather a vector in MASTER_NODE that determines if the boundary is not on the processor because of the partition or because the zone does not include it  ---*/
 
-    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Donor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -1263,9 +1263,9 @@ void CTransfer::Allgather_InterfaceData(CSolver *donor_solution, CSolver *target
       }
     }
 
-    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
-    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Gather(&Marker_Target, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     if (rank == MASTER_NODE) {
       for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -1276,7 +1276,7 @@ void CTransfer::Allgather_InterfaceData(CSolver *donor_solution, CSolver *target
       }
     }
 
-    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm);
+    SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
 
     #else
     Donor_check  = Marker_Donor;
@@ -1297,9 +1297,9 @@ void CTransfer::Allgather_InterfaceData(CSolver *donor_solution, CSolver *target
     
 #ifdef HAVE_MPI
     /*--- We receive MaxLocalVertexDonor as the maximum number of vertices in one single processor on the donor side---*/
-    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm);
+    SU2_MPI::Allreduce(&nLocalVertexDonor, &MaxLocalVertexDonor, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
     /*--- We gather a vector in all processors that determines how many elements are there on each processor on the structural side ---*/
-    SU2_MPI::Allgather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm);
+    SU2_MPI::Allgather(&Buffer_Send_nVertexDonor, 1, MPI_UNSIGNED_LONG, Buffer_Recv_nVertexDonor, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
 #else
     MaxLocalVertexDonor         = nLocalVertexDonor;
     Buffer_Recv_nVertexDonor[0] = Buffer_Send_nVertexDonor[0];
@@ -1360,8 +1360,8 @@ void CTransfer::Allgather_InterfaceData(CSolver *donor_solution, CSolver *target
     
 #ifdef HAVE_MPI
     /*--- Once all the messages have been prepared, we gather them all into all the processors ---*/
-    SU2_MPI::Allgather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, SU2_MPI::comm);
-    SU2_MPI::Allgather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, SU2_MPI::comm);
+    SU2_MPI::Allgather(Buffer_Send_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, Buffer_Recv_DonorVariables, nBuffer_DonorVariables, MPI_DOUBLE, SU2_MPI::comm_x);
+    SU2_MPI::Allgather(Buffer_Send_DonorIndices, nBuffer_DonorIndices, MPI_LONG, Buffer_Recv_DonorIndices, nBuffer_DonorIndices, MPI_LONG, SU2_MPI::comm_x);
 #else
     for (unsigned long iVariable = 0; iVariable < nBuffer_DonorVariables; iVariable++)
       Buffer_Recv_DonorVariables[iVariable] = Buffer_Send_DonorVariables[iVariable];
@@ -1458,8 +1458,8 @@ void CTransfer::Preprocessing_InterfaceAverage(CGeometry *donor_geometry, CGeome
   int size = SINGLE_NODE, iSize;
   int *BuffMarkerDonor, *BuffDonorFlag;
 
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
 #endif
 
 
@@ -1498,8 +1498,8 @@ void CTransfer::Preprocessing_InterfaceAverage(CGeometry *donor_geometry, CGeome
     BuffDonorFlag[iSize]              = -1;
   }
 
-  SU2_MPI::Allgather(&Marker_Donor, 1 , MPI_INT, BuffMarkerDonor, 1, MPI_INT, SU2_MPI::comm);
-  SU2_MPI::Allgather(&Donor_Flag, 1 , MPI_INT, BuffDonorFlag, 1, MPI_INT, SU2_MPI::comm);
+  SU2_MPI::Allgather(&Marker_Donor, 1 , MPI_INT, BuffMarkerDonor, 1, MPI_INT, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(&Donor_Flag, 1 , MPI_INT, BuffDonorFlag, 1, MPI_INT, SU2_MPI::comm_x);
 
 
   Marker_Donor= -1;
@@ -1600,8 +1600,8 @@ void CTransfer::Allgather_InterfaceAverage(CSolver *donor_solution, CSolver *tar
 
 #ifdef HAVE_MPI
   int size, iSize;
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
   su2double *BuffAvgPressureDonor = NULL, *BuffAvgDensityDonor = NULL, *BuffAvgNormalVelDonor = NULL, *BuffAvg3DVelDonor = NULL,
       *BuffAvgTangVelDonor = NULL, *BuffAvgNuDonor = NULL, *BuffAvgKineDonor = NULL, *BuffAvgOmegaDonor = NULL;
   int nSpanSize, *BuffMarkerDonor;
@@ -1724,15 +1724,15 @@ void CTransfer::Allgather_InterfaceAverage(CSolver *donor_solution, CSolver *tar
     BuffMarkerDonor[iSize]            = -1;
   }
 
-  SU2_MPI::Allgather(avgDensityDonor, nSpanDonor , MPI_DOUBLE, BuffAvgDensityDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(avgPressureDonor, nSpanDonor , MPI_DOUBLE, BuffAvgPressureDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(avgNormalVelDonor, nSpanDonor , MPI_DOUBLE, BuffAvgNormalVelDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(avgTangVelDonor, nSpanDonor , MPI_DOUBLE, BuffAvgTangVelDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(avg3DVelDonor, nSpanDonor , MPI_DOUBLE, BuffAvg3DVelDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(avgNuDonor, nSpanDonor , MPI_DOUBLE, BuffAvgNuDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(avgKineDonor, nSpanDonor , MPI_DOUBLE, BuffAvgKineDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(avgOmegaDonor, nSpanDonor , MPI_DOUBLE, BuffAvgOmegaDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm);
-  SU2_MPI::Allgather(&Marker_Donor, 1 , MPI_INT, BuffMarkerDonor, 1, MPI_INT, SU2_MPI::comm);
+  SU2_MPI::Allgather(avgDensityDonor, nSpanDonor , MPI_DOUBLE, BuffAvgDensityDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(avgPressureDonor, nSpanDonor , MPI_DOUBLE, BuffAvgPressureDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(avgNormalVelDonor, nSpanDonor , MPI_DOUBLE, BuffAvgNormalVelDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(avgTangVelDonor, nSpanDonor , MPI_DOUBLE, BuffAvgTangVelDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(avg3DVelDonor, nSpanDonor , MPI_DOUBLE, BuffAvg3DVelDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(avgNuDonor, nSpanDonor , MPI_DOUBLE, BuffAvgNuDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(avgKineDonor, nSpanDonor , MPI_DOUBLE, BuffAvgKineDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(avgOmegaDonor, nSpanDonor , MPI_DOUBLE, BuffAvgOmegaDonor, nSpanDonor, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(&Marker_Donor, 1 , MPI_INT, BuffMarkerDonor, 1, MPI_INT, SU2_MPI::comm_x);
 
   for (iSpan = 0; iSpan < nSpanDonor; iSpan++){
     avgDensityDonor[iSpan]            = -1.0;

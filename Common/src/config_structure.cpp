@@ -36,7 +36,7 @@
 CConfig::CConfig(char case_filename[MAX_STRING_SIZE], unsigned short val_software, unsigned short val_iZone, unsigned short val_nZone, unsigned short val_nDim, unsigned short verb_level) {
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #else
   rank = MASTER_NODE;
 #endif
@@ -134,7 +134,7 @@ unsigned short CConfig::GetnZone(string val_mesh_filename, unsigned short val_fo
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   /*--- Search the mesh file for the 'NZONE' keyword. ---*/
@@ -153,8 +153,8 @@ unsigned short CConfig::GetnZone(string val_mesh_filename, unsigned short val_fo
 #ifndef HAVE_MPI
         exit(EXIT_FAILURE);
 #else
-        MPI_Barrier(SU2_MPI::comm);
-        MPI_Abort(SU2_MPI::comm,1);
+        MPI_Barrier(SU2_MPI::comm_x);
+        MPI_Abort(SU2_MPI::comm_x,1);
         MPI_Finalize();
 #endif
       }
@@ -1950,7 +1950,7 @@ void CConfig::SetConfig_Parsing(char case_filename[MAX_STRING_SIZE]) {
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   /*--- Read the configuration file ---*/
@@ -2056,7 +2056,7 @@ bool CConfig::SetRunTime_Parsing(char case_filename[MAX_STRING_SIZE]) {
   int rank = MASTER_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
   /*--- Read the configuration file ---*/
@@ -2149,8 +2149,8 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
   int size = SINGLE_NODE;
-  MPI_Comm_size(SU2_MPI::comm, &size);
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
   
 #ifndef HAVE_TECIO
@@ -3435,7 +3435,7 @@ void CConfig::SetMarkers(unsigned short val_software) {
   
 #ifdef HAVE_MPI
   if (val_software != SU2_MSH)
-    MPI_Comm_size(SU2_MPI::comm, &size);
+    MPI_Comm_size(SU2_MPI::comm_x, &size);
 #endif
 
   /*--- Compute the total number of markers in the config file ---*/

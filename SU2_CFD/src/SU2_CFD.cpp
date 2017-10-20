@@ -42,14 +42,20 @@ int main(int argc, char *argv[]) {
   bool fsi, turbo;
   
   /*--- MPI initialization, and buffer setting ---*/
-  
+
+  int rank = MASTER_NODE;
+  int size = SINGLE_NODE;
 #ifdef HAVE_MPI
   int  buffsize;
   char *buffptr;
   SU2_MPI::Init(&argc, &argv);
   MPI_Buffer_attach( malloc(BUFSIZE), BUFSIZE );
   SU2_Comm MPICommunicator(MPI_COMM_WORLD);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
   SU2_MPI::comm = MPI_COMM_WORLD;
+  SU2_MPI::comm_x = MPI_COMM_WORLD;
+  SU2_MPI::comm_t = MPI_COMM_WORLD;
 #else
   SU2_Comm MPICommunicator(0);
 #endif
@@ -75,6 +81,31 @@ int main(int argc, char *argv[]) {
   nDim  = CConfig::GetnDim(config->GetMesh_FileName(), config->GetMesh_FileFormat());
   fsi   = config->GetFSI_Simulation();
   turbo = config->GetBoolTurbomachinery();
+
+
+
+    /* --- Preprocess the processor grid --- */
+
+    if ( config->GetBraid_Run() ){
+      if ( size % config->GetBraid_NProc_Time() != 0 ){
+        cout << "\n\nError: px*pt does not equal the number of processors!\n\n";
+        exit(EXIT_FAILURE);
+      } else {
+        /* Split communicators for the time and space dimensions */
+        int px = size / config->GetBraid_NProc_Time();
+        braid_SplitCommworld(&(SU2_MPI::comm), px, &(SU2_MPI::comm_x), &(SU2_MPI::comm_t));
+        /* Pass the spatial communicator to SU2 */
+//        SU2_MPI::comm_x = comm_x;
+        /* Get the rank and size of braid and su2 processors */
+//        MPI_Comm_size(comm_t, &braidsize);
+//        MPI_Comm_size(comm_x, &su2size);
+//        MPI_Comm_rank(comm_t, &braidrank);
+//        MPI_Comm_rank(comm_x, &su2rank);
+    }
+}
+
+
+
 
   /*--- First, given the basic information about the number of zones and the
    solver types from the config, instantiate the appropriate driver for the problem

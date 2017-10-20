@@ -88,6 +88,7 @@ protected:
   su2double APINodalForce[3];                   /*!< \brief This is used to store the force at each node. */
   su2double APINodalForceDensity[3];            /*!< \brief This is used to store the force density at each node. */
 
+
 public:
 	
   /*! 

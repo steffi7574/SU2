@@ -51,8 +51,8 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
   int size = SINGLE_NODE;
   
 #ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm, &rank);
-  MPI_Comm_size(SU2_MPI::comm, &size);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &size);
 #endif
   
   nPointTotal = geometry->GetnPoint();
@@ -128,7 +128,7 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
     Profile_File.close();
   }
 #ifdef HAVE_MPI
-  MPI_Barrier(SU2_MPI::comm);
+  MPI_Barrier(SU2_MPI::comm_x);
 #endif
   
   /*--- Loop through the map and write the results to the file ---*/
@@ -140,7 +140,7 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
       Profile_File.close();
     }
 #ifdef HAVE_MPI
-    MPI_Barrier(SU2_MPI::comm);
+    MPI_Barrier(SU2_MPI::comm_x);
 #endif
   }
   
