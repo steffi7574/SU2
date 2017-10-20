@@ -81,15 +81,14 @@ typedef struct _braid_App_struct
   double tstop        = 0.0;  /* End of Time integration */
   int    ntime        = 0;    /* Number of time steps */
   double initialDT    = 0.0;  /* Initial DeltaT */
-  double initialstart = 0.0;  /* Initial starting time USED FOR TESTING ONLY */
+//  double initialstart = 0.0;  /* Initial starting time USED FOR TESTING ONLY */
 
 
   /* Information about communication */
-  MPI_Comm comm;        /* global communicator */
   MPI_Comm comm_t;      /* temporal communicator */
   MPI_Comm comm_x;      /* spatial communicator */
-  int su2rank;          /* Rank of current su2 processor */
-  int braidrank;        /* Rank of current braid processor */
+  int su2rank, su2size; /* Rank and size of su2 communicator*/
+  int braidrank, braidsize;        /* Rank and size of braid communicator*/
 
 
   /* Information about the braid grid */

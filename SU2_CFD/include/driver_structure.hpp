@@ -916,7 +916,8 @@ public:
 class CXBraidDriver: public CDriver{
 
 protected:
-
+    braid_Core core;                                 /*!< \brief Driver for XBraid run. */
+    my_App *app;                                     /*!< \brief XBraid application that holds additional information for performing one time step. */
 
 public:
 
