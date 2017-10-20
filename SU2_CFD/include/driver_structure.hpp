@@ -45,6 +45,8 @@
 #include "../../Common/include/grid_movement_structure.hpp"
 #include "../../Common/include/config_structure.hpp"
 #include "../../Common/include/interpolation_structure.hpp"
+#include "braid.hpp"
+#include "braid_structure.hpp"
 
 using namespace std;
 
@@ -913,7 +915,7 @@ public:
 class CXBraidDriver: public CDriver{
 
 protected:
-  CIteration** direct_iteration; /*!< \brief A pointer to the direct iteration.*/
+
 
 public:
 
