@@ -197,6 +197,11 @@ public:
   void TurbomachineryPreprocessing(void);
 
   /*!
+   * \brief Initial a time-parallel computation with XBraid.
+   */
+  void XBraidPreprocessing();
+
+  /*!
    * \brief A virtual member.
    * \param[in] donorZone - zone in which the displacements will be predicted.
    * \param[in] targetZone - zone which receives the predicted displacements.
@@ -906,48 +911,5 @@ public:
   using CDriver::Update;
 };
 
-
-/*!
- * \class CXBraidDriver
- * \brief Class for parallel-in-time integration
- * \author S. Günther
- * \version 5.0.0 "Raven"
- */
-class CXBraidDriver: public CDriver{
-
-protected:
-    braid_Core core;                                 /*!< \brief Driver for XBraid run. */
-    my_App *app;                                     /*!< \brief XBraid application that holds additional information for performing one time step. */
-
-public:
-
-  /*!
-    * \brief Constructor of the class.
-    * \param[in] confFile - Configuration file name.
-    * \param[in] val_nZone - Total number of zones.
-    * \param[in] val_nDim - Number of dimensions.
-    */
-  CXBraidDriver(char* confFile,
-                unsigned short val_nZone,
-                unsigned short val_nDim,
-                SU2_Comm MPICommunicator);
-
-  /*!
-   * \brief Destructor of the class.
-   */
-  ~CXBraidDriver(void);
-
-  /*!
-   * \brief Perform one iteration of the parallel-in-time solver.
-   */
-
-  void Run();
-
-  /*!
-   * \brief Run one time-step of the direct solver. It is virtual because it depends on the kind of physics.
-   */
-  virtual void DirectRun();
-
-};
 
 

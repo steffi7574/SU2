@@ -220,11 +220,6 @@ CDriver::CDriver(char* confFile,
   else if (nZone == 2 && fsi) {
     if (rank == MASTER_NODE) cout << "A Fluid-Structure Interaction driver has been instantiated." << endl;
   }
-  else if (config_container[ZONE_0]->GetBraid_Run()){
-    if (rank == MASTER_NODE) cout << "A XBraid driver has been instantiated." << endl;
-    if (rank == MASTER_NODE) cout << "nProcs in Time : " << size_t << endl;
-    if (rank == MASTER_NODE) cout << "nProcs in Space: " << size << endl;
-  }
   else {
     if (rank == MASTER_NODE) cout << "A Fluid driver has been instantiated." << endl;
   }
@@ -413,6 +408,12 @@ CDriver::CDriver(char* confFile,
   APINodalForceDensity[1] = 0.0;
   APINodalForceDensity[2] = 0.0;
 
+
+  /* Preprocess XBraid */
+  if (config_container[ZONE_0]->GetBraid_Run()){
+      if (rank == MASTER_NODE) cout << endl <<"---------------------- XBraid Preprocessing ---------------------------" << endl;
+      XBraidPreprocessing();
+  }
 
 
   /*--- Set up a timer for performance benchmarking (preprocessing time is not included) ---*/
@@ -2801,6 +2802,151 @@ void CDriver::TurbomachineryPreprocessing(){
 
 }
 
+void CDriver::XBraidPreprocessing(){
+    cout << endl <<  "INSIDE XBRAIDPREPROCESSING" << endl << endl;
+
+
+//  int rank_t = MASTER_NODE;
+//  int size_t = SINGLE_NODE;
+//  int rank_x = MASTER_NODE;
+//  int size_x = SINGLE_NODE;
+//#ifdef HAVE_MPI
+//  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
+//  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
+//  MPI_Comm_rank(SU2_MPI::comm_x, &rank_x);
+//  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
+//#endif
+
+//  /* Preprocess XBraid */
+//  if (rank_t == MASTER_NODE && rank_x == MASTER_NODE)
+//     cout << endl <<"---------------------------- XBraid Preprocessing ---------------------------" << endl;
+
+
+//    /* --- Set up the application structure for xBraid --- */
+//    app = new my_App;
+
+//    /* Information concerning spacial and temporal communication */
+//    app->comm_x = SU2_MPI::comm_x;
+//    app->comm_t = SU2_MPI::comm_t;
+
+//    /* Set ranks and size of communicators*/
+//    app->su2rank = rank_x;
+//    app->su2size = size_x;
+//    app->braidrank = rank_t;
+//    app->braidsize = size_t;
+
+////    cout<< endl << "nProc Time:  " << app->braidsize << endl;
+////    cout<< endl << "nProc Space: " << app->su2size   << endl;
+////    cout<< endl << "Hi, I'm comm_x rank " << app->su2rank  << endl;
+////    cout<< endl << "Hi, I'm comm_t rank " << app->braidrank << endl ;
+
+
+//    /* Set the SU2 containers for running a SU2_CFD simulation */
+//    app->iteration_container    = iteration_container;
+//    app->output                 = output;
+//    app->integration_container  = integration_container;
+//    app->geometry_container     = geometry_container;
+//    app->solver_container       = solver_container;
+//    app->numerics_container     = numerics_container;
+//    app->config_container       = config_container;
+//    app->surface_movement       = surface_movement;
+//    app->grid_movement          = grid_movement;
+//    app->FFDBox                 = FFDBox;
+//    app->interpolator_container = interpolator_container;
+//    app->transfer_container     = transfer_container;
+
+//    app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
+//    app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
+////    app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
+
+////    /* Prepare history file for output of CDrag, CLift etc. */
+////    stringstream histstream;
+//////    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
+//////    ParallelFileIO fileIO(braidrank, size, 42);
+//////    fileIO.prepareStream(histstream);
+////    histstream.precision(8);
+////    app->history_stream = &histstream;
+////    if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
+
+
+//    /* Set the number of time steps and end time */
+//    if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){
+
+//        app->ntime = config_container[ZONE_0]->GetnExtIter();
+//        app->tstop = app->tstart + app->ntime * app->initialDT;
+
+//    } else if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) {
+
+//        if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
+//            app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
+//        }
+//        else {
+//            app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
+//        }
+//        /* From XBraid 2.0 on, substract one here!! */
+//        app->ntime = app->ntime-1;
+//        app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
+
+//    } else {
+//        cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
+//        exit(EXIT_FAILURE);
+//    }
+
+//    /* Check if xBraid's tstop is bigger that SU2's end time */
+//    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
+//        cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
+//        exit(EXIT_FAILURE);
+//    }
+
+////    cout << endl << "app->tstart    " << app->tstart<< endl;
+////    cout << endl << "app->initialDT " << app->initialDT<< endl;
+////    cout << endl << "app->ntime     " << app->ntime << endl;
+////    cout << endl << "app->tstop     " << app->tstop << endl;
+
+
+//    /* Initialize xBraid */
+//    braid_Init(SU2_MPI::comm, app->comm_t, app->tstart, app->tstop, app->ntime, app,
+//            my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
+//            my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
+
+//    // Set XBraid options
+//    braid_SetPrintLevel( core, config_container[ZONE_0]->GetBraid_Print_Level() );
+//    braid_SetAccessLevel( core, config_container[ZONE_0]->GetBraid_Access_Level() );
+//    braid_SetMaxLevels( core, config_container[ZONE_0]->GetBraid_Max_Level() );
+//    braid_SetNRelax( core, -1, config_container[ZONE_0]->GetBraid_NRelax());
+//    if (config_container[ZONE_0]->GetBraid_NRelax0() > -1) {
+//       braid_SetNRelax(core,  0, config_container[ZONE_0]->GetBraid_NRelax0() );
+//    }
+//    braid_SetAbsTol( core, config_container[ZONE_0]->GetBraid_Tol() );
+//    braid_SetCFactor( core, -1, config_container[ZONE_0]->GetBraid_CFactor() );
+//    braid_SetMinCoarse( core, config_container[ZONE_0]->GetBraid_Min_Coarse() );
+//    braid_SetMaxIter( core, config_container[ZONE_0]->GetBraid_Max_Iter() );
+//    if (config_container[ZONE_0]->GetBraid_FMG() )
+//    {
+//       braid_SetFMG( core );
+//    }
+//    braid_SetSkip(core, config_container[ZONE_0]->GetBraid_Skip() );
+//    braid_SetWarmRestart(core, config_container[ZONE_0]->GetBraid_Warm_Restart() );
+
+////    /* Set the primal initial guess on the coarse grid */
+//    braid_InitGridHierarchy(core);
+
+
+
+//  /*--- Set up a timer for performance benchmarking (preprocessing time is not included) ---*/
+//#ifndef HAVE_MPI
+//  StartTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
+//#else
+//  StartTime = MPI_Wtime();
+//#endif
+
+
+
+//}
+
+
+}
+
 
 //     // RUN XBRAID
 //    if ( config_container[ZONE_0]->GetBraid_Warm_Restart() ) {
@@ -4277,160 +4423,10 @@ bool CTurbomachineryDriver::Monitor(unsigned long ExtIter) {
 
 
 
-CXBraidDriver::CXBraidDriver(char* confFile,
-                                    unsigned short val_nZone,
-                                    unsigned short val_nDim,
-                                    SU2_Comm MPICommunicator) : CDriver(confFile,
-                                                                        val_nZone,
-                                                                        val_nDim, MPICommunicator) {
-
-  int rank_t = MASTER_NODE;
-  int size_t = SINGLE_NODE;
-  int rank_x = MASTER_NODE;
-  int size_x = SINGLE_NODE;
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
-  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank_x);
-  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
-#endif
-
-  /* Preprocess XBraid */
-  if (rank_t == MASTER_NODE && rank_x == MASTER_NODE)
-     cout << endl <<"---------------------------- XBraid Preprocessing ---------------------------" << endl;
-
-
-    /* --- Set up the application structure for xBraid --- */
-    app = new my_App;
-
-    /* Information concerning spacial and temporal communication */
-    app->comm_x = SU2_MPI::comm_x;
-    app->comm_t = SU2_MPI::comm_t;
-
-    /* Set ranks and size of communicators*/
-    app->su2rank = rank_x;
-    app->su2size = size_x;
-    app->braidrank = rank_t;
-    app->braidsize = size_t;
-
-//    cout<< endl << "nProc Time:  " << app->braidsize << endl;
-//    cout<< endl << "nProc Space: " << app->su2size   << endl;
-//    cout<< endl << "Hi, I'm comm_x rank " << app->su2rank  << endl;
-//    cout<< endl << "Hi, I'm comm_t rank " << app->braidrank << endl ;
-
-
-    /* Set the SU2 containers for running a SU2_CFD simulation */
-    app->iteration_container    = iteration_container;
-    app->output                 = output;
-    app->integration_container  = integration_container;
-    app->geometry_container     = geometry_container;
-    app->solver_container       = solver_container;
-    app->numerics_container     = numerics_container;
-    app->config_container       = config_container;
-    app->surface_movement       = surface_movement;
-    app->grid_movement          = grid_movement;
-    app->FFDBox                 = FFDBox;
-    app->interpolator_container = interpolator_container;
-    app->transfer_container     = transfer_container;
-
-    app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
-    app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
-//    app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
-
-//    /* Prepare history file for output of CDrag, CLift etc. */
-//    stringstream histstream;
-////    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
-////    ParallelFileIO fileIO(braidrank, size, 42);
-////    fileIO.prepareStream(histstream);
-//    histstream.precision(8);
-//    app->history_stream = &histstream;
-//    if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
-
-
-    /* Set the number of time steps and end time */
-    if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){
-
-        app->ntime = config_container[ZONE_0]->GetnExtIter();
-        app->tstop = app->tstart + app->ntime * app->initialDT;
-
-    } else if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) {
-
-        if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
-            app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
-        }
-        else {
-            app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
-        }
-        /* From XBraid 2.0 on, substract one here!! */
-        app->ntime = app->ntime-1;
-        app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
-
-    } else {
-        cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
-        exit(EXIT_FAILURE);
-    }
-
-    /* Check if xBraid's tstop is bigger that SU2's end time */
-    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
-        cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
-        exit(EXIT_FAILURE);
-    }
-
-//    cout << endl << "app->tstart    " << app->tstart<< endl;
-//    cout << endl << "app->initialDT " << app->initialDT<< endl;
-//    cout << endl << "app->ntime     " << app->ntime << endl;
-//    cout << endl << "app->tstop     " << app->tstop << endl;
-
-
-    /* Initialize xBraid */
-    braid_Init(SU2_MPI::comm, app->comm_t, app->tstart, app->tstop, app->ntime, app,
-            my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
-            my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
-
-    // Set XBraid options
-    braid_SetPrintLevel( core, config_container[ZONE_0]->GetBraid_Print_Level() );
-    braid_SetAccessLevel( core, config_container[ZONE_0]->GetBraid_Access_Level() );
-    braid_SetMaxLevels( core, config_container[ZONE_0]->GetBraid_Max_Level() );
-    braid_SetNRelax( core, -1, config_container[ZONE_0]->GetBraid_NRelax());
-    if (config_container[ZONE_0]->GetBraid_NRelax0() > -1) {
-       braid_SetNRelax(core,  0, config_container[ZONE_0]->GetBraid_NRelax0() );
-    }
-    braid_SetAbsTol( core, config_container[ZONE_0]->GetBraid_Tol() );
-    braid_SetCFactor( core, -1, config_container[ZONE_0]->GetBraid_CFactor() );
-    braid_SetMinCoarse( core, config_container[ZONE_0]->GetBraid_Min_Coarse() );
-    braid_SetMaxIter( core, config_container[ZONE_0]->GetBraid_Max_Iter() );
-    if (config_container[ZONE_0]->GetBraid_FMG() )
-    {
-       braid_SetFMG( core );
-    }
-    braid_SetSkip(core, config_container[ZONE_0]->GetBraid_Skip() );
-    braid_SetWarmRestart(core, config_container[ZONE_0]->GetBraid_Warm_Restart() );
-
-//    /* Set the primal initial guess on the coarse grid */
-    braid_InitGridHierarchy(core);
 
 
 
-  /*--- Set up a timer for performance benchmarking (preprocessing time is not included) ---*/
-#ifndef HAVE_MPI
-  StartTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StartTime = MPI_Wtime();
-#endif
-
-
-
-}
-
-
-
-CXBraidDriver::~CXBraidDriver(){
-
-}
-
-
-
-void CXBraidDriver::Run() {
+//void CXBraidDriver::Run() {
     //One XBraid iteration comes here
 
 //  /* For finite differencing only!! */
@@ -4451,12 +4447,12 @@ void CXBraidDriver::Run() {
 //  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
 
 
-}
+//}
 
-\
-void CXBraidDriver::DirectRun() {
+
+//void CXBraidDriver::DirectRun() {
     //One time-step of the simulation - Kopie von CfluidDriver::Run()
-}
+//}
 
 
 

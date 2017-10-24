@@ -158,10 +158,6 @@ int main(int argc, char *argv[]) {
 
       driver = new CTurbomachineryDriver(config_file_name, nZone, nDim, MPICommunicator);
 
-    } else if (config->GetBraid_Run()){
-
-        driver = new CXBraidDriver(config_file_name, nZone, nDim, MPICommunicator);
-
     } else {
 
       /*--- Instantiate the class for external aerodynamics ---*/
