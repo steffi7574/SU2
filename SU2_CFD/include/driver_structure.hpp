@@ -45,8 +45,7 @@
 #include "../../Common/include/grid_movement_structure.hpp"
 #include "../../Common/include/config_structure.hpp"
 #include "../../Common/include/interpolation_structure.hpp"
-#include "braid.hpp"
-#include "braid_structure.hpp"
+#include <braid.hpp>
 
 using namespace std;
 
@@ -87,7 +86,8 @@ protected:
   su2double APIVarCoord[3];                     /*!< \brief This is used to store the VarCoord of each node. */
   su2double APINodalForce[3];                   /*!< \brief This is used to store the force at each node. */
   su2double APINodalForceDensity[3];            /*!< \brief This is used to store the force density at each node. */
-
+  braid_Core xbraidcore;                              /*!< \brief Core driver for time-parallel XBraid run. */
+  _braid_App_struct *app;
 
 public:
 	

@@ -2803,100 +2803,95 @@ void CDriver::TurbomachineryPreprocessing(){
 }
 
 void CDriver::XBraidPreprocessing(){
-    cout << endl <<  "INSIDE XBRAIDPREPROCESSING" << endl << endl;
+
+  int rank_t = MASTER_NODE;
+  int size_t = SINGLE_NODE;
+  int rank_x = MASTER_NODE;
+  int size_x = SINGLE_NODE;
+#ifdef HAVE_MPI
+  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
+  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank_x);
+  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
+#endif
 
 
-//  int rank_t = MASTER_NODE;
-//  int size_t = SINGLE_NODE;
-//  int rank_x = MASTER_NODE;
-//  int size_x = SINGLE_NODE;
-//#ifdef HAVE_MPI
-//  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
-//  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
-//  MPI_Comm_rank(SU2_MPI::comm_x, &rank_x);
-//  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
-//#endif
+    /* --- Set up the application structure for xBraid --- */
+    app = new my_App;
 
-//  /* Preprocess XBraid */
-//  if (rank_t == MASTER_NODE && rank_x == MASTER_NODE)
-//     cout << endl <<"---------------------------- XBraid Preprocessing ---------------------------" << endl;
+    /* Information concerning spacial and temporal communication */
+    app->comm_x = SU2_MPI::comm_x;
+    app->comm_t = SU2_MPI::comm_t;
 
+    /* Set ranks and size of communicators*/
+    app->su2rank = rank_x;
+    app->su2size = size_x;
+    app->braidrank = rank_t;
+    app->braidsize = size_t;
 
-//    /* --- Set up the application structure for xBraid --- */
-//    app = new my_App;
-
-//    /* Information concerning spacial and temporal communication */
-//    app->comm_x = SU2_MPI::comm_x;
-//    app->comm_t = SU2_MPI::comm_t;
-
-//    /* Set ranks and size of communicators*/
-//    app->su2rank = rank_x;
-//    app->su2size = size_x;
-//    app->braidrank = rank_t;
-//    app->braidsize = size_t;
-
-////    cout<< endl << "nProc Time:  " << app->braidsize << endl;
-////    cout<< endl << "nProc Space: " << app->su2size   << endl;
-////    cout<< endl << "Hi, I'm comm_x rank " << app->su2rank  << endl;
-////    cout<< endl << "Hi, I'm comm_t rank " << app->braidrank << endl ;
+//    cout<< endl << "nProc Time:  " << app->braidsize << endl;
+//    cout<< endl << "nProc Space: " << app->su2size   << endl;
+//    cout<< endl << "Hi, I'm comm_x rank " << app->su2rank  << endl;
+//    cout<< endl << "Hi, I'm comm_t rank " << app->braidrank << endl ;
 
 
-//    /* Set the SU2 containers for running a SU2_CFD simulation */
-//    app->iteration_container    = iteration_container;
-//    app->output                 = output;
-//    app->integration_container  = integration_container;
-//    app->geometry_container     = geometry_container;
-//    app->solver_container       = solver_container;
-//    app->numerics_container     = numerics_container;
-//    app->config_container       = config_container;
-//    app->surface_movement       = surface_movement;
-//    app->grid_movement          = grid_movement;
-//    app->FFDBox                 = FFDBox;
-//    app->interpolator_container = interpolator_container;
-//    app->transfer_container     = transfer_container;
+    /* Set the SU2 containers for running a SU2_CFD simulation */
+    app->driver                 = this;
+    app->iteration_container    = iteration_container;
+    app->output                 = output;
+    app->integration_container  = integration_container;
+    app->geometry_container     = geometry_container;
+    app->solver_container       = solver_container;
+    app->numerics_container     = numerics_container;
+    app->config_container       = config_container;
+    app->surface_movement       = surface_movement;
+    app->grid_movement          = grid_movement;
+    app->FFDBox                 = FFDBox;
+    app->interpolator_container = interpolator_container;
+    app->transfer_container     = transfer_container;
 
-//    app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
-//    app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
-////    app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
+    app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
+    app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
+//    app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
 
-////    /* Prepare history file for output of CDrag, CLift etc. */
-////    stringstream histstream;
-//////    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
-//////    ParallelFileIO fileIO(braidrank, size, 42);
-//////    fileIO.prepareStream(histstream);
-////    histstream.precision(8);
-////    app->history_stream = &histstream;
-////    if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
+//    /* Prepare history file for output of CDrag, CLift etc. */
+//    stringstream histstream;
+////    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
+////    ParallelFileIO fileIO(braidrank, size, 42);
+////    fileIO.prepareStream(histstream);
+//    histstream.precision(8);
+//    app->history_stream = &histstream;
+//    if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
 
 
-//    /* Set the number of time steps and end time */
-//    if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){
+    /* Set the number of time steps and end time */
+    if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){
 
-//        app->ntime = config_container[ZONE_0]->GetnExtIter();
-//        app->tstop = app->tstart + app->ntime * app->initialDT;
+        app->ntime = config_container[ZONE_0]->GetnExtIter();
+        app->tstop = app->tstart + app->ntime * app->initialDT;
 
-//    } else if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) {
+    } else if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) {
 
-//        if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
-//            app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
-//        }
-//        else {
-//            app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
-//        }
-//        /* From XBraid 2.0 on, substract one here!! */
-//        app->ntime = app->ntime-1;
-//        app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
+        if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
+            app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
+        }
+        else {
+            app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
+        }
+        /* From XBraid 2.0 on, substract one here!! */
+        app->ntime = app->ntime-1;
+        app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
 
-//    } else {
-//        cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
-//        exit(EXIT_FAILURE);
-//    }
+    } else {
+        cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
+        exit(EXIT_FAILURE);
+    }
 
-//    /* Check if xBraid's tstop is bigger that SU2's end time */
-//    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
-//        cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
-//        exit(EXIT_FAILURE);
-//    }
+    /* Check if xBraid's tstop is bigger that SU2's end time */
+    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
+        cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
+        exit(EXIT_FAILURE);
+    }
 
 ////    cout << endl << "app->tstart    " << app->tstart<< endl;
 ////    cout << endl << "app->initialDT " << app->initialDT<< endl;
@@ -2904,185 +2899,46 @@ void CDriver::XBraidPreprocessing(){
 ////    cout << endl << "app->tstop     " << app->tstop << endl;
 
 
-//    /* Initialize xBraid */
-//    braid_Init(SU2_MPI::comm, app->comm_t, app->tstart, app->tstop, app->ntime, app,
-//            my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
-//            my_Access, my_BufSize, my_BufPack, my_BufUnpack, &core);
 
-//    // Set XBraid options
-//    braid_SetPrintLevel( core, config_container[ZONE_0]->GetBraid_Print_Level() );
-//    braid_SetAccessLevel( core, config_container[ZONE_0]->GetBraid_Access_Level() );
-//    braid_SetMaxLevels( core, config_container[ZONE_0]->GetBraid_Max_Level() );
-//    braid_SetNRelax( core, -1, config_container[ZONE_0]->GetBraid_NRelax());
-//    if (config_container[ZONE_0]->GetBraid_NRelax0() > -1) {
-//       braid_SetNRelax(core,  0, config_container[ZONE_0]->GetBraid_NRelax0() );
-//    }
-//    braid_SetAbsTol( core, config_container[ZONE_0]->GetBraid_Tol() );
-//    braid_SetCFactor( core, -1, config_container[ZONE_0]->GetBraid_CFactor() );
-//    braid_SetMinCoarse( core, config_container[ZONE_0]->GetBraid_Min_Coarse() );
-//    braid_SetMaxIter( core, config_container[ZONE_0]->GetBraid_Max_Iter() );
-//    if (config_container[ZONE_0]->GetBraid_FMG() )
-//    {
-//       braid_SetFMG( core );
-//    }
-//    braid_SetSkip(core, config_container[ZONE_0]->GetBraid_Skip() );
-//    braid_SetWarmRestart(core, config_container[ZONE_0]->GetBraid_Warm_Restart() );
+    /* Initialize xBraid */
+    braid_Init(SU2_MPI::comm, app->comm_t, app->tstart, app->tstop, app->ntime, app,
+            my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
+            my_Access, my_BufSize, my_BufPack, my_BufUnpack, &xbraidcore);
 
-////    /* Set the primal initial guess on the coarse grid */
-//    braid_InitGridHierarchy(core);
+    /* Set XBraid options */
+    braid_SetPrintLevel( xbraidcore, config_container[ZONE_0]->GetBraid_Print_Level() );
+    braid_SetAccessLevel( xbraidcore, config_container[ZONE_0]->GetBraid_Access_Level() );
+    braid_SetMaxLevels( xbraidcore, config_container[ZONE_0]->GetBraid_Max_Level() );
+    braid_SetNRelax( xbraidcore, -1, config_container[ZONE_0]->GetBraid_NRelax());
+    if (config_container[ZONE_0]->GetBraid_NRelax0() > -1) {
+       braid_SetNRelax(xbraidcore,  0, config_container[ZONE_0]->GetBraid_NRelax0() );
+    }
+    braid_SetAbsTol( xbraidcore, config_container[ZONE_0]->GetBraid_Tol() );
+    braid_SetCFactor( xbraidcore, -1, config_container[ZONE_0]->GetBraid_CFactor() );
+    braid_SetMinCoarse( xbraidcore, config_container[ZONE_0]->GetBraid_Min_Coarse() );
+    braid_SetMaxIter( xbraidcore, config_container[ZONE_0]->GetBraid_Max_Iter() );
+    if (config_container[ZONE_0]->GetBraid_FMG() )
+    {
+       braid_SetFMG( xbraidcore );
+    }
+    braid_SetSkip(xbraidcore, config_container[ZONE_0]->GetBraid_Skip() );
+    braid_SetWarmRestart(xbraidcore, config_container[ZONE_0]->GetBraid_Warm_Restart() );
 
+    /* Set number of XBraid iterations to 1, if warm restart is enabled */
+    if ( config_container[ZONE_0]->GetBraid_Warm_Restart() )
+      braid_SetMaxIter(xbraidcore, 1);
 
-
-//  /*--- Set up a timer for performance benchmarking (preprocessing time is not included) ---*/
-//#ifndef HAVE_MPI
-//  StartTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-//#else
-//  StartTime = MPI_Wtime();
-//#endif
+    /* Set the primal initial guess on the coarse grid */
+    braid_InitGridHierarchy(xbraidcore);
 
 
-
-//}
-
+    if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE)
+          cout<< "Time-parallel processor splitting with " << size_t
+              << " temporal times " << size_x << " spacial cores." << endl;
 
 }
 
 
-//     // RUN XBRAID
-//    if ( config_container[ZONE_0]->GetBraid_Warm_Restart() ) {
-
-//        /* Set the number of xBraid iterations to 1 */
-//      braid_SetMaxIter(core, 1);
-//      app->optimiter = 0;
-
-
-//      /* --- OPTIMIZATION LOOP --- */
-//      for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
-
-//        /* Reset the app */
-//        app->Total_Cd_avg   = 0.0;
-//        app->Total_Cd_avg_b = 1.0;
-//        app->optimiter      = optimiter;
-
-
-//        /* Clear the action tape */
-//        braidTape->action.clear();
-
-//        /* --- Primal xBraid computation ---*/
-
-//        /* Run one primal xBraid iteration */
-//        braid_Drive(core);
-
-
-//        /* Get the primal xBraid residuum */
-//        _braid_GetRNorm(core, -1, &app->primal_norm);
-
-//        /* Compute the time-average of CDrag */
-//        double MyTotalAvg = app->Total_Cd_avg;
-//        app->Total_Cd_avg = 0.0;
-//        MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
-//        app->Total_Cd_avg = 1.0/(app->ntime * 2) * app->Total_Cd_avg;
-//        cout<< format("Total_Cd_avg %1.14e\n", app->Total_Cd_avg);
-
-
-//        /* --- Adjoint sensitivity computation --- */
-//        cout<< "ADJONT\n";
-
-//        /* Reset the reduced gradient */
-//        for (int iPoint = 0; iPoint < nPoint; iPoint++){
-//          for (int iDim = 0; iDim < nDim; iDim++){
-//            app->redgrad[iPoint][iDim] = 0.0;
-//          }
-//        }
-
-//        /* Adjoint of computing the time-average. */
-//         app->Total_Cd_avg_b = 1.0/(app->ntime * 2 ) * app->Total_Cd_avg_b;
-
-//        /* Evaluate the Action tape in reverse order. */
-//        evalAdjointAction(app, braidTape);
-
-//        /* Compute adjoint residuum */
-//        double my_norm = 0.0;
-//        for (int i = 0; i < app->ncpoints; i++)
-//        {
-//          /* TODO: COMPUTE THE NORM! */
-//          // if (myid != 0 || i !=0 )
-//          // {
-//            // my_norm += pow(getValue(braidTape->braid_input_b[i]->y) - getValue(app->optim->adjoint[i]->y), 2);
-//          // }
-//        }
-//        MPI_Allreduce(&my_norm, &app->adjoint_norm, 1, MPI_DOUBLE, MPI_SUM, comm);
-//        app->adjoint_norm = sqrt(app->adjoint_norm);
-//        // if (optimiter == 0) app->optim_adjoint_norm0 = app_optim->adjoint_norm;
-
-//        /* Compute the reduced gradient */
-//        // double MyRedGrad = app->redgrad;
-//        // app->redgrad= 0.0;
-//        // MPI_Allreduce(&MyRedGrad, &app->redgrad, 1, MPI_DOUBLE, MPI_SUM, comm);
-
-//        /* Store the adjoints into the Optim structure */
-//        for (int i=0; i < app->ncpoints; i++)
-//        {
-//          /* TODO: Store the adjoint in optimadjoint
-//          // app->optim->adjoint[i]->y = braidTape->in_Adjoint[i]->y;
-//          /* Delete the pointer */
-//          braidTape->braid_input_b[i].reset();
-//        }
-
-//        /* Move pointers from braid_output_b to braid_input_b */
-//        // Because braid output of current iteration is braid input of next iteration
-//        for (int i=0; i<app->ncpoints; i++)
-//        {
-//          braidTape->braid_input_b[i] = braidTape->braid_output_b[i];
-//          braidTape->braid_output_b[i].reset();
-//        }
-
-//        /* Output */
-//        if (rank == MASTER_NODE){
-//          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
-//        }
-
-//        /* Stopping criterion */
-//        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
-//            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
-//            break;
-//        }
-
-//      } // END OF OPTIMIZATION LOOP
-
-//      /* Print some statistics */
-//      braid_PrintStats(core);
-
-//    } else {
-//      std::cout<<format("\n\nTurn warm_restart option on for One-Shot!!\n\n");
-//      return -1;
-//    }
-
-
-//  /* Print the sensitivity of a surface point */
-//  /* For finite differencing only!! */
-//  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
-//    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
-//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
-//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
-//      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
-//      cout<< format("grad surface %d %1.14e\n", iPoint_vertex0, app->redgrad[iPoint_vertex0][0]);
-//    }
-//  }
-
-
-////    std::ofstream out;
-////    ParallelFileIO::startFileWrite(out, "history_test.dat", braidrank, braidsize, 42, comm_t);
-////    cout << (*app->history_stream).str();
-////    out << (*app->history_stream).str();
-////    ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
-
-
-//    // Finalize XBraid
-//    braid_Destroy(core);
-
-
-//}
 
 void CDriver::StartSolver() {
 
@@ -3158,8 +3014,131 @@ void CDriver::StartSolver() {
 
       /* Time-parallel XBraid iteration */
 
-      if (rank == MASTER_NODE && rank_t == MASTER_NODE)
-            cout<< "Time-parallel processor splitting with " << size_t << " temporal times " << size_x << " spacial cores." << endl;
+//      for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
+
+//        /* Reset the app */
+//        app->Total_Cd_avg   = 0.0;
+//        app->Total_Cd_avg_b = 1.0;
+//        app->optimiter      = optimiter;
+
+
+//        /* Clear the action tape */
+//        braidTape->action.clear();
+
+//        /* --- Primal xBraid computation ---*/
+
+//        /* Run one primal xBraid iteration */
+//        braid_Drive(xbraidcore);
+
+
+//        /* Get the primal xBraid residuum */
+//        _braid_GetRNorm(xbraidcore, -1, &app->primal_norm);
+
+//        /* Compute the time-average of CDrag */
+//        double MyTotalAvg = app->Total_Cd_avg;
+//        app->Total_Cd_avg = 0.0;
+//        MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
+//        app->Total_Cd_avg = 1.0/(app->ntime * 2) * app->Total_Cd_avg;
+//        cout<< format("Total_Cd_avg %1.14e\n", app->Total_Cd_avg);
+
+
+//        /* --- Adjoint sensitivity computation --- */
+//        cout<< "ADJONT\n";
+
+//        /* Reset the reduced gradient */
+//        for (int iPoint = 0; iPoint < nPoint; iPoint++){
+//          for (int iDim = 0; iDim < nDim; iDim++){
+//            app->redgrad[iPoint][iDim] = 0.0;
+//          }
+//        }
+
+//        /* Adjoint of computing the time-average. */
+//         app->Total_Cd_avg_b = 1.0/(app->ntime * 2 ) * app->Total_Cd_avg_b;
+
+//        /* Evaluate the Action tape in reverse order. */
+//        evalAdjointAction(app, braidTape);
+
+//        /* Compute adjoint residuum */
+//        double my_norm = 0.0;
+//        for (int i = 0; i < app->ncpoints; i++)
+//        {
+//          /* TODO: COMPUTE THE NORM! */
+//          // if (myid != 0 || i !=0 )
+//          // {
+//            // my_norm += pow(getValue(braidTape->braid_input_b[i]->y) - getValue(app->optim->adjoint[i]->y), 2);
+//          // }
+//        }
+//        MPI_Allreduce(&my_norm, &app->adjoint_norm, 1, MPI_DOUBLE, MPI_SUM, comm);
+//        app->adjoint_norm = sqrt(app->adjoint_norm);
+//        // if (optimiter == 0) app->optim_adjoint_norm0 = app_optim->adjoint_norm;
+
+//        /* Compute the reduced gradient */
+//        // double MyRedGrad = app->redgrad;
+//        // app->redgrad= 0.0;
+//        // MPI_Allreduce(&MyRedGrad, &app->redgrad, 1, MPI_DOUBLE, MPI_SUM, comm);
+
+//        /* Store the adjoints into the Optim structure */
+//        for (int i=0; i < app->ncpoints; i++)
+//        {
+//          /* TODO: Store the adjoint in optimadjoint
+//          // app->optim->adjoint[i]->y = braidTape->in_Adjoint[i]->y;
+//          /* Delete the pointer */
+//          braidTape->braid_input_b[i].reset();
+//        }
+
+//        /* Move pointers from braid_output_b to braid_input_b */
+//        // Because braid output of current iteration is braid input of next iteration
+//        for (int i=0; i<app->ncpoints; i++)
+//        {
+//          braidTape->braid_input_b[i] = braidTape->braid_output_b[i];
+//          braidTape->braid_output_b[i].reset();
+//        }
+
+//        /* Output */
+//        if (rank == MASTER_NODE){
+//          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
+//        }
+
+//        /* Stopping criterion */
+//        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
+//            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
+//            break;
+//        }
+
+//      } // END OF OPTIMIZATION LOOP
+
+//      /* Print some statistics */
+//      braid_PrintStats(xbraidcore);
+
+//    } else {
+//      std::cout<<format("\n\nTurn warm_restart option on for One-Shot!!\n\n");
+//      return -1;
+//    }
+
+
+//  /* Print the sensitivity of a surface point */
+//  /* For finite differencing only!! */
+//  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
+//    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
+//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
+//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
+//      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
+//      cout<< format("grad surface %d %1.14e\n", iPoint_vertex0, app->redgrad[iPoint_vertex0][0]);
+//    }
+//  }
+
+
+////    std::ofstream out;
+////    ParallelFileIO::startFileWrite(out, "history_test.dat", braidrank, braidsize, 42, comm_t);
+////    cout << (*app->history_stream).str();
+////    out << (*app->history_stream).str();
+////    ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
+
+
+//    // Finalize XBraid
+//    braid_Destroy(xbraidcore);
+
+
 
   }
 
