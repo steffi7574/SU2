@@ -11,6 +11,7 @@
 #include <braid.hpp>
 #include "../../Common/include/mpi_structure.hpp"
 #include "iteration_structure.hpp"
+#include "driver_structure.hpp"
 #include "solver_structure.hpp"
 #include "integration_structure.hpp"
 #include "output_structure.hpp"
@@ -98,7 +99,7 @@ typedef struct _braid_App_struct
 
   /* Add the SU2 containers for SU2_CFD computations */
   /* TODO: Add only ZONE_0 ! (*_container[ZONE_0]) */
-//  CDriver *driver;
+  CDriver *driver;
   CIteration **iteration_container;
   COutput *output;
   CIntegration ***integration_container;
