@@ -461,9 +461,13 @@ void CDriver::Postprocessing() {
   }
 
 
-  /* Finalize Time-parallel XBraid */
-  if ( xbraid )
+  /* Print Statistics and Finalize Time-parallel XBraid */
+  if ( xbraid ) {
+
+      braid_PrintStats(xbraidcore);
       braid_Destroy(xbraidcore);
+
+  }
 
 
   if (rank == MASTER_NODE)
@@ -2952,11 +2956,22 @@ void CDriver::XBraidPreprocessing(){
 
 void CDriver::StartXBraidSolver() {
 
-    cout << endl << "INSIDE THE MAIN XBRAID ROUTINE !!!" << endl;
+    /* Check for warm_restart option */
+    if ( !config_container[ZONE_0]->GetBraid_Warm_Restart() ) {
 
-//      for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
+        cout << endl << "ERROR!! Enable Warm-Restart Option for Time-parallel computation!!" << endl;
+        exit(EXIT_FAILURE);
 
-//        /* Reset the app */
+    }
+
+
+    for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
+
+
+        if (app->braidrank == MASTER_NODE )
+            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
+
+        /* Reset the app */
 //        app->Total_Cd_avg   = 0.0;
 //        app->Total_Cd_avg_b = 1.0;
 //        app->optimiter      = optimiter;
@@ -2965,10 +2980,9 @@ void CDriver::StartXBraidSolver() {
 //        /* Clear the action tape */
 //        braidTape->action.clear();
 
-//        /* --- Primal xBraid computation ---*/
+        /* --- One Primal xBraid iteration---*/
 
-//        /* Run one primal xBraid iteration */
-//        braid_Drive(driver->xbraidcore);
+//        braid_Drive(xbraidcore);
 
 
 //        /* Get the primal xBraid residuum */
@@ -2982,58 +2996,6 @@ void CDriver::StartXBraidSolver() {
 //        cout<< format("Total_Cd_avg %1.14e\n", app->Total_Cd_avg);
 
 
-//        /* --- Adjoint sensitivity computation --- */
-//        cout<< "ADJONT\n";
-
-//        /* Reset the reduced gradient */
-//        for (int iPoint = 0; iPoint < nPoint; iPoint++){
-//          for (int iDim = 0; iDim < nDim; iDim++){
-//            app->redgrad[iPoint][iDim] = 0.0;
-//          }
-//        }
-
-//        /* Adjoint of computing the time-average. */
-//         app->Total_Cd_avg_b = 1.0/(app->ntime * 2 ) * app->Total_Cd_avg_b;
-
-//        /* Evaluate the Action tape in reverse order. */
-//        evalAdjointAction(app, braidTape);
-
-//        /* Compute adjoint residuum */
-//        double my_norm = 0.0;
-//        for (int i = 0; i < app->ncpoints; i++)
-//        {
-//          /* TODO: COMPUTE THE NORM! */
-//          // if (myid != 0 || i !=0 )
-//          // {
-//            // my_norm += pow(getValue(braidTape->braid_input_b[i]->y) - getValue(app->optim->adjoint[i]->y), 2);
-//          // }
-//        }
-//        MPI_Allreduce(&my_norm, &app->adjoint_norm, 1, MPI_DOUBLE, MPI_SUM, comm);
-//        app->adjoint_norm = sqrt(app->adjoint_norm);
-//        // if (optimiter == 0) app->optim_adjoint_norm0 = app_optim->adjoint_norm;
-
-//        /* Compute the reduced gradient */
-//        // double MyRedGrad = app->redgrad;
-//        // app->redgrad= 0.0;
-//        // MPI_Allreduce(&MyRedGrad, &app->redgrad, 1, MPI_DOUBLE, MPI_SUM, comm);
-
-//        /* Store the adjoints into the Optim structure */
-//        for (int i=0; i < app->ncpoints; i++)
-//        {
-//          /* TODO: Store the adjoint in optimadjoint
-//          // app->optim->adjoint[i]->y = braidTape->in_Adjoint[i]->y;
-//          /* Delete the pointer */
-//          braidTape->braid_input_b[i].reset();
-//        }
-
-//        /* Move pointers from braid_output_b to braid_input_b */
-//        // Because braid output of current iteration is braid input of next iteration
-//        for (int i=0; i<app->ncpoints; i++)
-//        {
-//          braidTape->braid_input_b[i] = braidTape->braid_output_b[i];
-//          braidTape->braid_output_b[i].reset();
-//        }
-
 //        /* Output */
 //        if (rank == MASTER_NODE){
 //          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
@@ -3045,27 +3007,7 @@ void CDriver::StartXBraidSolver() {
 //            break;
 //        }
 
-//      } // END OF OPTIMIZATION LOOP
-
-//      /* Print some statistics */
-//      braid_PrintStats(xbraidcore);
-
-//    } else {
-//      std::cout<<format("\n\nTurn warm_restart option on for One-Shot!!\n\n");
-//      return -1;
-//    }
-
-
-//  /* Print the sensitivity of a surface point */
-//  /* For finite differencing only!! */
-//  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
-//    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
-//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
-//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
-//      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
-//      cout<< format("grad surface %d %1.14e\n", iPoint_vertex0, app->redgrad[iPoint_vertex0][0]);
-//    }
-//  }
+      }
 
 
 ////    std::ofstream out;
