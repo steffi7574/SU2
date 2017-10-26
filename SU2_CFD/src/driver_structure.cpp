@@ -410,9 +410,14 @@ CDriver::CDriver(char* confFile,
 
 
   /* Preprocess XBraid */
-  if (config_container[ZONE_0]->GetBraid_Run()){
+  xbraid = config_container[ZONE_0]->GetBraid_Run();
+
+  if ( xbraid ){
+
       if (rank == MASTER_NODE) cout << endl <<"---------------------- XBraid Preprocessing ---------------------------" << endl;
+
       XBraidPreprocessing();
+
   }
 
 
@@ -2939,80 +2944,9 @@ void CDriver::XBraidPreprocessing(){
 }
 
 
+void CDriver::StartXBraidSolver() {
 
-void CDriver::StartSolver() {
-
-  int rank = MASTER_NODE;
-  int rank_t = MASTER_NODE;
-  int size_x = SINGLE_NODE;
-  int size_t = SINGLE_NODE;
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
-  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
-  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
-#endif
-
-  /*--- Main external loop of the solver. Within this loop, each iteration ---*/
-
-  if (rank == MASTER_NODE)
-    cout << endl <<"------------------------------ Begin Solver -----------------------------" << endl;
-
-  if( !config_container[ZONE_0]->GetBraid_Run() ) {
-
-      /*--- Time-serial solver ---*/
-
-      while ( ExtIter < config_container[ZONE_0]->GetnExtIter() ) {
-
-          /*--- Perform some external iteration preprocessing. ---*/
-
-          PreprocessExtIter(ExtIter);
-
-          /*--- Perform a single iteration of the chosen PDE solver. ---*/
-
-          if (!fsi) {
-
-              /*--- Perform a dynamic mesh update if required. ---*/
-
-              DynamicMeshUpdate(ExtIter);
-
-              /*--- Run a single iteration of the problem (fluid, elasticty, wave, heat, ...). ---*/
-
-              Run();
-
-              /*--- Update the solution for dual time stepping strategy ---*/
-
-              Update();
-
-          }
-
-          /*--- In the FSIDriver case, mesh and solution updates are already included into the Run function ---*/
-
-          else {
-
-              Run();
-
-          }
-
-          /*--- Monitor the computations after each iteration. ---*/
-
-          Monitor(ExtIter);
-
-          /*--- Output the solution in files. ---*/
-
-          Output(ExtIter);
-
-          /*--- If the convergence criteria has been met, terminate the simulation. ---*/
-
-          if (StopCalc) break;
-
-          ExtIter++;
-
-      }
-
-  } else {
-
-      /* Time-parallel XBraid iteration */
+    cout << endl << "INSIDE THE MAIN XBRAID ROUTINE !!!" << endl;
 
 //      for (int optimiter = 0; optimiter < config_container[ZONE_0]->GetBraid_Max_Iter(); optimiter++){
 
@@ -3028,7 +2962,7 @@ void CDriver::StartSolver() {
 //        /* --- Primal xBraid computation ---*/
 
 //        /* Run one primal xBraid iteration */
-//        braid_Drive(xbraidcore);
+//        braid_Drive(driver->xbraidcore);
 
 
 //        /* Get the primal xBraid residuum */
@@ -3140,7 +3074,77 @@ void CDriver::StartSolver() {
 
 
 
-  }
+}
+
+
+
+void CDriver::StartSolver() {
+
+  int rank = MASTER_NODE;
+  int rank_t = MASTER_NODE;
+  int size_x = SINGLE_NODE;
+  int size_t = SINGLE_NODE;
+#ifdef HAVE_MPI
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
+  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
+  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
+#endif
+
+  /*--- Main external loop of the solver. Within this loop, each iteration ---*/
+
+  if (rank == MASTER_NODE)
+    cout << endl <<"------------------------------ Begin Solver -----------------------------" << endl;
+
+  /*--- Time-serial solver ---*/
+
+      while ( ExtIter < config_container[ZONE_0]->GetnExtIter() ) {
+
+          /*--- Perform some external iteration preprocessing. ---*/
+
+          PreprocessExtIter(ExtIter);
+
+          /*--- Perform a single iteration of the chosen PDE solver. ---*/
+
+          if (!fsi) {
+
+              /*--- Perform a dynamic mesh update if required. ---*/
+
+              DynamicMeshUpdate(ExtIter);
+
+              /*--- Run a single iteration of the problem (fluid, elasticty, wave, heat, ...). ---*/
+
+              Run();
+
+              /*--- Update the solution for dual time stepping strategy ---*/
+
+              Update();
+
+          }
+
+          /*--- In the FSIDriver case, mesh and solution updates are already included into the Run function ---*/
+
+          else {
+
+              Run();
+
+          }
+
+          /*--- Monitor the computations after each iteration. ---*/
+
+          Monitor(ExtIter);
+
+          /*--- Output the solution in files. ---*/
+
+          Output(ExtIter);
+
+          /*--- If the convergence criteria has been met, terminate the simulation. ---*/
+
+          if (StopCalc) break;
+
+          ExtIter++;
+
+      }
 
 }
 
@@ -4400,38 +4404,6 @@ bool CTurbomachineryDriver::Monitor(unsigned long ExtIter) {
 
 }
 
-
-
-
-
-
-//void CXBraidDriver::Run() {
-    //One XBraid iteration comes here
-
-//  /* For finite differencing only!! */
-//  /* Perturb a surface point */
-//  for (int iMarker = 0; iMarker < app->geometry_container[ZONE_0][MESH_0]->GetnMarker(); iMarker++){
-//    if(app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == EULER_WALL
-//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == HEAT_FLUX
-//        || app->config_container[ZONE_0]->GetMarker_All_KindBC(iMarker) == ISOTHERMAL){
-//      int iPoint_vertex0 = app->geometry_container[ZONE_0][MESH_0]->vertex[iMarker][0]->GetNode();
-//      su2double EPS = app->config_container[ZONE_0]->GetCauchy_Eps();
-//      su2double* Coord;
-//      Coord = app->geometry_container[ZONE_0][MESH_0]->node[iPoint_vertex0]->GetCoord();
-//      Coord[0] += EPS;
-//      cout<< format("Perturb coordinate %d with eps %1.1e\n", iPoint_vertex0, SU2_TYPE::GetValue(EPS));
-//    }
-//  }
-//  /* Update the geomerty */
-//  app->geometry_container[ZONE_0][MESH_0]->UpdateGeometry(app->geometry_container[ZONE_0], app->config_container[ZONE_0]);
-
-
-//}
-
-
-//void CXBraidDriver::DirectRun() {
-    //One time-step of the simulation - Kopie von CfluidDriver::Run()
-//}
 
 
 

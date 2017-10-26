@@ -70,7 +70,8 @@ protected:
                 nDim;                           /*!< \brief Number of dimensions.*/
   bool StopCalc,                                /*!< \brief Stop computation flag.*/
        mixingplane,                             /*!< \brief mixing-plane simulation flag.*/
-       fsi;                                     /*!< \brief FSI simulation flag.*/
+       fsi,                                     /*!< \brief FSI simulation flag.*/
+       xbraid;                                  /*!< \brief Time-parallel XBraid flag. */
   CIteration **iteration_container;             /*!< \brief Container vector with all the iteration methods. */
   COutput *output;                              /*!< \brief Pointer to the COutput class. */
   CIntegration ***integration_container;        /*!< \brief Container vector with all the integration methods. */
@@ -200,6 +201,11 @@ public:
    * \brief Initial a time-parallel computation with XBraid.
    */
   void XBraidPreprocessing();
+
+  /*!
+   * \brief Main loop for time-parallel computations with XBraid.
+   */
+  void StartXBraidSolver();
 
   /*!
    * \brief A virtual member.
