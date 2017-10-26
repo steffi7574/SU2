@@ -460,6 +460,12 @@ void CDriver::Postprocessing() {
     cout << "History file, closed." << endl;
   }
 
+
+  /* Finalize Time-parallel XBraid */
+  if ( xbraid )
+      braid_Destroy(xbraidcore);
+
+
   if (rank == MASTER_NODE)
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
 
@@ -3069,8 +3075,6 @@ void CDriver::StartXBraidSolver() {
 ////    ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
 
 
-//    // Finalize XBraid
-//    braid_Destroy(xbraidcore);
 
 
 
