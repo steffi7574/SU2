@@ -2894,7 +2894,7 @@ void CDriver::XBraidPreprocessing(){
             app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
         }
         /* From XBraid 2.0 on, substract one here!! */
-        app->ntime = app->ntime-1;
+//        app->ntime = app->ntime-1;
         app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
 
     } else {
@@ -2946,16 +2946,6 @@ void CDriver::XBraidPreprocessing(){
     /* Set the primal initial guess on the coarse grid */
     braid_InitGridHierarchy(xbraidcore);
 
-
-    if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE)
-          cout<< "Time-parallel processor splitting with " << size_t
-              << " temporal times " << size_x << " spacial cores." << endl;
-
-}
-
-
-void CDriver::StartXBraidSolver() {
-
     /* Check for warm_restart option */
     if ( !config_container[ZONE_0]->GetBraid_Warm_Restart() ) {
 
@@ -2965,49 +2955,12 @@ void CDriver::StartXBraidSolver() {
     }
 
 
-    for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
+    /* Report on the processor grid */
+    if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE)
+          cout<< "Time-parallel processor splitting with " << size_t
+              << " temporal times " << size_x << " spacial cores." << endl;
 
 
-        if (app->braidrank == MASTER_NODE )
-            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
-
-        /* Reset the app */
-//        app->Total_Cd_avg   = 0.0;
-//        app->Total_Cd_avg_b = 1.0;
-//        app->optimiter      = optimiter;
-
-
-//        /* Clear the action tape */
-//        braidTape->action.clear();
-
-        /* --- One Primal xBraid iteration---*/
-
-//        braid_Drive(xbraidcore);
-
-
-//        /* Get the primal xBraid residuum */
-//        _braid_GetRNorm(xbraidcore, -1, &app->primal_norm);
-
-//        /* Compute the time-average of CDrag */
-//        double MyTotalAvg = app->Total_Cd_avg;
-//        app->Total_Cd_avg = 0.0;
-//        MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
-//        app->Total_Cd_avg = 1.0/(app->ntime * 2) * app->Total_Cd_avg;
-//        cout<< format("Total_Cd_avg %1.14e\n", app->Total_Cd_avg);
-
-
-//        /* Output */
-//        if (rank == MASTER_NODE){
-//          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
-//        }
-
-//        /* Stopping criterion */
-//        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
-//            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
-//            break;
-//        }
-
-      }
 
 
 ////    std::ofstream out;
@@ -3042,7 +2995,11 @@ void CDriver::StartSolver() {
   if (rank == MASTER_NODE)
     cout << endl <<"------------------------------ Begin Solver -----------------------------" << endl;
 
-  /*--- Time-serial solver ---*/
+
+
+  if( !xbraid ) {
+
+      /*--- Time-serial solver ---*/
 
       while ( ExtIter < config_container[ZONE_0]->GetnExtIter() ) {
 
@@ -3091,6 +3048,52 @@ void CDriver::StartSolver() {
           ExtIter++;
 
       }
+
+  } else {
+
+     /*--- Time-parallel XBraid solver ---*/
+
+    for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
+
+
+        if (app->braidrank == MASTER_NODE )
+            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
+
+        /* Reset the app */
+        app->Total_Cd_avg   = 0.0;
+        app->iter           = iter;
+
+
+        /* Perform one xBraid iteration---*/
+
+        braid_Drive(xbraidcore);
+
+
+        /* Get the primal xBraid residuum */
+//        _braid_GetRNorm(xbraidcore, -1, &app->primal_norm);
+
+//        /* Compute the time-average of CDrag */
+//        double MyTotalAvg = app->Total_Cd_avg;
+//        app->Total_Cd_avg = 0.0;
+//        MPI_Allreduce(&MyTotalAvg, &app->Total_Cd_avg, 1, MPI_DOUBLE, MPI_SUM, comm_t);
+//        app->Total_Cd_avg = 1.0/(app->ntime * 2) * app->Total_Cd_avg;
+//        cout<< format("Total_Cd_avg %1.14e\n", app->Total_Cd_avg);
+
+
+//        /* Output */
+//        if (rank == MASTER_NODE){
+//          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
+//        }
+
+//        /* Stopping criterion */
+//        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
+//            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
+//            break;
+//        }
+
+    }
+
+  }
 
 }
 

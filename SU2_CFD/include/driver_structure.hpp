@@ -87,8 +87,9 @@ protected:
   su2double APIVarCoord[3];                     /*!< \brief This is used to store the VarCoord of each node. */
   su2double APINodalForce[3];                   /*!< \brief This is used to store the force at each node. */
   su2double APINodalForceDensity[3];            /*!< \brief This is used to store the force density at each node. */
-  braid_Core xbraidcore;                              /*!< \brief Core driver for time-parallel XBraid run. */
-  _braid_App_struct *app;
+  braid_Core xbraidcore;                        /*!< \brief Core driver for time-parallel XBraid run. */
+  _braid_App_struct *app;                       /*!< \brief Application structure that holds additional information for time-parallel XBraid run */
+
 
 public:
 	
@@ -201,11 +202,6 @@ public:
    * \brief Initial a time-parallel computation with XBraid.
    */
   void XBraidPreprocessing();
-
-  /*!
-   * \brief Main loop for time-parallel computations with XBraid.
-   */
-  void StartXBraidSolver();
 
   /*!
    * \brief A virtual member.

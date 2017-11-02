@@ -82,7 +82,7 @@ typedef struct _braid_App_struct
   double tstop        = 0.0;  /* End of Time integration */
   int    ntime        = 0;    /* Number of time steps */
   double initialDT    = 0.0;  /* Initial DeltaT */
-//  double initialstart = 0.0;  /* Initial starting time USED FOR TESTING ONLY */
+  double initialstart = 0.0;  /* Initial starting time USED FOR TESTING ONLY */
 
 
   /* Information about communication */
@@ -120,24 +120,24 @@ typedef struct _braid_App_struct
   double primal_norm    = 0.0;    // Norm of primal xBraid residual
   double adjoint_norm   = 0.0;    // Norm of the adjoint xBraid residual
   double Total_Cd_avg   = 0.0;    // Time-averaged objective funtion
-  double Total_Cd_avg_b = 1.0;    // Seed for adjoint sensitivity computation
-  double redgrad_norm   = 0.0;    // Norm of the gradient
-  int optimiter;                // Iteration number of outer optimization loop.
+//  double Total_Cd_avg_b = 1.0;    // Seed for adjoint sensitivity computation
+//  double redgrad_norm   = 0.0;    // Norm of the gradient
+  int iter;                      // Iteration number of XBraid loop.
   int ncpoints;                  // Number of coarse grid points on that processor
 
   /* Reduced gradient */
-  double** redgrad;
+//  double** redgrad;
 
   /* Adjoint optimization variables */
-  std::vector<TwoStepSolution*> optimadjoint;
+//  std::vector<TwoStepSolution*> optimadjoint;
 
   /* Temprary adjoint variables used inside step_adjoint */
-  su2double** tmpadj;
-  su2double** tmpadj_n;
-  su2double** tmpadj_n1;
+//  su2double** tmpadj;
+//  su2double** tmpadj_n;
+//  su2double** tmpadj_n1;
 
   /* Constructor */
-  _braid_App_struct() : optimadjoint() {}
+//  _braid_App_struct() : optimadjoint() {}
 
 
 } my_App;
@@ -152,7 +152,7 @@ typedef struct _braid_Vector_struct
     TwoStepSolution* Solution;
 
     /* Shared pointer to adjoint Solution lists at time n and n-1 */
-    std::shared_ptr<TwoStepSolution> Solution_b;
+//    std::shared_ptr<TwoStepSolution> Solution_b;
 
     /* Constructor for primal Solution list: Called by my_init */
     /* Constructor for adjoint Solution list: Called in my_init */
@@ -161,10 +161,10 @@ typedef struct _braid_Vector_struct
 
 } my_Vector;
 
-/*!
- * \brief Creates the braidTape
- */
-void setupTapeData();
+// /*!
+// * \brief Creates the braidTape
+// */
+//void setupTapeData();
 
 /*!
  * \brief Create a copy v of a given vector u
@@ -230,71 +230,71 @@ int my_BufPack(braid_App app, braid_Vector u, void *buffer, braid_BufferStatus b
  */
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_BufferStatus bstatus  );
 
-enum class BraidCall_t {
-  PHI       = 1,
-  INIT      = 2,
-  CLONE     = 3,
-  FREE      = 4,
-  SUM       = 5,
-  BUFPACK   = 6,
-  BUFUNPACK = 7,
-  ACCESS    = 8,
-};
+//enum class BraidCall_t {
+//  PHI       = 1,
+//  INIT      = 2,
+//  CLONE     = 3,
+//  FREE      = 4,
+//  SUM       = 5,
+//  BUFPACK   = 6,
+//  BUFUNPACK = 7,
+//  ACCESS    = 8,
+//};
 
 
-struct BraidAction_t {
-    BraidCall_t       braidCall;        /* The type of xBraid call */
-    std::vector<int>  inIndex;          /* The indicees input xBraid vectors */
-    int               outIndex;         /* The index of output xBraid vector */
-    double            deltat;           /* The time step size that was used in the primal Step function*/
-    braid_StepStatus  StepStatus;        /* The status of xBraid for Phi Calls */
-    double            sum_alpha;        /* First coefficient of the sum */
-    double            sum_beta;         /* Second coefficient of the sum */
-    double            time;         /* Current number of time step, needed for access_adjoint */
-    int               send_recv_rank;   /* Processor rank of the sender / receiver */
-    int               optimiter;       /* Iteration number of xBraid */
-    int               myid;             /* Processors id */
+//struct BraidAction_t {
+//    BraidCall_t       braidCall;        /* The type of xBraid call */
+//    std::vector<int>  inIndex;          /* The indicees input xBraid vectors */
+//    int               outIndex;         /* The index of output xBraid vector */
+//    double            deltat;           /* The time step size that was used in the primal Step function*/
+//    braid_StepStatus  StepStatus;        /* The status of xBraid for Phi Calls */
+//    double            sum_alpha;        /* First coefficient of the sum */
+//    double            sum_beta;         /* Second coefficient of the sum */
+//    double            time;         /* Current number of time step, needed for access_adjoint */
+//    int               send_recv_rank;   /* Processor rank of the sender / receiver */
+//    int               optimiter;       /* Iteration number of xBraid */
+//    int               myid;             /* Processors id */
 
-    /* Constructor */
-    BraidAction_t() : inIndex() {
-    }
-};
-
-struct BraidTape_t {
-    std::vector<my_Vector*>     primal;   /* Intermediate primal braid vectors that are used in the nonlinear operations */
-    std::vector<BraidAction_t>  action;   /* Actions during one xBraid iteration */
-
-    std::vector<std::shared_ptr<TwoStepSolution>> adjoint; /* Intermediate adjoint braid vectors */
-
-    /* Two more tapes that store pointers to xbraid input and output variables in each iteration */
-   std::vector<std::shared_ptr<TwoStepSolution>> braid_input_b;
-   std::vector<std::shared_ptr<TwoStepSolution>> braid_output_b;
-
-    /* Constructor */
-    BraidTape_t() : primal(), action(), adjoint() {}
-//     in_Adjoint(),
-//     out_Adjoint() {
+//    /* Constructor */
+//    BraidAction_t() : inIndex() {
 //    }
-};
+//};
 
-// Define the tapes as extern
-extern BraidTape_t* braidTape;
+//struct BraidTape_t {
+//    std::vector<my_Vector*>     primal;   /* Intermediate primal braid vectors that are used in the nonlinear operations */
+//    std::vector<BraidAction_t>  action;   /* Actions during one xBraid iteration */
 
-/*!
- * \brief Creates the braidTape
- */
-void setupTapeData();
+//    std::vector<std::shared_ptr<TwoStepSolution>> adjoint; /* Intermediate adjoint braid vectors */
 
-/*!
- * \brief Evaluates the Braid ActionTape in reverse order and calls adjoint actions
- */
-void evalAdjointAction( braid_App app, BraidTape_t* braidTape);
+//    /* Two more tapes that store pointers to xbraid input and output variables in each iteration */
+//   std::vector<std::shared_ptr<TwoStepSolution>> braid_input_b;
+//   std::vector<std::shared_ptr<TwoStepSolution>> braid_output_b;
+
+//    /* Constructor */
+//    BraidTape_t() : primal(), action(), adjoint() {}
+////     in_Adjoint(),
+////     out_Adjoint() {
+////    }
+//};
+
+//// Define the tapes as extern
+//extern BraidTape_t* braidTape;
+
+///*!
+// * \brief Creates the braidTape
+// */
+//void setupTapeData();
+
+///*!
+// * \brief Evaluates the Braid ActionTape in reverse order and calls adjoint actions
+// */
+//void evalAdjointAction( braid_App app, BraidTape_t* braidTape);
 
 
-/* Adjoint Action Calls */
-void my_Step_adjoint( BraidAction_t &action, braid_App app );
-void my_Access_adjoint( BraidAction_t &action , braid_App app );
-void my_Sum_adjoint( BraidAction_t &action, braid_App app );
-void my_Clone_adjoint( BraidAction_t &action, braid_App app );
-void my_BufPack_adjoint( BraidAction_t &action, braid_App app );
-void my_BufUnPack_adjoint( BraidAction_t &action, braid_App app );
+///* Adjoint Action Calls */
+//void my_Step_adjoint( BraidAction_t &action, braid_App app );
+//void my_Access_adjoint( BraidAction_t &action , braid_App app );
+//void my_Sum_adjoint( BraidAction_t &action, braid_App app );
+//void my_Clone_adjoint( BraidAction_t &action, braid_App app );
+//void my_BufPack_adjoint( BraidAction_t &action, braid_App app );
+//void my_BufUnPack_adjoint( BraidAction_t &action, braid_App app );

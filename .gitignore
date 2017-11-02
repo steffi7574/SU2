@@ -56,3 +56,6 @@ bin/
 
 # ignore swap files
 *.swp
+
+# ignore mergeconflict original files:
+*.orig

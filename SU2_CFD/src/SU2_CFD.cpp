@@ -175,21 +175,7 @@ int main(int argc, char *argv[]) {
 
   /*--- Launch the main external loop of the solver ---*/
   
-  if( !xbraid ) {
-
-      /* Time-serial run */
-
-      driver->StartSolver();
-
-  } else {
-
-
-      /* Time-parallel XBraid iteration */
-
-      driver->StartXBraidSolver();
-
-  }
-
+  driver->StartSolver();
 
   /*--- Postprocess all the containers, close history file, exit SU2 ---*/
   
