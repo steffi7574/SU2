@@ -85,7 +85,8 @@ int my_Step( braid_App        app,
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Print information output */
-    // if (app->su2rank == MASTER_NODE) cout<<format(" %d: two %1.3f-steps from %1.4f to %1.4f\n", app->braidrank, deltat, tstart, tstop);
+     if (app->su2rank == MASTER_NODE)
+         cout << "rank " << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstop << endl;
 
     /* Take the first time step to tstart + deltat */
     app->driver->Run();
@@ -93,24 +94,12 @@ int my_Step( braid_App        app,
     /* Update the Solution_n and solution_n1 for dual time stepping strategy */
     app->driver->Update();
 
-    /* Get the objective function */
-//    su2double Obj_Func = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag();
-//    cout<< format("primal: Obj_Func n1 %1.14e\n", SU2_TYPE::GetValue(Obj_Func));
 
-//    /* Grab the history values from SU2's master node. */
-//    if (app->su2rank == MASTER_NODE){
-////      /* Grab the flow coefficient values for that time step and store it at time n-1 */
-//      u->Solution->Total_CDrag_n1       = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag());
-//      u->Solution->Total_CLift_n1       = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CLift());
-//      u->Solution->Total_CSideForce_n1  = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CSideForce());
-//      u->Solution->Total_CEff_n1        = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CEff());
-//      u->Solution->Total_CMx_n1         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMx());
-//      u->Solution->Total_CMy_n1         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMy());
-//      u->Solution->Total_CMz_n1         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMz());
-//      u->Solution->Total_CFx_n1         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFx());
-//      u->Solution->Total_CFy_n1         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFy());
-//      u->Solution->Total_CFz_n1         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFz());
-//    }
+    /* Grab drag and lift coefficient from SU2's master node. */
+    if (app->su2rank == MASTER_NODE){
+        u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CD());
+        u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
+      }
 
 
      /* Trick SU2 with the next iExtIter */
@@ -123,20 +112,13 @@ int my_Step( braid_App        app,
      /* Update the Solution_n and solution_n1 for dual time stepping strategy */
      app->driver->Update();
 
-//     /* Grab the history values from SU2's master node. */
-//     if (app->su2rank == MASTER_NODE){
-//       /* Grab the flow coefficient values for that time step and store it at time n-1 */
-//       u->Solution->Total_CLift_n       = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CLift());
-//       u->Solution->Total_CDrag_n       = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CDrag());
-//       u->Solution->Total_CSideForce_n  = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CSideForce());
-//       u->Solution->Total_CEff_n        = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CEff());
-//       u->Solution->Total_CMx_n         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMx());
-//       u->Solution->Total_CMy_n         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMy());
-//       u->Solution->Total_CMz_n         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CMz());
-//       u->Solution->Total_CFx_n         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFx());
-//       u->Solution->Total_CFy_n         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFy());
-//       u->Solution->Total_CFz_n         = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CFz());
-//     }
+     /* Grab the history values from SU2's master node. */
+     if (app->su2rank == MASTER_NODE){
+
+       u->Solution->Total_CD_n = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CD());
+       u->Solution->Total_CL_n = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
+
+     }
 
 
      /* Grab the solution vectors from su2 for both time steps */
@@ -289,20 +271,31 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
+
+    /* --- Add drag and lift to objective function. ---*/
+    app->Total_CD_avg += u->Solution->Total_CD_n + u->Solution->Total_CD_n1;
+    app->Total_CL_avg += u->Solution->Total_CL_n + u->Solution->Total_CL_n1;
+
+
+
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
-    /* Allocate memory for the casting variable */
-    su2double* cast = new su2double[nVar];
-
-    /* Retrieve xBraid time information from status object */
+    /* Retrieve xBraid information from status object */
     double t;
     braid_AccessStatusGetT(astatus, &t);
+
+    /* Allocate memory for the casting variable */
+    su2double* cast = new su2double[nVar];
 
     /* Compute the time step iExtIter = (t - t0)/dt -1 which is used for naming the restart file */
     int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) -1 ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
+
+
+    cout<< "TIME " <<t << " u_n[44][2]  = " << u->Solution->time_n[44][2] << endl;
+    cout<< "TIME " <<t << " u_n1[44][2] = " << u->Solution->time_n1[44][2] << endl;
 
 
     /* Only continue if iExtIter > 0 !! Otherwise xbraid tries to write at timestep -1*/
@@ -322,7 +315,8 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
 //    /* Call the SU2 output routine */
-      if (app->su2rank==MASTER_NODE) cout << "rank_t " << app->braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
+      if (app->su2rank==MASTER_NODE)
+          cout << "rank_t " << app->braidrank << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
       app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
                                  app->config_container, iExtIter, 1);
 
@@ -370,7 +364,6 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
                                        app->config_container, iExtIter, 1);
 
-
       /* Write history values at time n-1 to the app stream */
       /* NOT WORKING RIGHT NOW....... */
       //if (app->su2rank == MASTER_NODE){
@@ -391,13 +384,13 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       //    *app->history_stream << "\n";
       //}
 
-      /* Add to objective function. */
-      app->Total_Cd_avg += u->Solution->Total_CDrag_n + u->Solution->Total_CDrag_n1;
 
-    }
+//    }
 
     /* Free memory for the intermediat casting variable */
     delete [] cast;
+
+    }
 
     return 0;
 }

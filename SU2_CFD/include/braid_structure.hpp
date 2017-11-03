@@ -37,17 +37,10 @@ struct TwoStepSolution
     double **time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
 
     /* Flow solution coefficients for time n and time n1*/
-    double Total_CLift_n, Total_CLift_n1;
-    double Total_CDrag_n = 0.0;
-    double Total_CDrag_n1 = 0.0;
-    double Total_CSideForce_n, Total_CSideForce_n1;
-    double Total_CEff_n, Total_CEff_n1;
-    double Total_CMx_n, Total_CMx_n1;
-    double Total_CMy_n, Total_CMy_n1;
-    double Total_CMz_n, Total_CMz_n1;
-    double Total_CFx_n, Total_CFx_n1;
-    double Total_CFy_n, Total_CFy_n1;
-    double Total_CFz_n, Total_CFz_n1;
+    double Total_CL_n  = 0.0;
+    double Total_CL_n1 = 0.0;
+    double Total_CD_n  = 0.0;
+    double Total_CD_n1 = 0.0;
 
     /* Constructor */
     TwoStepSolution(int Point, int Var){
@@ -85,6 +78,7 @@ typedef struct _braid_App_struct
   double initialstart = 0.0;  /* Initial starting time USED FOR TESTING ONLY */
 
 
+
   /* Information about communication */
   MPI_Comm comm_t;      /* temporal communicator */
   MPI_Comm comm_x;      /* spatial communicator */
@@ -119,7 +113,8 @@ typedef struct _braid_App_struct
   /* Information for optimization */
   double primal_norm    = 0.0;    // Norm of primal xBraid residual
   double adjoint_norm   = 0.0;    // Norm of the adjoint xBraid residual
-  double Total_Cd_avg   = 0.0;    // Time-averaged objective funtion
+  double Total_CD_avg   = 0.0;    // Time-averaged drag coefficient
+  double Total_CL_avg   = 0.0;    // Time-averaged lift funtion
 //  double Total_Cd_avg_b = 1.0;    // Seed for adjoint sensitivity computation
 //  double redgrad_norm   = 0.0;    // Norm of the gradient
   int iter;                      // Iteration number of XBraid loop.

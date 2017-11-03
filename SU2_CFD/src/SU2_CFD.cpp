@@ -95,13 +95,6 @@ int main(int argc, char *argv[]) {
         /* Split communicators for the time and space dimensions */
         int px = size / config->GetBraid_NProc_Time();
         braid_SplitCommworld(&(SU2_MPI::comm), px, &(SU2_MPI::comm_x), &(SU2_MPI::comm_t));
-        /* Pass the spatial communicator to SU2 */
-//        SU2_MPI::comm_x = comm_x;
-        /* Get the rank and size of braid and su2 processors */
-//        MPI_Comm_size(comm_t, &braidsize);
-//        MPI_Comm_size(comm_x, &su2size);
-//        MPI_Comm_rank(comm_t, &braidrank);
-//        MPI_Comm_rank(comm_x, &su2rank);
     }
 }
 
