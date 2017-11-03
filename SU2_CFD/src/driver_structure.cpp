@@ -3059,55 +3059,49 @@ void CDriver::StartSolver() {
 
      /*--- Time-parallel XBraid solver ---*/
 
-      /* Testing XBRaid */
-      double mytime=0.004;
-      int correct1, correct2;
-      braid_TestInitAccess(app, SU2_MPI::comm_x, stdout, mytime, my_Init, my_Access, my_Free);
-      braid_TestSum( app, SU2_MPI::comm_x, stdout, mytime, my_Init, my_Access, my_Free, my_Clone, my_Sum);
-      braid_TestClone( app, SU2_MPI::comm_x, stdout, mytime, my_Init, my_Access, my_Free, my_Clone);
-      correct1 = braid_TestSpatialNorm( app, SU2_MPI::comm_x, stdout, mytime, my_Init, my_Free, my_Clone, my_Sum, my_SpatialNorm);
-      correct2 = braid_TestBuf( app, SU2_MPI::comm_x, stdout, mytime, my_Init, my_Free, my_Sum, my_SpatialNorm, my_BufSize, my_BufPack, my_BufUnpack);
-      cout<< "PASSED: " << correct1 << " " << correct2 << endl;
-
-//    for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
+    for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
 
 
-//        if (app->braidrank == MASTER_NODE )
-//            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
+        if (app->braidrank == MASTER_NODE )
+            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
 
-//        /* Reset the app */
-//        app->Total_CD_avg   = 0.0;
-//        app->iter           = iter;
+        /* Reset the app */
+        app->Total_CD_avg   = 0.0;
+        app->iter           = iter;
 
-//        /*--- Run a single XBraid iteration ---*/
+        /*--- Run a single XBraid iteration ---*/
 
-//        braid_Drive(xbraidcore);
-
-
-//        /*--- Compute the time-averaged drag coefficient ---*/
-//        double MyTotalAvg = app->Total_CD_avg;
-//        app->Total_CD_avg = 0.0;
-//        MPI_Allreduce(&MyTotalAvg, &app->Total_CD_avg, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_t);
-//        app->Total_CD_avg = 1.0/(app->ntime * 2) * app->Total_CD_avg;
+        braid_Drive(xbraidcore);
 
 
-//        /*--- Get the primal xBraid residuum ---*/
-//        _braid_GetRNorm(xbraidcore, -1, &app->primal_norm);
+        /*--- Compute the time-averaged drag coefficient ---*/
+        double MyTotalAvg = app->Total_CD_avg;
+        app->Total_CD_avg = 0.0;
+        MPI_Allreduce(&MyTotalAvg, &app->Total_CD_avg, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_t);
+        app->Total_CD_avg = 1.0/(app->ntime * 2) * app->Total_CD_avg;
 
-//        /* Output */
-////        if (rank== MASTER_NODE){
-//            cout << endl << " || r_" << iter << " || = " << app->primal_norm << ", CD_avg = " << app->Total_CD_avg << endl;
-////          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
-////        }
 
-//        /* Stopping criterion */
-////        if (app->done) break;
-////        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
-////            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
-////            break;
-////        }
+        /*--- Get the primal xBraid residuum ---*/
+        _braid_GetRNorm(xbraidcore, -1, &app->primal_norm);
 
-//    }
+        /* Output */
+//        if (rank== MASTER_NODE){
+            cout << endl << " || r_" << iter << " || = " << app->primal_norm << ", CD_avg = " << app->Total_CD_avg << endl;
+//          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
+//        }
+
+        /* Stopping criterion */
+//        if (app->done) break;
+//        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
+//            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
+//            break;
+//        }
+
+    }
+
+    /* Run a final FAccess in order to write the restart files */
+    app->done = true;
+    _braid_FAccess(xbraidcore, 0, 1);
 
   }
 

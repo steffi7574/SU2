@@ -282,6 +282,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
+    if(app->done){
+
+
+
     /* Retrieve xBraid information from status object */
     double t;
     braid_AccessStatusGetT(astatus, &t);
@@ -292,10 +296,6 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     /* Compute the time step iExtIter = (t - t0)/dt -1 which is used for naming the restart file */
     int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) -1 ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
-
-
-    cout<< "TIME " <<t << " u_n[44][2]  = " << u->Solution->time_n[44][2] << endl;
-    cout<< "TIME " <<t << " u_n1[44][2] = " << u->Solution->time_n1[44][2] << endl;
 
 
     /* Only continue if iExtIter > 0 !! Otherwise xbraid tries to write at timestep -1*/
@@ -390,6 +390,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     /* Free memory for the intermediat casting variable */
     delete [] cast;
 
+    }
     }
 
     return 0;
