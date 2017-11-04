@@ -263,6 +263,11 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
         }
     }
 
+    /* Communicate the norm over all spatial processors */
+    double mynorm = norm;
+    norm = 0.0;
+    MPI_Allreduce(&mynorm, &norm, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+
     /* Set the pointer */
     *norm_ptr = sqrt(norm);
 

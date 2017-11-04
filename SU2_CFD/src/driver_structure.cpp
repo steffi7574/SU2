@@ -2867,7 +2867,7 @@ void CDriver::XBraidPreprocessing(){
 
     app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
     app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
-//    app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
+    app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
 
 //    /* Prepare history file for output of CDrag, CLift etc. */
 //    stringstream histstream;
@@ -3081,14 +3081,12 @@ void CDriver::StartSolver() {
         app->Total_CD_avg = 1.0/(app->ntime * 2) * app->Total_CD_avg;
 
 
-        /*--- Get the primal xBraid residuum and communicate over processors---*/
+        /*--- Get the state residuum from XBraid ---*/
         _braid_GetRNorm(xbraidcore, -1, &app->primal_norm);
-        double myPrimalNorm = app->primal_norm;
-        app->primal_norm = 0.0;
-        MPI_Allreduce(&myPrimalNorm, &app->primal_norm, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_t);
+
 
         /* Output */
-        if (app->braidrank == MASTER_NODE){
+        if (app->braidrank && app->su2rank == MASTER_NODE){
             cout << endl << app->braidrank << ": || r_" << iter << " || = " << app->primal_norm << ", CD_avg = " << app->Total_CD_avg << endl;
 //          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
         }
