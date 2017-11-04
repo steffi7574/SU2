@@ -3081,26 +3081,30 @@ void CDriver::StartSolver() {
         app->Total_CD_avg = 1.0/(app->ntime * 2) * app->Total_CD_avg;
 
 
-        /*--- Get the primal xBraid residuum ---*/
+        /*--- Get the primal xBraid residuum and communicate over processors---*/
         _braid_GetRNorm(xbraidcore, -1, &app->primal_norm);
+        double myPrimalNorm = app->primal_norm;
+        app->primal_norm = 0.0;
+        MPI_Allreduce(&myPrimalNorm, &app->primal_norm, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_t);
 
         /* Output */
-//        if (rank== MASTER_NODE){
-            cout << endl << " || r_" << iter << " || = " << app->primal_norm << ", CD_avg = " << app->Total_CD_avg << endl;
+        if (app->braidrank == MASTER_NODE){
+            cout << endl << app->braidrank << ": || r_" << iter << " || = " << app->primal_norm << ", CD_avg = " << app->Total_CD_avg << endl;
 //          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
-//        }
+        }
+
 
         /* Stopping criterion */
-//        if (app->done) break;
-//        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
+        if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
 //            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
-//            break;
-//        }
+            cout<< "\n XBraid has converged! primal res = " << app->primal_norm << endl;
+            app->done = true;
+            break;
+        }
 
     }
 
     /* Run a final FAccess in order to write the restart files */
-    app->done = true;
     _braid_FAccess(xbraidcore, 0, 1);
 
   }
