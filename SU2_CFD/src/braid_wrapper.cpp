@@ -61,8 +61,9 @@ int my_Step( braid_App        app,
 ////    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
     /* Declare and allocate intermediate casting variables */
-    su2double* cast_n  = new su2double[nVar];
-    if (app->BDF2) su2double* cast_n1 = new su2double[nVar];
+    su2double *cast_n, *cast_n1;
+    cast_n  = new su2double[nVar];
+    if (app->BDF2) cast_n1 = new su2double[nVar];
 
 
     /* Trick SU2 with xBraid's DeltaT */

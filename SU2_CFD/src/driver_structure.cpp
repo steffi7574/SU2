@@ -2869,6 +2869,16 @@ void CDriver::XBraidPreprocessing(){
     app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
     app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
 
+    /* Check for BDF time-stepping of first or second order */
+    if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){
+          app->BDF2=false;
+    } else if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) {
+          app->BDF2 = true;
+    } else {
+        cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
+        exit(EXIT_FAILURE);
+    }
+
 //    /* Prepare history file for output of CDrag, CLift etc. */
 //    stringstream histstream;
 ////    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
@@ -2880,30 +2890,19 @@ void CDriver::XBraidPreprocessing(){
 
 
     /* Set the number of time steps and end time */
-    if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){
-
+    if (app->BDF2){
+        if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 )
+            app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
+        else
+            app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
+        app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
+    } else {
         app->ntime = config_container[ZONE_0]->GetnExtIter();
         app->tstop = app->tstart + app->ntime * app->initialDT;
-
-    } else if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) {
-
-        app->BDF2 = true;
-        if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
-            app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
-        }
-        else {
-            app->ntime = (config_container[ZONE_0]->GetnExtIter() + 1 )  / 2;
-        }
-        /* From XBraid 2.0 on, substract one here!! */
-//        app->ntime = app->ntime-1;
-        app->tstop = app->tstart + app->ntime * ( 2.0 * app->initialDT );
-
-    } else {
-        cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
-        exit(EXIT_FAILURE);
     }
 
-    /* Check if xBraid's tstop is bigger that SU2's end time */
+
+    /* Sanity check if xBraid's tstop is bigger that SU2's end time */
     if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
         cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
         exit(EXIT_FAILURE);
