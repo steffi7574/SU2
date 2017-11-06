@@ -24,11 +24,14 @@
 #include "../../Common/include/mpi_structure.hpp"
 #include <memory>
 
+
 /*!
 * \brief Structure that holds the Solution lists at time n and time n-1
 */
 struct TwoStepSolution
 {
+    /* Choose between 1st and 2nd order BDF time-stepping */
+    bool BDF2;
     /* Dimensions of the solution lists */
     int nPoint;
     int nVar;
@@ -43,15 +46,15 @@ struct TwoStepSolution
     double Total_CD_n1 = 0.0;
 
     /* Constructor */
-    TwoStepSolution(int Point, int Var){
+    TwoStepSolution(bool BDF2, int Point, int Var){
       nPoint = Point;
       nVar   = Var;
       /* Allocate memory for the solution lists */
       time_n  = new double*[nPoint];
-      time_n1 = new double*[nPoint];
+      if (BDF2) time_n1 = new double*[nPoint];
       for (int iPoint = 0; iPoint < nPoint; iPoint++){
           time_n[iPoint]  = new double[nVar];
-          time_n1[iPoint] = new double[nVar];
+          if(BDF2) time_n1[iPoint] = new double[nVar];
       }
     }
 
@@ -59,10 +62,10 @@ struct TwoStepSolution
     ~TwoStepSolution(){
         for (int iPoint = 0; iPoint < nPoint; iPoint++){
           delete [] time_n[iPoint];
-          delete [] time_n1[iPoint];
+          if (BDF2) delete [] time_n1[iPoint];
         }
         delete [] time_n;
-        delete [] time_n1;
+        if (BDF2) delete [] time_n1;
     }
 };
 
@@ -76,8 +79,9 @@ typedef struct _braid_App_struct
   int    ntime        = 0;      /* Number of time steps */
   double initialDT    = 0.0;    /* Initial DeltaT */
   double initialstart = 0.0;    /* Initial starting time USED FOR TESTING ONLY */
+  bool BDF2           = false;  /* Boolean: 1 if 2nd order dual time-stepping,
+                                            0 if 1st order dual time-stepping */
   bool done           = false;  /* Boolean: 1 if XBraid has finished */
-
 
 
   /* Information about communication */

@@ -2887,6 +2887,7 @@ void CDriver::XBraidPreprocessing(){
 
     } else if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) {
 
+        app->BDF2 = true;
         if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 ) {
             app->ntime = config_container[ZONE_0]->GetnExtIter() / 2;
         }
