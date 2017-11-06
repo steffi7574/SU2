@@ -46,9 +46,10 @@ struct TwoStepSolution
     double Total_CD_n1 = 0.0;
 
     /* Constructor */
-    TwoStepSolution(bool BDF2, int Point, int Var){
+    TwoStepSolution(bool bdf2, int Point, int Var){
       nPoint = Point;
       nVar   = Var;
+      BDF2   = bdf2;
       /* Allocate memory for the solution lists */
       time_n  = new double*[nPoint];
       if (BDF2) time_n1 = new double*[nPoint];
