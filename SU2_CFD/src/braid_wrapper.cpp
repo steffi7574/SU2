@@ -87,8 +87,10 @@ int my_Step( braid_App        app,
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     /* Print information output */
+//    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
      if (app->su2rank == MASTER_NODE)
-         cout << "rank " << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstop << endl;
+         cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstop << endl;
+//    }
 
     /* Take the first time step to tstart + deltat */
     app->driver->Run();
@@ -162,6 +164,12 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     my_Vector* u = new my_Vector;
     u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
 
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank == MASTER_NODE)
+           cout << app->braidrank << ": INIT time " << t << endl;
+    }
+
     /*--- Initialize the solution to the far-field state everywhere. ---*/
 
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -201,6 +209,12 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     int nVar        = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
     CConfig *config = app->config_container[ZONE_0];
 
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+       if (app->su2rank == MASTER_NODE)
+          cout << app->braidrank << ": CLONE" << endl;
+    }
+
     /* Allocate memory for the new copy v */
     my_Vector* v = new my_Vector;
     v->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
@@ -224,6 +238,12 @@ int my_Free( braid_App app, braid_Vector u ){
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
 
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+     if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": FREE" << endl;
+    }
+
     /* Delete the primal solution lists (calls destructor of TwoStepSolution) */
     delete u->Solution;
 
@@ -239,6 +259,13 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta,
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+     if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": SUM" << endl;
+    }
+
 
     /* Compute the sum y = alpha x + beta y at time n and time n-1 */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -258,6 +285,12 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+     if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": Spatial Norm" << endl;
+    }
 
     /* Compute l2norm of the solution list at time n and n1 */
     double norm = 0.0;
@@ -281,6 +314,11 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+     if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": ACCESS" << endl;
+    }
 
     /* --- Add drag and lift to objective function. ---*/
     app->Total_CD_avg += u->Solution->Total_CD_n;
@@ -413,6 +451,12 @@ int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+     if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": BUFSIZE" << endl;
+    }
+
     /* Compute size of buffer */
     *size_ptr = nPoint * nVar * sizeof(double);
     if (app->BDF2) *size_ptr = 2.0 * nPoint * nVar * sizeof(double);
@@ -425,6 +469,13 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+     if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": BUFPACK" << endl;
+    }
+
 
     /* Pack the buffer with current and previous time */
     double *dbuffer = (double*)buffer;
@@ -456,6 +507,12 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     /* Grab variables from the app */
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+     if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": BUFUNPACK" << endl;
+    }
 
     /* Get the buffer */
     double *dbuffer = (double*)buffer;
