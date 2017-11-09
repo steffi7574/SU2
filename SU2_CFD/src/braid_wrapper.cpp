@@ -52,13 +52,11 @@ int my_Step( braid_App        app,
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
-    int nDim   = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
 
     /* Grab status of current time step from xBraid */
     double tstart;
     double tstop;
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
-////    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
     /* Trick SU2 with xBraid's DeltaT */
     double deltat  = tstop - tstart;
@@ -81,7 +79,7 @@ int my_Step( braid_App        app,
 
         /* Print information output */
          if (app->su2rank == MASTER_NODE)
-             cout << app->braidrank << ": " << deltat << "-step at iExtIter " << iExtIter << endl;
+             cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstart + deltat << endl;
 
         /* Take the first time step to tstart + deltat */
         app->driver->Run();
@@ -105,7 +103,8 @@ int my_Step( braid_App        app,
 
     /* Print information output */
     if (app->su2rank == MASTER_NODE)
-         cout << app->braidrank << ": " << deltat << "-step at iExtIter " << iExtIter << endl;
+       if (app->BDF2) cout << app->braidrank << ": " << deltat << "-step from " << tstart + deltat << " to " << tstop << endl;
+       else cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstart + deltat << endl;
 
     /* Take the next time step to tstop */
     app->driver->Run();
