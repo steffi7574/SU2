@@ -76,38 +76,43 @@ int my_Step( braid_App        app,
     int iExtIter = (int) round( ( tstart + deltat - app->initialstart ) / app->initialDT) -1 ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
-    /* Print information output */
-//    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
-     if (app->su2rank == MASTER_NODE)
-         cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstop << endl;
-//    }
+    if (app->BDF2)
+    {
 
-    /* Take the first time step to tstart + deltat */
+        /* Print information output */
+         if (app->su2rank == MASTER_NODE)
+             cout << app->braidrank << ": " << deltat << "-step at iExtIter " << iExtIter << endl;
+
+        /* Take the first time step to tstart + deltat */
+        app->driver->Run();
+
+        /* Update the Solution_n and solution_n1 for dual time stepping strategy */
+        app->driver->Update();
+
+
+          /* Grab drag and lift coefficient from SU2's master node. */
+          if (app->su2rank == MASTER_NODE){
+              u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CD());
+              u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
+            }
+
+
+           /* Trick SU2 with the next iExtIter */
+           iExtIter++;
+           app->config_container[ZONE_0]->SetExtIter(iExtIter);
+
+    }
+
+    /* Print information output */
+    if (app->su2rank == MASTER_NODE)
+         cout << app->braidrank << ": " << deltat << "-step at iExtIter " << iExtIter << endl;
+
+    /* Take the next time step to tstop */
     app->driver->Run();
 
     /* Update the Solution_n and solution_n1 for dual time stepping strategy */
     app->driver->Update();
 
-
-    if (app->BDF2)
-    {
-      /* Grab drag and lift coefficient from SU2's master node. */
-      if (app->su2rank == MASTER_NODE){
-          u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CD());
-          u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
-        }
-
-
-       /* Trick SU2 with the next iExtIter */
-       iExtIter++;
-       app->config_container[ZONE_0]->SetExtIter(iExtIter);
-
-       /* Take the next time step to tstart + 2*deltat = tstop */
-       app->driver->Run();
-
-       /* Update the Solution_n and solution_n1 for dual time stepping strategy */
-       app->driver->Update();
-    }
 
      /* Grab the history values from SU2's master node. */
      if (app->su2rank == MASTER_NODE){
