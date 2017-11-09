@@ -60,12 +60,6 @@ int my_Step( braid_App        app,
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
 ////    braid_PhiStatusGetTstartTstop(status, &tstart, &tstop);
 
-    /* Declare and allocate intermediate casting variables */
-    su2double *cast_n, *cast_n1;
-    cast_n  = new su2double[nVar];
-    if (app->BDF2) cast_n1 = new su2double[nVar];
-
-
     /* Trick SU2 with xBraid's DeltaT */
     double deltat  = tstop - tstart;
     if (app->BDF2) deltat = deltat / 2.0;
@@ -73,13 +67,9 @@ int my_Step( braid_App        app,
 
     /* Trick the su2 solver with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-      for (int iVar = 0; iVar < nVar; iVar++){
-        cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
-        if (app->BDF2) cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
-      }
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
-      if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
+      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
+      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
+      if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
     }
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt  -1 */
@@ -135,10 +125,6 @@ int my_Step( braid_App        app,
             if (app->BDF2) u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
         }
     }
-
-    /* Free memory of the intermediate casting variables */
-    delete [] cast_n;
-    if (app->BDF2) delete [] cast_n1;
 
     /* Tell XBraid no refinement */
     braid_StepStatusSetRFactor(status, 1);
@@ -340,9 +326,6 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
       double t;
       braid_AccessStatusGetT(astatus, &t);
   
-      /* Allocate memory for the casting variable */
-      su2double* cast = new su2double[nVar];
-  
       /* Compute the time step iExtIter = (t - t0)/dt -1 which is used for naming the restart file */
       int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) -1 ;
       app->config_container[ZONE_0]->SetExtIter(iExtIter);
@@ -355,10 +338,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
   
         /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
         for (int iPoint = 0; iPoint < nPoint; iPoint++){
-          for (int iVar = 0.0; iVar < nVar; iVar++){
-            cast[iVar] = u->Solution->time_n[iPoint][iVar];
-          }
-          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
+          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
         }
   
         /* Compute the primitive Variables from the conservative ones */
@@ -400,10 +380,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
           /* Trick SU2 with the current solution for output */
           for (int iPoint = 0; iPoint < nPoint; iPoint++){
-            for (int iVar = 0.0; iVar < nVar; iVar++){
-              cast[iVar] = u->Solution->time_n1[iPoint][iVar];
-            }
-            app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
+            app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n1[iPoint]);
           }
   
           /* Compute the primitive Variables from the conservative ones */
@@ -434,11 +411,6 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
           //    *app->history_stream << "\n";
           //}
         }
-  
-  
-        /* Free memory for the intermediat casting variable */
-        delete [] cast;
-  
       }
     }
 
