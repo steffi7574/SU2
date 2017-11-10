@@ -77,10 +77,6 @@ int my_Step( braid_App        app,
     if (app->BDF2)
     {
 
-        /* Print information output */
-         if (app->su2rank == MASTER_NODE)
-             cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstart + deltat << endl;
-
         /* Take the first time step to tstart + deltat */
         app->driver->Run();
 
@@ -88,23 +84,38 @@ int my_Step( braid_App        app,
         app->driver->Update();
 
 
-          /* Grab drag and lift coefficient from SU2's master node. */
-          if (app->su2rank == MASTER_NODE){
-              u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CD());
-              u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
-            }
+        /* Grab drag and lift coefficient from SU2's master node. */
+        if (app->su2rank == MASTER_NODE){
+            u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CD());
+            u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
+        }
 
 
-           /* Trick SU2 with the next iExtIter */
-           iExtIter++;
-           app->config_container[ZONE_0]->SetExtIter(iExtIter);
+        /* Grab the flow residual from SU2 */
+        double* residual_flow = new double[nVar];
+        for (int iVar = 0; iVar < nVar; iVar++)
+          residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+
+
+        /* Print information output */
+        if (app->su2rank == MASTER_NODE)
+           cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstart + deltat
+                << ", resid[0] = " << residual_flow[0] << endl;
+
+
+        /* Check for SU2 convergence */
+        double resid_log = log10(residual_flow[0]);
+        if ( resid_log > app->config_container[ZONE_0]->GetMinLogResidual() ){
+            cout<< endl << "SU2 Solver has not converged! " << resid_log << " " << app->config_container[ZONE_0]->GetMinLogResidual() << endl;
+            exit(EXIT_FAILURE);
+        }
+
+        /* Trick SU2 with the next iExtIter */
+        iExtIter++;
+        app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
     }
 
-    /* Print information output */
-    if (app->su2rank == MASTER_NODE)
-       if (app->BDF2) cout << app->braidrank << ": " << deltat << "-step from " << tstart + deltat << " to " << tstop << endl;
-       else cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstart + deltat << endl;
 
     /* Take the next time step to tstop */
     app->driver->Run();
@@ -120,6 +131,27 @@ int my_Step( braid_App        app,
        u->Solution->Total_CL_n = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
 
      }
+
+
+     /* Grab the flow residual from SU2 */
+     double* residual_flow = new double[nVar];
+     for (int iVar = 0; iVar < nVar; iVar++)
+       residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+
+
+    /* Print information output */
+    if (app->su2rank == MASTER_NODE)
+       if (app->BDF2) cout << app->braidrank << ": " << deltat << "-step from " << tstart + deltat << " to " << tstop
+                           << ", resid[0] = " << residual_flow[0] << endl;
+       else cout << app->braidrank << ": " << deltat << "-step from " << tstart << " to " << tstart + deltat
+                 << ", resid[0] = " << residual_flow[0] << endl;
+
+    /* Check for SU2 convergence */
+    double resid_log = log10(residual_flow[0]);
+    if ( resid_log > app->config_container[ZONE_0]->GetMinLogResidual() ){
+        cout<< endl << "SU2 Solver has not converged! " << resid_log << " " << app->config_container[ZONE_0]->GetMinLogResidual() << endl;
+        exit(EXIT_FAILURE);
+    }
 
 
      /* Grab the solution vectors from su2 for both time steps */
