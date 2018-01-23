@@ -299,3 +299,7 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
 //void my_Clone_adjoint( BraidAction_t &action, braid_App app );
 //void my_BufPack_adjoint( BraidAction_t &action, braid_App app );
 //void my_BufUnPack_adjoint( BraidAction_t &action, braid_App app );
+
+
+std::string vformat(const char* format, va_list list);
+std::string format(const char* format, ...);
