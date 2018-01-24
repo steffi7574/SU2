@@ -3072,7 +3072,7 @@ void CDriver::StartSolver() {
         double MyTotalAvg = app->Total_CD_avg;
         app->Total_CD_avg = 0.0;
         MPI_Allreduce(&MyTotalAvg, &app->Total_CD_avg, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_t);
-        app->Total_CD_avg = 1.0/(app->ntime * 2) * app->Total_CD_avg;
+        app->Total_CD_avg = 1.0 / ( app->config_container[ZONE_0]->GetnExtIter() ) * app->Total_CD_avg;
 
 
         /*--- Get the state residuum from XBraid ---*/
