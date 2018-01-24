@@ -2954,12 +2954,6 @@ void CDriver::XBraidPreprocessing(){
     /* Set the primal initial guess on the coarse grid */
     braid_InitGridHierarchy(xbraidcore);
 
-    /* Check for warm_restart option */
-    if ( !config_container[ZONE_0]->GetBraid_Warm_Restart() ) {
-
-
-    }
-
 
     /* Report on the processor grid */
     if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE)
@@ -3062,8 +3056,8 @@ void CDriver::StartSolver() {
     for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
 
 
-        if (app->braidrank == MASTER_NODE )
-            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
+//        if (app->braidrank == MASTER_NODE )
+//            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
 
         /* Reset the app */
         app->Total_CD_avg   = 0.0;
@@ -3086,9 +3080,8 @@ void CDriver::StartSolver() {
 
 
         /* Output */
-        if (app->braidrank && app->su2rank == MASTER_NODE){
-            cout << endl << app->braidrank << ": || r_" << iter << " || = " << app->primal_norm << ", CD_avg = " << app->Total_CD_avg << endl;
-//          cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", optimiter, app->primal_norm, app->Total_Cd_avg);
+        if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE){
+            cout<<format(" || r_%d || = %1.14e  CD_avg = %1.14e\n", iter, app->primal_norm, app->Total_CD_avg);
         }
 
 
@@ -3103,7 +3096,7 @@ void CDriver::StartSolver() {
     }
 
     /* Run a final FAccess in order to write the restart files */
-    _braid_FAccess(xbraidcore, 0, 1);
+//    _braid_FAccess(xbraidcore, 0, 1);
 
   }
 
