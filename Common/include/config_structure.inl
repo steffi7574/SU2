@@ -973,6 +973,8 @@ inline unsigned short CConfig::GetKind_Upwind_AdjTurb(void) { return Kind_Upwind
 
 inline unsigned short CConfig::GetKind_Inlet(void) { return Kind_Inlet; }
 
+inline string CConfig::GetMarker_InletUnst(unsigned short index) { return Marker_InletUnst[index];}
+
 inline unsigned short CConfig::GetKind_Engine_Inflow(void) { return Kind_Engine_Inflow; }
 
 inline unsigned short CConfig::GetKind_ActDisk(void) { return Kind_ActDisk; }
@@ -1181,6 +1183,8 @@ inline unsigned short CConfig::GetMarker_All_DV(unsigned short val_marker) { ret
 inline unsigned short CConfig::GetMarker_All_Moving(unsigned short val_marker) { return Marker_All_Moving[val_marker]; }
 
 inline unsigned short CConfig::GetnMarker_All(void) { return nMarker_All; }
+
+inline unsigned short CConfig::GetnMarker_InletUnst(void) { return nMarker_InletUnst; }
 
 inline unsigned short CConfig::GetnMarker_Max(void) { return nMarker_Max; }
 
