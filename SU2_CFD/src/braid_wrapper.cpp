@@ -80,9 +80,14 @@ int my_Step( braid_App        app,
         /* Take the first time step to tstart + deltat */
         app->driver->Run();
 
+        /* Grab the flow residual from SU2 */
+        double* residual_flow = new double[nVar];
+        for (int iVar = 0; iVar < nVar; iVar++)
+          residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+
         /* Check for SU2 convergence */
         if (!app->integration_container[ZONE_0][FLOW_SOL]->GetConvergence()) {
-             cout<<format("SU2 Solver didn't converge! resid: %1.14e\n",app->config_container[ZONE_0]->GetMinLogResidual());
+             cout<<format("CAUTION: SU2 Solver didn't converge!? resid[0]: %1.14e\n", residual_flow[0]);
              exit(EXIT_FAILURE);
         }
 
@@ -96,13 +101,6 @@ int my_Step( braid_App        app,
             u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CD());
             u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetTotal_CL());
         }
-
-
-        /* Grab the flow residual from SU2 */
-        double* residual_flow = new double[nVar];
-        for (int iVar = 0; iVar < nVar; iVar++)
-          residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
-
 
         /* Print information output */
 //        if (app->su2rank == MASTER_NODE)
@@ -118,10 +116,15 @@ int my_Step( braid_App        app,
     /* Take the next time step to tstop */
     app->driver->Run();
 
+    /* Grab the flow residual from SU2 */
+    double* residual_flow = new double[nVar];
+    for (int iVar = 0; iVar < nVar; iVar++)
+       residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+
     /* Check for SU2 convergence */
     if (!app->integration_container[ZONE_0][FLOW_SOL]->GetConvergence()) {
-          cout<<format("SU2 Solver didn't converge! resid: %1.14e\n",app->config_container[ZONE_0]->GetMinLogResidual());
-          exit(EXIT_FAILURE);
+          cout<<format("CAUTION: SU2 Solver didn't converge!? resid[0]: %1.14e\n", residual_flow[0]);
+//          exit(EXIT_FAILURE);
     }
 
 
@@ -136,11 +139,6 @@ int my_Step( braid_App        app,
 
      }
 
-
-     /* Grab the flow residual from SU2 */
-     double* residual_flow = new double[nVar];
-     for (int iVar = 0; iVar < nVar; iVar++)
-       residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
 
 
     /* Print information output */

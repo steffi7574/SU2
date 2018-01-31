@@ -3056,9 +3056,6 @@ void CDriver::StartSolver() {
     for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
 
 
-//        if (app->braidrank == MASTER_NODE )
-//            cout<< endl << "INSIDE THE XBRAID LOOP. Iter " << iter << endl;
-
         /* Reset the app */
         app->Total_CD_avg   = 0.0;
         app->iter           = iter;
@@ -3087,8 +3084,9 @@ void CDriver::StartSolver() {
 
         /* Stopping criterion */
         if (app->primal_norm < app->config_container[ZONE_0]->GetBraid_Tol()){
-//            cout<< format("\n XBraid has converged! primal res = %1.14e \n\n", app->primal_norm);
-            cout<< "\n XBraid has converged! primal res = " << app->primal_norm << endl;
+            if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE){
+                cout<< format("\n XBraid has converged! primal res = %1.14e\n", app->primal_norm);
+            }
             app->done = true;
             break;
         }
