@@ -927,6 +927,8 @@ inline unsigned short CConfig::GetKind_SlopeLimit(void) { return Kind_SlopeLimit
 
 inline unsigned short CConfig::GetKind_SlopeLimit_Flow(void) { return Kind_SlopeLimit_Flow; }
 
+inline unsigned short CConfig::GetKind_Opt_Problem(void) { return  Kind_OptProblem; }
+
 inline unsigned short CConfig::GetKind_SlopeLimit_Turb(void) { return Kind_SlopeLimit_Turb; }
 
 inline unsigned short CConfig::GetKind_SlopeLimit_AdjTurb(void) { return Kind_SlopeLimit_AdjTurb; }
@@ -972,6 +974,8 @@ inline unsigned short CConfig::GetKind_Centered_AdjTurb(void) { return Kind_Cent
 inline unsigned short CConfig::GetKind_Upwind_AdjTurb(void) { return Kind_Upwind_AdjTurb; }
 
 inline unsigned short CConfig::GetKind_Inlet(void) { return Kind_Inlet; }
+
+inline string CConfig::GetMarker_InletUnst(unsigned short index) { return Marker_InletUnst[index];}
 
 inline unsigned short CConfig::GetKind_Engine_Inflow(void) { return Kind_Engine_Inflow; }
 
@@ -1181,6 +1185,8 @@ inline unsigned short CConfig::GetMarker_All_DV(unsigned short val_marker) { ret
 inline unsigned short CConfig::GetMarker_All_Moving(unsigned short val_marker) { return Marker_All_Moving[val_marker]; }
 
 inline unsigned short CConfig::GetnMarker_All(void) { return nMarker_All; }
+
+inline unsigned short CConfig::GetnMarker_InletUnst(void) { return nMarker_InletUnst; }
 
 inline unsigned short CConfig::GetnMarker_Max(void) { return nMarker_Max; }
 

@@ -117,6 +117,9 @@ void CIntegration::Space_Integration(CGeometry *geometry,
       case INLET_FLOW:
         solver_container[MainSolver]->BC_Inlet(geometry, solver_container, numerics[CONV_BOUND_TERM], numerics[VISC_BOUND_TERM], config, iMarker);
         break;
+      case INLET_FLOW_UNST:
+        solver_container[MainSolver]->BC_Inlet_Unst(geometry, solver_container, numerics[CONV_BOUND_TERM], numerics[VISC_BOUND_TERM], config, iMarker);
+        break;
       case ACTDISK_OUTLET:
         solver_container[MainSolver]->BC_ActDisk_Outlet(geometry, solver_container, numerics[CONV_BOUND_TERM], numerics[VISC_BOUND_TERM], config, iMarker);
         break;
