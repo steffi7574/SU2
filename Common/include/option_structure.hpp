@@ -623,6 +623,14 @@ static const map<string, ENUM_LIMITER> Limiter_Map = CCreateMap<string, ENUM_LIM
 ("SHARP_EDGES", SHARP_EDGES)
 ("WALL_DISTANCE", WALL_DISTANCE);
 
+  enum ENUM_OPT_PROBLEM_TYPE {
+    SHAPE_OPT = 0,        /*!< \brief Shape Optimization */
+    FLOW_CONTROL = 1,        /*!< \brief Flow Control*/
+  };
+  static const map<string, ENUM_OPT_PROBLEM_TYPE >   OptProblem_Map  = CCreateMap<string, ENUM_OPT_PROBLEM_TYPE >
+  ("SHAPE_OPT", SHAPE_OPT )
+  ("FLOW_CONTROL", FLOW_CONTROL  );
+
 /*!
  * \brief types of turbulent models
  */
