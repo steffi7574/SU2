@@ -4945,7 +4945,7 @@ void CIncEulerSolver::BC_Inlet_Unst(CGeometry *geometry, CSolver **solver_contai
 
         /*--- Neumann condition for pressure ---*/
 
-        V_inlet[0] = node[iPoint]->GetPressureInc();
+        V_inlet[0] = node[iPoint]->GetPressure();
 
         /*--- Constant value of density ---*/
 

@@ -43,7 +43,7 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config)  : CSolver(
 
 CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *direct_solver, unsigned short Kind_Solver, unsigned short iMesh)  : CSolver() {
 
-  unsigned short iVar, iMarker, iDim;
+  unsigned short iVar, iParam, iMarker, iDim;
   unsigned long iVertex, iPoint;
   string text_line, mesh_filename;
   ifstream restart_file;
@@ -407,6 +407,8 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
  
   su2double *FlowParam;
   unsigned short iMarker, iMarker_InletUnst, iParam;
+  string Marker_Tag;
+
   /*--- Extract the adjoint values of the farfield values ---*/
 
   if ((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && !config->GetBoolTurbomachinery()) {
@@ -453,6 +455,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 
     for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
       if (config->GetMarker_All_KindBC(iMarker) ==  INLET_FLOW_UNST) {
+        Marker_Tag = config->GetMarker_All_TagBound(iMarker);
         FlowParam  =  config->GetInlet_FlowParamUnst(Marker_Tag);
         for (iParam = 0; iParam < 5; iParam++){
           Local_Sens_FlowParam[iMarker_InletUnst][iParam]  = SU2_TYPE::GetDerivative( FlowParam[iParam] );
