@@ -2865,8 +2865,8 @@ void CDriver::XBraidPreprocessing(){
     app->interpolator_container = interpolator_container;
     app->transfer_container     = transfer_container;
 
-    app->tstart        = config_container[ZONE_0]->GetCurrent_UnstTime();
-    app->initialDT     = config_container[ZONE_0]->GetDelta_UnstTimeND();
+    app->tstart        = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
+    app->initialDT     = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDelta_UnstTimeND());
     app->initialstart  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetCurrent_UnstTime());
 
     /* Check for BDF time-stepping of first or second order */
@@ -2928,7 +2928,7 @@ void CDriver::XBraidPreprocessing(){
     if (config_container[ZONE_0]->GetBraid_NRelax0() > -1) {
        braid_SetNRelax(xbraidcore,  0, config_container[ZONE_0]->GetBraid_NRelax0() );
     }
-    braid_SetAbsTol( xbraidcore, config_container[ZONE_0]->GetBraid_Tol() );
+    braid_SetAbsTol( xbraidcore, SU2_TYPE::GetValue(config_container[ZONE_0]->GetBraid_Tol()) );
     braid_SetCFactor( xbraidcore, -1, config_container[ZONE_0]->GetBraid_CFactor() );
     braid_SetMinCoarse( xbraidcore, config_container[ZONE_0]->GetBraid_Min_Coarse() );
     braid_SetMaxIter( xbraidcore, config_container[ZONE_0]->GetBraid_Max_Iter() );

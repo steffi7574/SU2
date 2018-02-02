@@ -65,9 +65,9 @@ int my_Step( braid_App        app,
 
     /* Trick the su2 solver with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
-      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
-      if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
+//      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
+//      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
+//      if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
     }
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt  -1 */
@@ -83,7 +83,7 @@ int my_Step( braid_App        app,
         /* Grab the flow residual from SU2 */
         double* residual_flow = new double[nVar];
         for (int iVar = 0; iVar < nVar; iVar++)
-          residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+          residual_flow[iVar] = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar));
 
         /* Check for SU2 convergence */
         if (!app->integration_container[ZONE_0][FLOW_SOL]->GetConvergence()) {
@@ -119,7 +119,7 @@ int my_Step( braid_App        app,
     /* Grab the flow residual from SU2 */
     double* residual_flow = new double[nVar];
     for (int iVar = 0; iVar < nVar; iVar++)
-       residual_flow[iVar] = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar);
+       residual_flow[iVar] = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(iVar));
 
     /* Check for SU2 convergence */
     if (!app->integration_container[ZONE_0][FLOW_SOL]->GetConvergence()) {
@@ -367,7 +367,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
   
         /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
         for (int iPoint = 0; iPoint < nPoint; iPoint++){
-          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
+//          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
         }
   
         /* Compute the primitive Variables from the conservative ones */
@@ -409,7 +409,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
           /* Trick SU2 with the current solution for output */
           for (int iPoint = 0; iPoint < nPoint; iPoint++){
-            app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n1[iPoint]);
+//            app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n1[iPoint]);
           }
   
           /* Compute the primitive Variables from the conservative ones */
