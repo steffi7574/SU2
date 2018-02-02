@@ -1185,7 +1185,9 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 
   /*!\par CONFIG_CATEGORY: Adjoint and Gradient \ingroup Config*/
   /*--- Options related to the adjoint and gradient ---*/
-
+  /*!\brief OPT_PROBLEM_TYPE
+   *  \n DESCRIPTION: Type of Design Probelm \n OPTIONS: See \link OptProblem_Type  \endlink \n DEFAULT: SHAPE_OPT  \ingroup Config*/
+  addEnumOption("OPT_PROBLEM_TYPE", Kind_OptProblem, OptProblem_Map,SHAPE_OPT);
   /*!\brief LIMIT_ADJFLOW \n DESCRIPTION: Limit value for the adjoint variable.\n DEFAULT: 1E6. \ingroup Config*/
   addDoubleOption("LIMIT_ADJFLOW", AdjointLimit, 1E6);
   /*!\brief MG_ADJFLOW\n DESCRIPTION: Multigrid with the adjoint problem. \n Defualt: YES \ingroup Config*/
