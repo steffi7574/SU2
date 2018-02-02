@@ -450,7 +450,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
   }
 
   /*--- Extract adjoint values of flow control parameters ---*/
-
+  iMarker_InletUnst = 0;
   if((KindDirect_Solver == RUNTIME_FLOW_SYS) && (config->GetKind_Opt_Problem() == FLOW_CONTROL)){
 
     for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
@@ -545,6 +545,19 @@ void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CConfig *config) {
         Buffer_Send_Sens_FlowParam[iMarker_InletUnst][iParam] = 0;
       }
     }
+
+    /*--- Update the total flow control sensitivities ---*/
+
+    iMarker_InletUnst = 0;
+    for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
+      if (config->GetMarker_All_KindBC(iMarker) ==  INLET_FLOW_UNST) {
+        for (iParam = 0; iParam < 5; iParam++){
+          Total_Sens_FlowParam[iMarker_InletUnst][iParam] += Local_Sens_FlowParam[iMarker_InletUnst][iParam];
+        }
+        iMarker_InletUnst++;
+      }
+    }
+
   
     iMarker_InletUnst = 0;
   
@@ -553,7 +566,7 @@ void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CConfig *config) {
         Marker_Tag = config->GetMarker_All_TagBound(iMarker);
         if (config->GetMarker_InletUnst(iMarker_InletUnst_Total) == Marker_Tag) {
           for (iParam = 0; iParam < 5 ; iParam++){
-            Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total][iParam] = Local_Sens_FlowParam[iMarker_InletUnst][iParam];
+            Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total][iParam] = Total_Sens_FlowParam[iMarker_InletUnst][iParam];
           }
           iMarker_InletUnst++;
         }
@@ -568,15 +581,6 @@ void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CConfig *config) {
   #endif
     }
     
-    for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-      if (config->GetMarker_All_KindBC(iMarker) ==  INLET_FLOW_UNST) {
-        for (iParam = 0; iParam < 5; iParam++){
-          Local_Sens_FlowParam[iMarker_InletUnst][iParam] = Buffer_Recv_Sens_FlowParam[iMarker_InletUnst][iParam];
-        }
-        iMarker_InletUnst++;        
-      }
-    }
-    
     for (iMarker_InletUnst = 0; iMarker_InletUnst < nMarker_InletUnst; iMarker_InletUnst++){
       delete [] Buffer_Send_Sens_FlowParam[iMarker_InletUnst];
       delete [] Buffer_Recv_Sens_FlowParam[iMarker_InletUnst];
@@ -584,17 +588,8 @@ void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CConfig *config) {
     delete [] Buffer_Send_Sens_FlowParam;
     delete [] Buffer_Recv_Sens_FlowParam;
     
-    /*--- Update the total flow control sensitivities ---*/
-    
-    for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
-      if (config->GetMarker_All_KindBC(iMarker) ==  INLET_FLOW_UNST) {
-        for (iParam = 0; iParam < 5; iParam++){
-          Total_Sens_FlowParam[iMarker_InletUnst][iParam] += Local_Sens_FlowParam[iMarker_InletUnst][iParam];
-        }
-        iMarker_InletUnst++;
-      }
-    }
   }
+  //CSG: TODO: Store the buffer_recv_sens_flowParam because it contains the array of derivatives for optim!
   
 
 }
