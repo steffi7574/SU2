@@ -4865,11 +4865,12 @@ void CIncEulerSolver::BC_Inlet_Unst(CGeometry *geometry, CSolver **solver_contai
   su2double *Normal = new su2double[nDim];
 
   unsigned long ExtIter = config->GetExtIter();
+  if (config->GetDiscrete_Adjoint()){
+    ExtIter = config->GetnExtIter() - ExtIter - 1;
+  }
   Physical_dt = config->GetDelta_UnstTimeND();
   Physical_t  = (ExtIter+1)*Physical_dt;
-
-
-
+  
   /*--- Loop over all the vertices on this boundary marker ---*/
 
   for (iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
