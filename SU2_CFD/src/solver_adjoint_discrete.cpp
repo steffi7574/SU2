@@ -119,14 +119,16 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
     Local_Sens_FlowParam = new su2double*[nMarker];
     Total_Sens_FlowParam = new su2double*[nMarker];
 
+    unsigned short iMarker_InletUnst = 0;
     for (iMarker = 0; iMarker < nMarker; iMarker++){
       if(config->GetMarker_All_KindBC(iMarker) ==  INLET_FLOW_UNST){
-        Total_Sens_FlowParam[iMarker]    = new su2double[5];
-        Local_Sens_FlowParam[iMarker]    = new su2double[5];
+        Total_Sens_FlowParam[iMarker_InletUnst]    = new su2double[5];
+        Local_Sens_FlowParam[iMarker_InletUnst]    = new su2double[5];
         for (iParam = 0; iParam < 5; iParam++){
-          Local_Sens_FlowParam[iMarker][iParam]    = 0.0;
-          Total_Sens_FlowParam[iMarker][iParam]    = 0.0;
+          Local_Sens_FlowParam[iMarker_InletUnst][iParam]    = 0.0;
+          Total_Sens_FlowParam[iMarker_InletUnst][iParam]    = 0.0;
         }
+        iMarker_InletUnst++;
       }
     }
   }
