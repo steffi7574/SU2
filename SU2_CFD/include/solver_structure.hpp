@@ -2711,6 +2711,12 @@ public:
    */
   virtual su2double GetTotal_Sens_Geo(void);
   
+ /*!
+   * \brief Provide the total derivative of the flow parameters for active flow control.
+   * \return Value of the sensitivity.
+   */
+  virtual su2double GetTotal_Sens_FlowParam(unsigned short iMarker_Inlet, unsigned short Param );
+
   /*!
    * \brief A virtual member.
    * \return Value of the Mach sensitivity coefficient
@@ -11559,7 +11565,13 @@ public:
    *         (inviscid + viscous contribution).
    */
   su2double GetTotal_Sens_Geo(void);
-  
+
+ /*!
+   * \brief Provide the total derivative of the flow parameters for active flow control.
+   * \return Value of the sensitivity.
+   */
+  su2double GetTotal_Sens_FlowParam(unsigned short iMarker_Inlet, unsigned short Param );
+
   /*!
    * \brief Set the total Mach number sensitivity coefficient.
    * \return Value of the Mach sensitivity coefficient

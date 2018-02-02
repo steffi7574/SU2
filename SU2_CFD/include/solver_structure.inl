@@ -540,6 +540,8 @@ inline void CSolver::Source_Template(CGeometry *geometry, CSolver **solver_conta
 
 inline su2double CSolver::GetTotal_Sens_Geo() { return 0; }
 
+inline su2double CSolver::GetTotal_Sens_FlowParam(unsigned short iMarker, unsigned short iParam) { return 0; }
+
 inline su2double CSolver::GetTotal_Sens_Mach() { return 0; }
 
 inline su2double CSolver::GetTotal_Sens_AoA() { return 0; }
@@ -1848,6 +1850,8 @@ inline su2double CWaveSolver::GetTotal_CWave() { return Total_CWave; }
 inline su2double CHeatSolver::GetTotal_CHeat() { return Total_CHeat; }
 
 inline su2double CDiscAdjSolver::GetTotal_Sens_Geo() { return Total_Sens_Geo; }
+
+inline su2double CDiscAdjSolver::GetTotal_Sens_FlowParam(unsigned short iMarker, unsigned short iParam) { return Total_Sens_FlowParam[iMarker][iParam]; }
 
 inline su2double CDiscAdjSolver::GetTotal_Sens_Mach() { return Total_Sens_Mach; }
 
