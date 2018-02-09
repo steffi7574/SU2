@@ -255,8 +255,8 @@ su2_adtPointsOnlyClass::su2_adtPointsOnlyClass(unsigned short      nDim,
   int rank, iProcessor, nProcessor;
   unsigned long  iVertex, nBuffer;
   unsigned short iDim;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nProcessor);
+  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
+  MPI_Comm_size(SU2_MPI::comm_x, &nProcessor);
   
   unsigned long nLocalVertex = nPoints, nGlobalVertex = 0, MaxLocalVertex = 0;
   
@@ -265,9 +265,9 @@ su2_adtPointsOnlyClass::su2_adtPointsOnlyClass(unsigned short      nDim,
 
   Buffer_Send_nVertex[0] = nLocalVertex;
   
-  SU2_MPI::Allreduce(&nLocalVertex, &nGlobalVertex, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&nLocalVertex, &MaxLocalVertex, 1, MPI_UNSIGNED_LONG, MPI_MAX, MPI_COMM_WORLD);
-  SU2_MPI::Allgather(Buffer_Send_nVertex, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&nLocalVertex, &nGlobalVertex, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&nLocalVertex, &MaxLocalVertex, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(Buffer_Send_nVertex, 1, MPI_UNSIGNED_LONG, Buffer_Receive_nVertex, 1, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
 
   /*--- Gather the local pointID's and the ranks of the nodes on all ranks. ---*/
   
@@ -278,7 +278,7 @@ su2_adtPointsOnlyClass::su2_adtPointsOnlyClass(unsigned short      nDim,
     Buffer_Send[iVertex] = pointID[iVertex];
   }
   
-  SU2_MPI::Allgather(Buffer_Send, MaxLocalVertex, MPI_UNSIGNED_LONG, Buffer_Recv, MaxLocalVertex, MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
+  SU2_MPI::Allgather(Buffer_Send, MaxLocalVertex, MPI_UNSIGNED_LONG, Buffer_Recv, MaxLocalVertex, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
   
   /*--- Unpack the buffer into the local point ID vector. ---*/
   
@@ -294,7 +294,7 @@ su2_adtPointsOnlyClass::su2_adtPointsOnlyClass(unsigned short      nDim,
     Buffer_Send[iVertex] = (unsigned long) rank;
   }
   
-  SU2_MPI::Allgather(Buffer_Send, MaxLocalVertex, MPI_UNSIGNED_LONG, Buffer_Recv, MaxLocalVertex, MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
+  SU2_MPI::Allgather(Buffer_Send, MaxLocalVertex, MPI_UNSIGNED_LONG, Buffer_Recv, MaxLocalVertex, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
   
   /*--- Unpack the ranks into the vector and delete buffer memory. ---*/
   
@@ -318,7 +318,7 @@ su2_adtPointsOnlyClass::su2_adtPointsOnlyClass(unsigned short      nDim,
     Buffer_Send_Coord[iVertex*nDim + iDim] = coor[iVertex*nDim + iDim];
   }
   
-  SU2_MPI::Allgather(Buffer_Send_Coord, nBuffer, MPI_DOUBLE, Buffer_Recv_Coord, nBuffer, MPI_DOUBLE, MPI_COMM_WORLD);
+  SU2_MPI::Allgather(Buffer_Send_Coord, nBuffer, MPI_DOUBLE, Buffer_Recv_Coord, nBuffer, MPI_DOUBLE, SU2_MPI::comm_x);
   
   /*--- Unpack the coordinates into the vector and delete buffer memory. ---*/
   

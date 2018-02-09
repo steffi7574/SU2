@@ -575,7 +575,7 @@ void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CConfig *config) {
       }
   
   #ifdef HAVE_MPI
-      SU2_MPI::Allreduce(Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total], Buffer_Recv_Sens_FlowParam[iMarker_InletUnst_Total], 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      SU2_MPI::Allreduce(Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total], Buffer_Recv_Sens_FlowParam[iMarker_InletUnst_Total], 5, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
   #else
       for (iParam = 0; iParam < 5 ; iParam++){
          Buffer_Recv_Sens_FlowParam[iMarker_InletUnst_Total][iParam] = Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total][iParam];
