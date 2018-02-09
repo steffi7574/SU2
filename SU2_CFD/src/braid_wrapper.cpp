@@ -63,12 +63,50 @@ int my_Step( braid_App        app,
     if (app->BDF2) deltat = deltat / 2.0;
     app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
 
-    /* Trick the su2 solver with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
+    /* Trick SU2 with the correct state vector (Solution, Solution_time_n and Solution_time_n1*/
+    su2double *cast_n, *cast_n1;
+    cast_n = new su2double[nVar];
+    if(app->BDF2) cast_n1 = new su2double[nVar];
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-//      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
-//      app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
-//      if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
+       for (int iVar = 0; iVar < nVar; iVar++){
+           cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
+           if(app->BDF2) cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
+       }
+       app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
+       app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
+      if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
     }
+    delete cast_n;
+    if(app->BDF2) delete cast_n1;
+
+    /* Interpolate the solution_rime_n and solution_time_n1 to all meshes */
+    su2double *Solution_n, *Solution_Fine_n, *Solution_n1, *Solution_Fine_n1, Area_Parent, Area_Children;
+    unsigned Point_Fine;
+    Solution_n = new su2double[nVar];
+    Solution_n1 = new su2double[nVar];
+    for (unsigned short iMesh = 1; iMesh <= app->config_container[ZONE_0]->GetnMGLevels(); iMesh++) {
+      for (int iPoint = 0; iPoint < app->geometry_container[ZONE_0][iMesh]->GetnPoint(); iPoint++) {
+        Area_Parent = app->geometry_container[ZONE_0][iMesh]->node[iPoint]->GetVolume();
+        for (int iVar = 0; iVar < nVar; iVar++) {
+              Solution_n[iVar]  = 0.0;
+              Solution_n1[iVar] = 0.0;
+        }
+        for (int iChildren = 0; iChildren < app->geometry_container[ZONE_0][iMesh]->node[iPoint]->GetnChildren_CV(); iChildren++) {
+          Point_Fine = app->geometry_container[ZONE_0][iMesh]->node[iPoint]->GetChildren_CV(iChildren);
+          Area_Children = app->geometry_container[ZONE_0][iMesh-1]->node[Point_Fine]->GetVolume();
+          Solution_Fine_n  = app->solver_container[ZONE_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution_time_n();
+          Solution_Fine_n1 = app->solver_container[ZONE_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution_time_n1();
+          for (int iVar = 0; iVar < nVar; iVar++) {
+            Solution_n[iVar]  += Solution_Fine_n[iVar]*Area_Children/Area_Parent;
+            Solution_n1[iVar] += Solution_Fine_n1[iVar]*Area_Children/Area_Parent;
+          }
+        }
+        app->solver_container[ZONE_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution_time_n(Solution_n);
+        app->solver_container[ZONE_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution_time_n1(Solution_n1);
+      }
+      app->solver_container[ZONE_0][iMesh][FLOW_SOL]->Set_MPI_Solution(app->geometry_container[ZONE_0][iMesh], app->config_container[ZONE_0]);
+    }
+    delete [] Solution_n, Solution_n1;
 
     /* Trick SU2 with the correct iExtIter = (t - t0)/dt  -1 */
     int iExtIter = (int) round( ( tstart + deltat - app->initialstart ) / app->initialDT) -1 ;
@@ -185,30 +223,65 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
            cout << app->braidrank << ": INIT time " << t << endl;
     }
 
-    /*--- Initialize the solution to the far-field state everywhere. ---*/
 
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+    /* --- Set the initial condition --- */
+    bool restart      = app->config_container[ZONE_0]->GetRestart();
+    bool restart_flow = app->config_container[ZONE_0]->GetRestart_Flow();
+    if (restart || restart_flow) {
 
-        /* Initialize the solution with the freestream values */
-        if (compressible) {
-			u->Solution->time_n[iPoint][0]  = Density_Inf;
-			if(app->BDF2) u->Solution->time_n1[iPoint][0] = Density_Inf;
-			for (int iDim = 0; iDim < nDim; iDim++) {
-				u->Solution->time_n[iPoint][iDim+1]  = Density_Inf*SU2_TYPE::GetValue(Velocity_Inf[iDim]);
-				if(app->BDF2) u->Solution->time_n1[iPoint][iDim+1] = Density_Inf*SU2_TYPE::GetValue(Velocity_Inf[iDim]);
-			}
-			u->Solution->time_n[iPoint][nVar-1]  = Density_Inf*Energy_Inf;
-            if(app->BDF2) u->Solution->time_n1[iPoint][nVar-1] = Density_Inf*Energy_Inf;
-		}
-        if (incompressible) {
-			u->Solution->time_n[iPoint][0]  = Pressure_Inf;
-			if(app->BDF2) u->Solution->time_n1[iPoint][0] = Pressure_Inf;
-			for (int iDim = 0; iDim < nDim; iDim++) {
-				u->Solution->time_n[iPoint][iDim+1]  = SU2_TYPE::GetValue(Velocity_Inf[iDim])*Density_Inf;
-				if(app->BDF2) u->Solution->time_n1[iPoint][iDim+1] = SU2_TYPE::GetValue(Velocity_Inf[iDim])*Density_Inf;
-			}
-		}
-	}
+        /* Load initial condition from restart file */
+
+        cout<< "Load flow solution from restart file." << endl;
+
+        int val_iter = SU2_TYPE::Int(app->config_container[ZONE_0]->GetUnst_RestartIter())-1;
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->LoadRestart(app->geometry_container[ZONE_0], app->solver_container[ZONE_0], app->config_container[ZONE_0], val_iter, true);
+
+        /* Pass the solution to xbraid */
+        for (int iPoint = 0; iPoint < nPoint; iPoint++){
+          for (int iVar = 0; iVar < nVar; iVar++){
+            u->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
+          }
+        }
+
+        if (app->BDF2) {
+              val_iter = SU2_TYPE::Int(app->config_container[ZONE_0]->GetUnst_RestartIter())-2;
+              app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->LoadRestart(app->geometry_container[ZONE_0], app->solver_container[ZONE_0], app->config_container[ZONE_0], val_iter, true);
+              /* Pass the solution to xbraid */
+              for (int iPoint = 0; iPoint < nPoint; iPoint++){
+                 for (int iVar = 0; iVar < nVar; iVar++){
+                    u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
+                 }
+              }
+        }
+
+    } else {
+
+      /* Initialize the solution with the freestream values */
+      cout<< "Initialize with free stream solution." << endl;
+      for (int iPoint = 0; iPoint < nPoint; iPoint++){
+
+         if (compressible) {
+             // see CEulerSolver::SetFreeStream_Solution(CConfig* )
+			  u->Solution->time_n[iPoint][0]  = Density_Inf;
+			  if(app->BDF2) u->Solution->time_n1[iPoint][0] = Density_Inf;
+			  for (int iDim = 0; iDim < nDim; iDim++) {
+			  	u->Solution->time_n[iPoint][iDim+1]  = Density_Inf*SU2_TYPE::GetValue(Velocity_Inf[iDim]);
+			  	if(app->BDF2) u->Solution->time_n1[iPoint][iDim+1] = Density_Inf*SU2_TYPE::GetValue(Velocity_Inf[iDim]);
+			  }
+			  u->Solution->time_n[iPoint][nVar-1]  = Density_Inf*Energy_Inf;
+             if(app->BDF2) u->Solution->time_n1[iPoint][nVar-1] = Density_Inf*Energy_Inf;
+		 }
+         if (incompressible) {
+             // see CIncEulerSolver::SetFreeStream_Solution(CConfig* )
+		  	u->Solution->time_n[iPoint][0]  = Pressure_Inf;
+		  	if(app->BDF2) u->Solution->time_n1[iPoint][0] = Pressure_Inf;
+		  	for (int iDim = 0; iDim < nDim; iDim++) {
+		  		u->Solution->time_n[iPoint][iDim+1]  = SU2_TYPE::GetValue(Velocity_Inf[iDim])*Density_Inf;
+		  		if(app->BDF2) u->Solution->time_n1[iPoint][iDim+1] = SU2_TYPE::GetValue(Velocity_Inf[iDim])*Density_Inf;
+		  	}
+		 }
+	  }
+    }
 
     /* Set the pointer */
     *u_ptr = u;

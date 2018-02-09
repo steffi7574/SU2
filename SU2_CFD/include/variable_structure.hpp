@@ -1767,7 +1767,13 @@ public:
    * \param[in] val_solution_old - Pointer to the residual vector.
    */
   virtual void SetSolution_time_n(su2double *val_solution_time_n);
-  
+
+   /*!
+   * \brief Set the value of the old solution.
+   * \param[in] val_solution_old - Pointer to the residual vector.
+   */
+  virtual void SetSolution_time_n1(su2double *val_solution_time_n1);
+
   
   /*!
    * \brief Set the value of the velocity (Structural Analysis).
