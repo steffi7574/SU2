@@ -461,11 +461,13 @@ void CDriver::Postprocessing() {
   }
 
 
-  /* Print Statistics and Finalize Time-parallel XBraid */
+  /* Finalize Time-parallel XBraid */
   if ( xbraid ) {
 
       braid_PrintStats(xbraidcore);
       braid_Destroy(xbraidcore);
+
+      delete app->initial_condition;
 
   }
 
@@ -2830,6 +2832,16 @@ void CDriver::XBraidPreprocessing(){
   MPI_Comm_size(SU2_MPI::comm_x, &size_x);
 #endif
 
+    int nPoint              = geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nDim                = geometry_container[ZONE_0][MESH_0]->GetnDim();
+    int nVar                = solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    double Density_Inf   = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDensity_FreeStreamND());
+    su2double *Velocity_Inf = config_container[ZONE_0]->GetVelocity_FreeStreamND();
+    double Energy_Inf    = SU2_TYPE::GetValue(config_container[ZONE_0]->GetEnergy_FreeStreamND());
+    double Pressure_Inf  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetPressure_FreeStreamND());
+    bool compressible = (config_container[ZONE_0]->GetKind_Regime() == COMPRESSIBLE);
+    bool incompressible = (config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
+
 
     /* --- Set up the application structure for xBraid --- */
     app = new my_App;
@@ -2900,6 +2912,28 @@ void CDriver::XBraidPreprocessing(){
         app->ntime = config_container[ZONE_0]->GetnExtIter();
         app->tstop = app->tstart + app->ntime * app->initialDT;
     }
+
+    /* --- Grab the initial condition from SU2 and store pointer in app --- */
+    TwoStepSolution *initial_condition  = new TwoStepSolution(app->BDF2, nPoint, nVar);
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      for (int iVar = 0; iVar < nVar; iVar++){
+        initial_condition->time_n[iPoint][iVar] = SU2_TYPE::GetValue(solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution(iVar));
+        if(app->BDF2) initial_condition->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
+      }
+    }
+ 
+    // Store pointer to the vector that holds the initial condition //
+    app->initial_condition = initial_condition;
+
+//    /* Prepare history file for output of CDrag, CLift etc. */
+//    stringstream histstream;
+//    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
+//    ParallelFileIO fileIO(app->braidrank, size, 42);
+//    fileIO.prepareStream(histstream);
+//    histstream.precision(8);
+//    app->history_stream = &histstream;
+//    if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE) *app->history_stream << "#Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
+
 
 
     /* Sanity check if xBraid's tstop is bigger that SU2's end time */

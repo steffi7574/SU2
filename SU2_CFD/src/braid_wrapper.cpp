@@ -206,16 +206,6 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     int nPoint              = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nDim                = app->geometry_container[ZONE_0][MESH_0]->GetnDim();
     int nVar                = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
-    double Density_Inf   = SU2_TYPE::GetValue(app->config_container[ZONE_0]->GetDensity_FreeStreamND());
-    su2double *Velocity_Inf = app->config_container[ZONE_0]->GetVelocity_FreeStreamND();
-    double Energy_Inf    = SU2_TYPE::GetValue(app->config_container[ZONE_0]->GetEnergy_FreeStreamND());
-    double Pressure_Inf  = SU2_TYPE::GetValue(app->config_container[ZONE_0]->GetPressure_FreeStreamND());
-    bool compressible = (app->config_container[ZONE_0]->GetKind_Regime() == COMPRESSIBLE);
-    bool incompressible = (app->config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
-
-    /* Allocate memory for the primal braid vector */
-    my_Vector* u = new my_Vector;
-    u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
 
     /* Print information */
     if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
@@ -223,66 +213,18 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
            cout << app->braidrank << ": INIT time " << t << endl;
     }
 
+    /* Allocate memory for the primal braid vector */
+    my_Vector* u = new my_Vector;
+    u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
 
-    /* --- Set the initial condition --- */
-    bool restart      = app->config_container[ZONE_0]->GetRestart();
-    bool restart_flow = app->config_container[ZONE_0]->GetRestart_Flow();
-    if (restart || restart_flow) {
-
-        /* Load initial condition from restart file */
-
-        cout<< "Load flow solution from restart file." << endl;
-
-        int val_iter = SU2_TYPE::Int(app->config_container[ZONE_0]->GetUnst_RestartIter())-1;
-        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->LoadRestart(app->geometry_container[ZONE_0], app->solver_container[ZONE_0], app->config_container[ZONE_0], val_iter, true);
-
-        /* Pass the solution to xbraid */
-        for (int iPoint = 0; iPoint < nPoint; iPoint++){
-          for (int iVar = 0; iVar < nVar; iVar++){
-            u->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
-          }
-        }
-
-        if (app->BDF2) {
-              val_iter = SU2_TYPE::Int(app->config_container[ZONE_0]->GetUnst_RestartIter())-2;
-              app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->LoadRestart(app->geometry_container[ZONE_0], app->solver_container[ZONE_0], app->config_container[ZONE_0], val_iter, true);
-              /* Pass the solution to xbraid */
-              for (int iPoint = 0; iPoint < nPoint; iPoint++){
-                 for (int iVar = 0; iVar < nVar; iVar++){
-                    u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution()[iVar]);
-                 }
-              }
-        }
-
-    } else {
-
-      /* Initialize the solution with the freestream values */
-      cout<< "Initialize with free stream solution." << endl;
-      for (int iPoint = 0; iPoint < nPoint; iPoint++){
-
-         if (compressible) {
-             // see CEulerSolver::SetFreeStream_Solution(CConfig* )
-			  u->Solution->time_n[iPoint][0]  = Density_Inf;
-			  if(app->BDF2) u->Solution->time_n1[iPoint][0] = Density_Inf;
-			  for (int iDim = 0; iDim < nDim; iDim++) {
-			  	u->Solution->time_n[iPoint][iDim+1]  = Density_Inf*SU2_TYPE::GetValue(Velocity_Inf[iDim]);
-			  	if(app->BDF2) u->Solution->time_n1[iPoint][iDim+1] = Density_Inf*SU2_TYPE::GetValue(Velocity_Inf[iDim]);
-			  }
-			  u->Solution->time_n[iPoint][nVar-1]  = Density_Inf*Energy_Inf;
-             if(app->BDF2) u->Solution->time_n1[iPoint][nVar-1] = Density_Inf*Energy_Inf;
-		 }
-         if (incompressible) {
-             // see CIncEulerSolver::SetFreeStream_Solution(CConfig* )
-		  	u->Solution->time_n[iPoint][0]  = Pressure_Inf;
-		  	if(app->BDF2) u->Solution->time_n1[iPoint][0] = Pressure_Inf;
-		  	for (int iDim = 0; iDim < nDim; iDim++) {
-		  		u->Solution->time_n[iPoint][iDim+1]  = SU2_TYPE::GetValue(Velocity_Inf[iDim])*Density_Inf;
-		  		if(app->BDF2) u->Solution->time_n1[iPoint][iDim+1] = SU2_TYPE::GetValue(Velocity_Inf[iDim])*Density_Inf;
-		  	}
-		 }
-	  }
+    /* Set the initial condition */
+    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      for (int iVar = 0; iVar < nVar; iVar++){
+        u->Solution->time_n[iPoint][iVar]  = app->initial_condition->time_n[iPoint][iVar];
+        if(app->BDF2) u->Solution->time_n1[iPoint][iVar] = app->initial_condition->time_n1[iPoint][iVar];
+      }
     }
-
+ 
     /* Set the pointer */
     *u_ptr = u;
 

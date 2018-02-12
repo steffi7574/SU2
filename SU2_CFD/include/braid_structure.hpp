@@ -113,6 +113,9 @@ typedef struct _braid_App_struct
   CInterpolator ***interpolator_container;
   CTransfer ***transfer_container;
 
+  /* Stores the initial condition */
+  TwoStepSolution* initial_condition;
+
   /* Output of history file */
   stringstream* history_stream;
 
