@@ -2856,12 +2856,6 @@ void CDriver::XBraidPreprocessing(){
     app->braidrank = rank_t;
     app->braidsize = size_t;
 
-//    cout<< endl << "nProc Time:  " << app->braidsize << endl;
-//    cout<< endl << "nProc Space: " << app->su2size   << endl;
-//    cout<< endl << "Hi, I'm comm_x rank " << app->su2rank  << endl;
-//    cout<< endl << "Hi, I'm comm_t rank " << app->braidrank << endl ;
-
-
     /* Set the SU2 containers for running a SU2_CFD simulation */
     app->driver                 = this;
     app->iteration_container    = iteration_container;
@@ -2890,17 +2884,6 @@ void CDriver::XBraidPreprocessing(){
         cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
         exit(EXIT_FAILURE);
     }
-
-//    /* Prepare history file for output of CDrag, CLift etc. */
-//    stringstream histstream;
-////    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
-////    ParallelFileIO fileIO(braidrank, size, 42);
-////    fileIO.prepareStream(histstream);
-//    histstream.precision(8);
-//    app->history_stream = &histstream;
-//    if (rank == MASTER_NODE) *app->history_stream << "Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
-
-
     /* Set the number of time steps and end time */
     if (app->BDF2){
         if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 )
@@ -2941,12 +2924,6 @@ void CDriver::XBraidPreprocessing(){
         cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
         exit(EXIT_FAILURE);
     }
-
-////    cout << endl << "app->tstart    " << app->tstart<< endl;
-////    cout << endl << "app->initialDT " << app->initialDT<< endl;
-////    cout << endl << "app->ntime     " << app->ntime << endl;
-////    cout << endl << "app->tstop     " << app->tstop << endl;
-
 
 
     /* Initialize xBraid */
@@ -2993,18 +2970,6 @@ void CDriver::XBraidPreprocessing(){
     if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE)
           cout<< "Time-parallel processor splitting with " << size_t
               << " temporal times " << size_x << " spacial cores." << endl;
-
-
-
-
-////    std::ofstream out;
-////    ParallelFileIO::startFileWrite(out, "history_test.dat", braidrank, braidsize, 42, comm_t);
-////    cout << (*app->history_stream).str();
-////    out << (*app->history_stream).str();
-////    ParallelFileIO::endFileWrite(out, braidrank, braidsize, 42, comm_t);
-
-
-
 
 
 }
@@ -3094,12 +3059,18 @@ void CDriver::StartSolver() {
         app->Total_CD_avg   = 0.0;
         app->iter           = iter;
 
-        /*--- Run a single XBraid iteration ---*/
+        /* Prepare history convergence file for next iteration */
+        if (app->su2rank == MASTER_NODE){
+          ConvHist_file[0] <<"\n\n# Braid_iter " << iter << "\n";
+          ConvHist_file[0].flush();
+        } 
+        
 
+        /*--- Run a single XBraid iteration ---*/
         braid_Drive(xbraidcore);
 
 
-        /*--- Compute the time-averaged drag coefficient ---*/
+        /*--- Collect time-averaged drag coefficient from all time-processors---*/
         double MyTotalAvg = app->Total_CD_avg;
         app->Total_CD_avg = 0.0;
         MPI_Allreduce(&MyTotalAvg, &app->Total_CD_avg, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_t);

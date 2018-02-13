@@ -57,9 +57,15 @@ int my_Step( braid_App        app,
     double tstart;
     double tstop;
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
+    double deltat  = tstop - tstart;
+
+    /* Print information */
+    if (app->config_container[ZONE_0]->GetBraid_Action_Verb()){
+      if (app->su2rank == MASTER_NODE)
+           cout << app->braidrank << ": STEP from " << tstart << " to " << tstop << ", dt = " << deltat <<  endl;
+    }
 
     /* Trick SU2 with xBraid's DeltaT */
-    double deltat  = tstop - tstart;
     if (app->BDF2) deltat = deltat / 2.0;
     app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
 
@@ -112,6 +118,7 @@ int my_Step( braid_App        app,
     int iExtIter = (int) round( ( tstart + deltat - app->initialstart ) / app->initialDT) -1 ;
     app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
+
     if (app->BDF2)
     {
 
@@ -153,6 +160,7 @@ int my_Step( braid_App        app,
 
     /* Take the next time step to tstop */
     app->driver->Run();
+
 
     /* Grab the flow residual from SU2 */
     double* residual_flow = new double[nVar];
