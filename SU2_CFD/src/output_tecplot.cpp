@@ -2,20 +2,24 @@
  * \file output_tecplot.cpp
  * \brief Main subroutines for output solver information.
  * \author F. Palacios, T. Economon, M. Colonno
- * \version 5.0.0 "Raven"
+ * \version 6.0.1 "Falcon"
  *
- * SU2 Original Developers: Dr. Francisco D. Palacios.
- *                          Dr. Thomas D. Economon.
+ * The current SU2 release has been coordinated by the
+ * SU2 International Developers Society <www.su2devsociety.org>
+ * with selected contributions from the open-source community.
  *
- * SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
- *                 Prof. Piero Colonna's group at Delft University of Technology.
- *                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
- *                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
- *                 Prof. Rafael Palacios' group at Imperial College London.
- *                 Prof. Edwin van der Weide's group at the University of Twente.
- *                 Prof. Vincent Terrapon's group at the University of Liege.
+ * The main research teams contributing to the current release are:
+ *  - Prof. Juan J. Alonso's group at Stanford University.
+ *  - Prof. Piero Colonna's group at Delft University of Technology.
+ *  - Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
+ *  - Prof. Alberto Guardone's group at Polytechnic University of Milan.
+ *  - Prof. Rafael Palacios' group at Imperial College London.
+ *  - Prof. Vincent Terrapon's group at the University of Liege.
+ *  - Prof. Edwin van der Weide's group at the University of Twente.
+ *  - Lab. of New Concepts in Aeronautics at Tech. Institute of Aeronautics.
  *
- * Copyright (C) 2012-2017 SU2, the open-source CFD code.
+ * Copyright 2012-2018, Francisco D. Palacios, Thomas D. Economon,
+ *                      Tim Albring, and the SU2 contributors.
  *
  * SU2 is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -71,7 +75,7 @@ void COutput::SetTecplotASCII(CConfig *config, CGeometry *geometry, CSolver **so
     else filename = config->GetWave_FileName().c_str();
   }
   
-  if (Kind_Solver == HEAT_EQUATION) {
+  if (Kind_Solver == HEAT_EQUATION || Kind_Solver == HEAT_EQUATION_FVM) {
     if (surf_sol) filename = config->GetSurfHeat_FileName().c_str();
     else filename = config->GetHeat_FileName().c_str();
   }
@@ -91,7 +95,8 @@ void COutput::SetTecplotASCII(CConfig *config, CGeometry *geometry, CSolver **so
   
   if ((Kind_Solver == EULER || Kind_Solver == NAVIER_STOKES || Kind_Solver == RANS ||
        Kind_Solver == ADJ_EULER || Kind_Solver == ADJ_NAVIER_STOKES || Kind_Solver == ADJ_RANS ||
-       Kind_Solver == DISC_ADJ_EULER || Kind_Solver == DISC_ADJ_NAVIER_STOKES || Kind_Solver == DISC_ADJ_RANS) &&
+       Kind_Solver == DISC_ADJ_EULER || Kind_Solver == DISC_ADJ_NAVIER_STOKES || Kind_Solver == DISC_ADJ_RANS ||
+       Kind_Solver == HEAT_EQUATION || Kind_Solver == HEAT_EQUATION_FVM) &&
       (val_nZone > 1) ) {
     SPRINTF (buffer, "_%d", SU2_TYPE::Int(val_iZone));
     strcat(cstr, buffer);
@@ -411,6 +416,7 @@ void COutput::SetTecplotASCII(CConfig *config, CGeometry *geometry, CSolver **so
   
 }
 
+<<<<<<< HEAD
 void COutput::SetTecplotASCII_LowMemory(CConfig *config, CGeometry *geometry, CSolver **solver, char mesh_filename[MAX_STRING_SIZE], bool surf_sol) {
   
   int rank = MASTER_NODE;
@@ -738,6 +744,8 @@ void COutput::SetTecplotASCII_LowMemory(CConfig *config, CGeometry *geometry, CS
   
 }
 
+=======
+>>>>>>> SU2_original/develop
 void COutput::SetTecplotASCII_Mesh(CConfig *config, CGeometry *geometry, unsigned short val_iZone, bool surf_sol, bool new_file) {
   
   unsigned short iDim, nDim = geometry->GetnDim();
@@ -1052,11 +1060,14 @@ void COutput::SetCSV_MeshASCII(CConfig *config, CGeometry *geometry) {
 	vector<su2double> Xcoord_Airfoil, Ycoord_Airfoil, Zcoord_Airfoil, Variable_Airfoil;
 	ofstream csv_File;
 
+<<<<<<< HEAD
 	int rank = MASTER_NODE;
 #ifdef HAVE_MPI
 	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
 #endif
 
+=======
+>>>>>>> SU2_original/develop
 	if (nDim == 3) {
 
 		Plane_P0 = new su2double[3];
@@ -1074,21 +1085,27 @@ void COutput::SetCSV_MeshASCII(CConfig *config, CGeometry *geometry) {
 				Plane_Normal[1] = 0.0; Plane_P0[1] = 0.0;
 				Plane_Normal[2] = 0.0; Plane_P0[2] = 0.0;
 
-				if (config->GetGeo_Description() == FUSELAGE) {
-					Plane_Normal[0] = 1.0;
-					Plane_P0[0] = config->GetLocationStations(iStation);
-				}
-
-				if (config->GetGeo_Description() == WING) {
-					Plane_Normal[1] = 1.0;
-					Plane_P0[1] = config->GetLocationStations(iStation);
-				}
+     if (config->GetGeo_Description() == FUSELAGE) {
+       Plane_Normal[0] = 1.0;
+       Plane_P0[0] = config->GetLocationStations(iStation);
+     }
+     
+     if (config->GetGeo_Description() == NACELLE) {
+       Plane_Normal[0] = 0.0;
+       Plane_Normal[1] = -sin(config->GetLocationStations(iStation)*PI_NUMBER/180.0);
+       Plane_Normal[2] = cos(config->GetLocationStations(iStation)*PI_NUMBER/180.0);
+     }
+     
+     if (config->GetGeo_Description() == WING) {
+       Plane_Normal[1] = 1.0;
+       Plane_P0[1] = config->GetLocationStations(iStation);
+     }
 
 				/*--- Compute the airfoil Stations (note that we feed in the Cp) ---*/
 
-				geometry->ComputeAirfoil_Section(Plane_P0, Plane_Normal, -1E6,
-						1E6, NULL, Xcoord_Airfoil, Ycoord_Airfoil, Zcoord_Airfoil,
-						Variable_Airfoil, true, config);
+				geometry->ComputeAirfoil_Section(Plane_P0, Plane_Normal, -1E6, 1E6, -1E6, 1E6, -1E6, 1E6,
+                                     NULL, Xcoord_Airfoil, Ycoord_Airfoil, Zcoord_Airfoil,
+                                     Variable_Airfoil, true, config);
 
 				if ((rank == MASTER_NODE) && (Xcoord_Airfoil.size() == 0)) {
 					cout << "Please check the config file, the station (" << Plane_P0[0] << ", " << Plane_P0[1] << ", " << Plane_P0[2] << ") has not been detected." << endl;
@@ -1138,6 +1155,7 @@ void COutput::WriteTecplotASCII_Parallel(CConfig *config, CGeometry *geometry, C
   bool adjoint = config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint();
   
   int iProcessor;
+<<<<<<< HEAD
   
   int rank = MASTER_NODE;
   int size = SINGLE_NODE;
@@ -1146,6 +1164,9 @@ void COutput::WriteTecplotASCII_Parallel(CConfig *config, CGeometry *geometry, C
   MPI_Comm_size(SU2_MPI::comm_x, &size);
 #endif
   
+=======
+
+>>>>>>> SU2_original/develop
   char cstr[200], buffer[50];
   string filename;
   ofstream Tecplot_File;
@@ -1248,7 +1269,11 @@ void COutput::WriteTecplotASCII_Parallel(CConfig *config, CGeometry *geometry, C
   }
   
 #ifdef HAVE_MPI
+<<<<<<< HEAD
   MPI_Barrier(SU2_MPI::comm_x);
+=======
+  SU2_MPI::Barrier(MPI_COMM_WORLD);
+>>>>>>> SU2_original/develop
 #endif
   
   /*--- Each processor opens the file. ---*/
@@ -1280,7 +1305,11 @@ void COutput::WriteTecplotASCII_Parallel(CConfig *config, CGeometry *geometry, C
     }
     Tecplot_File.flush();
 #ifdef HAVE_MPI
+<<<<<<< HEAD
     MPI_Barrier(SU2_MPI::comm_x);
+=======
+    SU2_MPI::Barrier(MPI_COMM_WORLD);
+>>>>>>> SU2_original/develop
 #endif
   }
   
@@ -1293,8 +1322,8 @@ void COutput::WriteTecplotASCII_Parallel(CConfig *config, CGeometry *geometry, C
         
         for (iElem = 0; iElem < nParallel_Line; iElem++) {
           iNode = iElem*N_POINTS_LINE;
-          Tecplot_File << Conn_Line_Par[iNode+0] << "\t";
-          Tecplot_File << Conn_Line_Par[iNode+1] << "\n";
+          Tecplot_File << Conn_BoundLine_Par[iNode+0] << "\t";
+          Tecplot_File << Conn_BoundLine_Par[iNode+1] << "\n";
         }
         
         for (iElem = 0; iElem < nParallel_BoundTria; iElem++) {
@@ -1367,7 +1396,11 @@ void COutput::WriteTecplotASCII_Parallel(CConfig *config, CGeometry *geometry, C
     }
     Tecplot_File.flush();
 #ifdef HAVE_MPI
+<<<<<<< HEAD
     MPI_Barrier(SU2_MPI::comm_x);
+=======
+    SU2_MPI::Barrier(MPI_COMM_WORLD);
+>>>>>>> SU2_original/develop
 #endif
   }
   
