@@ -228,8 +228,8 @@ void CSolver::SetResidual_RMS(CGeometry *geometry, CConfig *config) {
   Local_nPointDomain = geometry->GetnPointDomain();
   
   
-  SU2_MPI::Allreduce(sbuf_residual, rbuf_residual, nVar, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
-  SU2_MPI::Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(sbuf_residual, rbuf_residual, nVar, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
   
   
   for (iVar = 0; iVar < nVar; iVar++) {
@@ -262,9 +262,9 @@ void CSolver::SetResidual_RMS(CGeometry *geometry, CConfig *config) {
       sbuf_coord[iVar*nDim+iDim] = Coord[iDim];
   }
   
-  SU2_MPI::Allgather(sbuf_residual, nVar, MPI_DOUBLE, rbuf_residual, nVar, MPI_DOUBLE, SU2_MPI::comm_x);
-  SU2_MPI::Allgather(sbuf_point, nVar, MPI_UNSIGNED_LONG, rbuf_point, nVar, MPI_UNSIGNED_LONG, SU2_MPI::comm_x);
-  SU2_MPI::Allgather(sbuf_coord, nVar*nDim, MPI_DOUBLE, rbuf_coord, nVar*nDim, MPI_DOUBLE, SU2_MPI::comm_x);
+  SU2_MPI::Allgather(sbuf_residual, nVar, MPI_DOUBLE, rbuf_residual, nVar, MPI_DOUBLE, SU2_MPI::GetComm());
+  SU2_MPI::Allgather(sbuf_point, nVar, MPI_UNSIGNED_LONG, rbuf_point, nVar, MPI_UNSIGNED_LONG, SU2_MPI::GetComm());
+  SU2_MPI::Allgather(sbuf_coord, nVar*nDim, MPI_DOUBLE, rbuf_coord, nVar*nDim, MPI_DOUBLE, SU2_MPI::GetComm());
 
   for (iVar = 0; iVar < nVar; iVar++) {
     for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
@@ -317,8 +317,8 @@ void CSolver::SetResidual_BGS(CGeometry *geometry, CConfig *config) {
   Local_nPointDomain = geometry->GetnPointDomain();
 
 
-  SU2_MPI::Allreduce(sbuf_residual, rbuf_residual, nVar, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(sbuf_residual, rbuf_residual, nVar, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&Local_nPointDomain, &Global_nPointDomain, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
 
 
   for (iVar = 0; iVar < nVar; iVar++) {
@@ -353,9 +353,9 @@ void CSolver::SetResidual_BGS(CGeometry *geometry, CConfig *config) {
       sbuf_coord[iVar*nDim+iDim] = Coord[iDim];
   }
 
-  SU2_MPI::Allgather(sbuf_residual, nVar, MPI_DOUBLE, rbuf_residual, nVar, MPI_DOUBLE, MPI_COMM_WORLD);
-  SU2_MPI::Allgather(sbuf_point, nVar, MPI_UNSIGNED_LONG, rbuf_point, nVar, MPI_UNSIGNED_LONG, MPI_COMM_WORLD);
-  SU2_MPI::Allgather(sbuf_coord, nVar*nDim, MPI_DOUBLE, rbuf_coord, nVar*nDim, MPI_DOUBLE, MPI_COMM_WORLD);
+  SU2_MPI::Allgather(sbuf_residual, nVar, MPI_DOUBLE, rbuf_residual, nVar, MPI_DOUBLE, SU2_MPI::GetComm());
+  SU2_MPI::Allgather(sbuf_point, nVar, MPI_UNSIGNED_LONG, rbuf_point, nVar, MPI_UNSIGNED_LONG, SU2_MPI::GetComm());
+  SU2_MPI::Allgather(sbuf_coord, nVar*nDim, MPI_DOUBLE, rbuf_coord, nVar*nDim, MPI_DOUBLE, SU2_MPI::GetComm());
 
   for (iVar = 0; iVar < nVar; iVar++) {
     for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
@@ -1237,8 +1237,8 @@ void CSolver::SetSolution_Limiter(CGeometry *geometry, CConfig *config) {
     }
     
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(LocalMinSolution, GlobalMinSolution, nVar, MPI_DOUBLE, MPI_MIN, SU2_MPI::comm_x);
-    SU2_MPI::Allreduce(LocalMaxSolution, GlobalMaxSolution, nVar, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(LocalMinSolution, GlobalMinSolution, nVar, MPI_DOUBLE, MPI_MIN, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(LocalMaxSolution, GlobalMaxSolution, nVar, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
 #else
     for (iVar = 0; iVar < nVar; iVar++) {
       GlobalMinSolution[iVar] = LocalMinSolution[iVar];
@@ -1950,7 +1950,7 @@ void CSolver::Restart_OldGeometry(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
   rbuf_NotMatching = sbuf_NotMatching;
 #else
-  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
 #endif
   if (rbuf_NotMatching != 0) {
     SU2_MPI::Error(string("The solution file ") + filename + string(" doesn't match with the mesh file!\n") +
@@ -2023,7 +2023,7 @@ void CSolver::Restart_OldGeometry(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
     rbuf_NotMatching = sbuf_NotMatching;
 #else
-    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
 #endif
     if (rbuf_NotMatching != 0) {
       SU2_MPI::Error(string("The solution file ") + filename + string(" doesn't match with the mesh file!\n") +
@@ -2103,7 +2103,7 @@ void CSolver::Read_SU2_Restart_ASCII(CGeometry *geometry, CConfig *config, strin
 
   /*--- All ranks open the file using MPI. ---*/
 
-  ierr = MPI_File_open(SU2_MPI::comm_x, fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
+  ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
 
   /*--- Error check opening the file. ---*/
 
@@ -2118,7 +2118,7 @@ void CSolver::Read_SU2_Restart_ASCII(CGeometry *geometry, CConfig *config, strin
 
   /*--- Broadcast the number of variables to all procs and store clearly. ---*/
 
-  SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
   /*--- Check that this is an SU2 binary file. SU2 binary files
    have the hex representation of "SU2" as the first int in the file. ---*/
@@ -2283,7 +2283,7 @@ void CSolver::Read_SU2_Restart_Binary(CGeometry *geometry, CConfig *config, stri
 
   /*--- All ranks open the file using MPI. ---*/
 
-  ierr = MPI_File_open(SU2_MPI::comm_x, fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
+  ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
 
   /*--- Error check opening the file. ---*/
 
@@ -2300,7 +2300,7 @@ void CSolver::Read_SU2_Restart_Binary(CGeometry *geometry, CConfig *config, stri
 
   /*--- Broadcast the number of variables to all procs and store clearly. ---*/
 
-  SU2_MPI::Bcast(Restart_Vars, nRestart_Vars, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(Restart_Vars, nRestart_Vars, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
   /*--- Check that this is an SU2 binary file. SU2 binary files
    have the hex representation of "SU2" as the first int in the file. ---*/
@@ -2330,7 +2330,7 @@ void CSolver::Read_SU2_Restart_Binary(CGeometry *geometry, CConfig *config, stri
   /*--- Broadcast the string names of the variables. ---*/
 
   SU2_MPI::Bcast(mpi_str_buf, nFields*CGNS_STRING_SIZE, MPI_CHAR,
-                 MASTER_NODE, SU2_MPI::comm_x);
+                 MASTER_NODE, SU2_MPI::GetComm());
 
   /*--- Now parse the string names and load into the config class in case
    we need them for writing visualization files (SU2_SOL). ---*/
@@ -2496,7 +2496,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
 		/*--- All ranks open the file using MPI. ---*/
 
-		ierr = MPI_File_open(SU2_MPI::comm_x, fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
+		ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
 
 		/*--- Error check opening the file. ---*/
 
@@ -2513,7 +2513,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
 		/*--- Broadcast the number of variables to all procs and store clearly. ---*/
 
-		SU2_MPI::Bcast(var_buf, nVar_Buf, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+		SU2_MPI::Bcast(var_buf, nVar_Buf, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
     /*--- Check that this is an SU2 binary file. SU2 binary files
      have the hex representation of "SU2" as the first int in the file. ---*/
@@ -2545,7 +2545,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
 		/*--- Communicate metadata. ---*/
 
-		SU2_MPI::Bcast(&Restart_Iter, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+		SU2_MPI::Bcast(&Restart_Iter, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
 		/*--- Copy to a su2double structure (because of the SU2_MPI::Bcast
               doesn't work with passive data)---*/
@@ -2553,7 +2553,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 		for (unsigned short iVar = 0; iVar < 8; iVar++)
 			Restart_Meta[iVar] = Restart_Meta_Passive[iVar];
 
-		SU2_MPI::Bcast(Restart_Meta, 8, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
+		SU2_MPI::Bcast(Restart_Meta, 8, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
 
 		/*--- All ranks close the file after writing. ---*/
 
@@ -2622,7 +2622,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
     /*--- All ranks open the file using MPI. ---*/
 
-    ierr = MPI_File_open(SU2_MPI::comm_x, fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
+    ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
 
     /*--- Error check opening the file. ---*/
 
@@ -2637,7 +2637,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
     /*--- Broadcast the number of variables to all procs and store clearly. ---*/
 
-    SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
     /*--- Check that this is an SU2 binary file. SU2 binary files
      have the hex representation of "SU2" as the first int in the file. ---*/
@@ -2657,7 +2657,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
 		restart_file.open(val_filename.data(), ios::in);
 		if (restart_file.fail()) {
-			if (rank == MASTER_NODE) {
+			if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
 				cout << " Warning: There is no restart file (" << val_filename.data() << ")."<< endl;
 				cout << " Computation will continue without updating metadata parameters." << endl;
 			}
@@ -2765,7 +2765,7 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 		/*--- Angle of attack ---*/
 
 		if (config->GetDiscard_InFiles() == false) {
-			if ((config->GetAoA() != AoA_) &&  (rank == MASTER_NODE)) {
+			if ((config->GetAoA() != AoA_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
 				cout.precision(6);
 				cout <<"WARNING: AoA in the solution file (" << AoA_ << " deg.) +" << endl;
 				cout << "         AoA offset in mesh file (" << config->GetAoA_Offset() << " deg.) = " << AoA_ + config->GetAoA_Offset() << " deg." << endl;
@@ -2773,14 +2773,14 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 			config->SetAoA(AoA_ + config->GetAoA_Offset());
 		}
 		else {
-			if ((config->GetAoA() != AoA_) &&  (rank == MASTER_NODE))
+			if ((config->GetAoA() != AoA_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
 				cout <<"WARNING: Discarding the AoA in the solution file." << endl;
 		}
 
 		/*--- Sideslip angle ---*/
 
 		if (config->GetDiscard_InFiles() == false) {
-			if ((config->GetAoS() != AoS_) &&  (rank == MASTER_NODE)) {
+			if ((config->GetAoS() != AoS_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
 				cout.precision(6);
 				cout <<"WARNING: AoS in the solution file (" << AoS_ << " deg.) +" << endl;
 				cout << "         AoS offset in mesh file (" << config->GetAoS_Offset() << " deg.) = " << AoS_ + config->GetAoS_Offset() << " deg." << endl;
@@ -2788,19 +2788,19 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 			config->SetAoS(AoS_ + config->GetAoS_Offset());
 		}
 		else {
-			if ((config->GetAoS() != AoS_) &&  (rank == MASTER_NODE))
+			if ((config->GetAoS() != AoS_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
 				cout <<"WARNING: Discarding the AoS in the solution file." << endl;
 		}
 
 		/*--- BCThrust angle ---*/
 
 		if (config->GetDiscard_InFiles() == false) {
-			if ((config->GetInitial_BCThrust() != BCThrust_) &&  (rank == MASTER_NODE))
+			if ((config->GetInitial_BCThrust() != BCThrust_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
 				cout <<"WARNING: SU2 will use the initial BC Thrust provided in the solution file: " << BCThrust_ << " lbs." << endl;
 			config->SetInitial_BCThrust(BCThrust_);
 		}
 		else {
-			if ((config->GetInitial_BCThrust() != BCThrust_) &&  (rank == MASTER_NODE))
+			if ((config->GetInitial_BCThrust() != BCThrust_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
 				cout <<"WARNING: Discarding the BC Thrust in the solution file." << endl;
 		}
 
@@ -2813,35 +2813,35 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
 				if (config->GetDiscard_InFiles() == false) {
 
-      if ((config->GetdCD_dCL() != dCD_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCD_dCL() != dCD_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: SU2 will use the dCD/dCL provided in the direct solution file: " << dCD_dCL_ << "." << endl;
       config->SetdCD_dCL(dCD_dCL_);
       
-      if ((config->GetdCMx_dCL() != dCMx_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCMx_dCL() != dCMx_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: SU2 will use the dCMx/dCL provided in the direct solution file: " << dCMx_dCL_ << "." << endl;
       config->SetdCMx_dCL(dCMx_dCL_);
       
-      if ((config->GetdCMy_dCL() != dCMy_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCMy_dCL() != dCMy_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: SU2 will use the dCMy/dCL provided in the direct solution file: " << dCMy_dCL_ << "." << endl;
       config->SetdCMy_dCL(dCMy_dCL_);
       
-      if ((config->GetdCMz_dCL() != dCMz_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCMz_dCL() != dCMz_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: SU2 will use the dCMz/dCL provided in the direct solution file: " << dCMz_dCL_ << "." << endl;
       config->SetdCMz_dCL(dCMz_dCL_);
 
 				}
 				else {
       
-      if ((config->GetdCD_dCL() != dCD_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCD_dCL() != dCD_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: Discarding the dCD/dCL in the direct solution file." << endl;
       
-      if ((config->GetdCMx_dCL() != dCMx_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCMx_dCL() != dCMx_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: Discarding the dCMx/dCL in the direct solution file." << endl;
       
-      if ((config->GetdCMy_dCL() != dCMy_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCMy_dCL() != dCMy_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: Discarding the dCMy/dCL in the direct solution file." << endl;
       
-      if ((config->GetdCMz_dCL() != dCMz_dCL_) &&  (rank == MASTER_NODE))
+      if ((config->GetdCMz_dCL() != dCMz_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
         cout <<"WARNING: Discarding the dCMz/dCL in the direct solution file." << endl;
       
     }
@@ -2866,25 +2866,25 @@ void CSolver::Read_SU2_Restart_Metadata(CGeometry *geometry, CConfig *config, bo
 
      /*--- dCD_dCL coefficient ---*/
      
-     if ((config->GetdCD_dCL() != dCD_dCL_) &&  (rank == MASTER_NODE))
+     if ((config->GetdCD_dCL() != dCD_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
        cout <<"WARNING: SU2 will use the dCD/dCL provided in\nthe adjoint solution file: " << dCD_dCL_ << " ." << endl;
      config->SetdCD_dCL(dCD_dCL_);
      
      /*--- dCMx_dCL coefficient ---*/
      
-     if ((config->GetdCMx_dCL() != dCMx_dCL_) &&  (rank == MASTER_NODE))
+     if ((config->GetdCMx_dCL() != dCMx_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
        cout <<"WARNING: SU2 will use the dCMx/dCL provided in\nthe adjoint solution file: " << dCMx_dCL_ << " ." << endl;
      config->SetdCMx_dCL(dCMx_dCL_);
      
      /*--- dCMy_dCL coefficient ---*/
      
-     if ((config->GetdCMy_dCL() != dCMy_dCL_) &&  (rank == MASTER_NODE))
+     if ((config->GetdCMy_dCL() != dCMy_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
        cout <<"WARNING: SU2 will use the dCMy/dCL provided in\nthe adjoint solution file: " << dCMy_dCL_ << " ." << endl;
      config->SetdCMy_dCL(dCMy_dCL_);
      
      /*--- dCMz_dCL coefficient ---*/
      
-     if ((config->GetdCMz_dCL() != dCMz_dCL_) &&  (rank == MASTER_NODE))
+     if ((config->GetdCMz_dCL() != dCMz_dCL_) &&  (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
        cout <<"WARNING: SU2 will use the dCMz/dCL provided in\nthe adjoint solution file: " << dCMz_dCL_ << " ." << endl;
      config->SetdCMz_dCL(dCMz_dCL_);
      
@@ -3054,7 +3054,7 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
     
     /*--- All ranks open the file using MPI. ---*/
 
-    ierr = MPI_File_open(SU2_MPI::comm_x, fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
+    ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
 
     /*--- Error check opening the file. ---*/
 
@@ -3072,7 +3072,7 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
 
     /*--- Broadcast the number of variables to all procs and store more clearly. ---*/
 
-    SU2_MPI::Bcast(var_buf, nVar_Buf, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Bcast(var_buf, nVar_Buf, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
     /*--- Check that this is an SU2 binary file. SU2 binary files
      have the hex representation of "SU2" as the first int in the file. ---*/
@@ -3145,7 +3145,7 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
 
     /*--- All ranks open the file using MPI. ---*/
 
-    ierr = MPI_File_open(SU2_MPI::comm_x, fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
+    ierr = MPI_File_open(SU2_MPI::GetComm(), fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fhw);
 
     /*--- Error check opening the file. ---*/
 
@@ -3160,7 +3160,7 @@ void CBaselineSolver::SetOutputVariables(CGeometry *geometry, CConfig *config) {
 
     /*--- Broadcast the number of variables to all procs and store clearly. ---*/
 
-    SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Bcast(&magic_number, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
     /*--- Check that this is an SU2 binary file. SU2 binary files
      have the hex representation of "SU2" as the first int in the file. ---*/
@@ -3266,7 +3266,7 @@ void CBaselineSolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
       /*--- Send/Receive information using Sendrecv ---*/
       
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                   Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
       
 #else
       
@@ -3450,7 +3450,7 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
 
   /*--- Output the file name to the console. ---*/
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << "Reading and storing the solution from " << filename
     << "." << endl;
 
@@ -3588,7 +3588,7 @@ void CBaselineSolver::LoadRestart_FSI(CGeometry *geometry, CSolver ***solver, CC
 
   /*--- Output the file name to the console. ---*/
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << "Reading and storing the solution from " << filename
     << "." << endl;
 

@@ -109,7 +109,7 @@ CTransLMSolver::CTransLMSolver(CGeometry *geometry, CConfig *config, unsigned sh
       if ((config->GetKind_Linear_Solver_Prec() == LINELET) ||
           (config->GetKind_Linear_Solver() == SMOOTHER_LINELET)) {
         nLineLets = Jacobian.BuildLineletPreconditioner(geometry, config);
-        if (rank == MASTER_NODE) cout << "Compute linelet structure. " << nLineLets << " elements in each line (average)." << endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Compute linelet structure. " << nLineLets << " elements in each line (average)." << endl;
       }
       
     }

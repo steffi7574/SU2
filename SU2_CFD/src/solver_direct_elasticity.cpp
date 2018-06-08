@@ -350,7 +350,7 @@ CFEASolver::CFEASolver(CGeometry *geometry, CConfig *config) : CSolver() {
   
   
   /*--- Initialization of matrix structures ---*/
-  if (rank == MASTER_NODE) cout << "Initialize Jacobian structure (Non-Linear Elasticity)." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Initialize Jacobian structure (Non-Linear Elasticity)." << endl;
   
   Jacobian.Initialize(nPoint, nPointDomain, nVar, nVar, false, geometry, config);
   
@@ -571,7 +571,7 @@ void CFEASolver::Set_MPI_Solution(CGeometry *geometry, CConfig *config) {
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
       
 #else
       
@@ -673,7 +673,7 @@ void CFEASolver::Set_MPI_Solution_Old(CGeometry *geometry, CConfig *config) {
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
       
 #else
       
@@ -758,7 +758,7 @@ void CFEASolver::Set_MPI_Solution_DispOnly(CGeometry *geometry, CConfig *config)
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
       
 #else
       
@@ -840,7 +840,7 @@ void CFEASolver::Set_MPI_Solution_Pred(CGeometry *geometry, CConfig *config) {
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
       
 #else
       
@@ -927,7 +927,7 @@ void CFEASolver::Set_MPI_Solution_Pred_Old(CGeometry *geometry, CConfig *config)
       
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
       
 #else
       
@@ -987,14 +987,14 @@ void CFEASolver::Set_ElementProperties(CGeometry *geometry, CConfig *config) {
   if (nZone > 1)
     filename = config->GetMultizone_FileName(filename, iZone);
 
-  if (rank == MASTER_NODE) cout << "Filename: " << filename << "." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Filename: " << filename << "." << endl;
 
   properties_file.open(filename.data(), ios::in);
 
   /*--- In case there is no file, all elements get the same property (0) ---*/
 
   if (properties_file.fail()) {
-    if (rank == MASTER_NODE){
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << "There is no element-based properties file." << endl;
       cout << "The structural domain has uniform properties." << endl;
     }
@@ -1072,7 +1072,7 @@ void CFEASolver::Set_ElementProperties(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
     rbuf_NotMatching = sbuf_NotMatching;
 #else
-    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
 #endif
     if (rbuf_NotMatching != 0) {
       SU2_MPI::Error(string("The properties file ") + filename + string(" doesn't match with the mesh file!\n")  + 
@@ -1115,7 +1115,7 @@ void CFEASolver::Set_Prestretch(CGeometry *geometry, CConfig *config) {
   if (nZone > 1)
     filename = config->GetMultizone_FileName(filename, iZone);
   
-  if (rank == MASTER_NODE) cout << "Filename: " << filename << "." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Filename: " << filename << "." << endl;
   
   prestretch_file.open(filename.data(), ios::in);
   
@@ -1173,7 +1173,7 @@ void CFEASolver::Set_Prestretch(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
   rbuf_NotMatching = sbuf_NotMatching;
 #else
-  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
 #endif
   if (rbuf_NotMatching != 0) {
       SU2_MPI::Error(string("The solution file ") + filename + string(" doesn't match with the mesh file!\n") +
@@ -1226,7 +1226,7 @@ void CFEASolver::Set_Prestretch(CGeometry *geometry, CConfig *config) {
 
       /*--- Send/Receive information using Sendrecv ---*/
       SU2_MPI::Sendrecv(Buffer_Send_U, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, MPI_COMM_WORLD, &status);
+                        Buffer_Receive_U, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
 
 #else
 
@@ -1298,7 +1298,7 @@ void CFEASolver::Set_ReferenceGeometry(CGeometry *geometry, CConfig *config) {
     SU2_MPI::Error( "There is no FEM reference geometry file!!", CURRENT_FUNCTION);
   }
 
-  if (rank == MASTER_NODE) cout << "Filename: " << filename << " and format " << file_format << "." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Filename: " << filename << " and format " << file_format << "." << endl;
 
   /*--- In case this is a parallel simulation, we need to perform the
    Global2Local index transformation first. ---*/
@@ -1354,7 +1354,7 @@ void CFEASolver::Set_ReferenceGeometry(CGeometry *geometry, CConfig *config) {
 #ifndef HAVE_MPI
   rbuf_NotMatching = sbuf_NotMatching;
 #else
-  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
 #endif
   
   if (rbuf_NotMatching != 0) {
@@ -2091,7 +2091,7 @@ void CFEASolver::Compute_NodalStress(CGeometry *geometry, CSolver **solver_conta
   /*--- Compute MaxVonMises_Stress using all the nodes ---*/
   
   su2double MyMaxVonMises_Stress = MaxVonMises_Stress; MaxVonMises_Stress = 0.0;
-  SU2_MPI::Allreduce(&MyMaxVonMises_Stress, &MaxVonMises_Stress, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&MyMaxVonMises_Stress, &MaxVonMises_Stress, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
   
 #endif
   
@@ -2712,7 +2712,7 @@ void CFEASolver::Postprocessing(CGeometry *geometry, CSolver **solver_container,
 
 #ifdef HAVE_MPI
         /*--- We sum the squares of the norms across the different processors ---*/
-        SU2_MPI::Allreduce(&solNorm, &solNorm_recv, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        SU2_MPI::Allreduce(&solNorm, &solNorm_recv, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #else
         solNorm_recv         = solNorm;
 #endif
@@ -4156,8 +4156,8 @@ void CFEASolver::ComputeAitken_Coefficient(CGeometry **fea_geometry, CConfig *fe
         }
         
 #ifdef HAVE_MPI
-        SU2_MPI::Allreduce(&sbuf_numAitk, &rbuf_numAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
-        SU2_MPI::Allreduce(&sbuf_denAitk, &rbuf_denAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+        SU2_MPI::Allreduce(&sbuf_numAitk, &rbuf_numAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+        SU2_MPI::Allreduce(&sbuf_denAitk, &rbuf_denAitk, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #else
         rbuf_numAitk = sbuf_numAitk;
         rbuf_denAitk = sbuf_denAitk;
@@ -4184,7 +4184,7 @@ void CFEASolver::ComputeAitken_Coefficient(CGeometry **fea_geometry, CConfig *fe
       
     }
     else {
-      if (rank == MASTER_NODE) cout << "No relaxation method used. " << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "No relaxation method used. " << endl;
     }
   
   if (writeHistFSI && (rank == MASTER_NODE)) {historyFile_FSI.close();}
@@ -4280,7 +4280,7 @@ void CFEASolver::Compute_OFRefGeom(CGeometry *geometry, CSolver **solver_contain
   su2double objective_function_averaged = 0.0;
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&nPointDomain,  &nTotalPoint,  1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&nPointDomain,  &nTotalPoint,  1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
 #else
     nTotalPoint        = nPointDomain;
 #endif
@@ -4304,7 +4304,7 @@ void CFEASolver::Compute_OFRefGeom(CGeometry *geometry, CSolver **solver_contain
   }
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&objective_function,  &objective_function_reduce,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&objective_function,  &objective_function_reduce,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #else
     objective_function_reduce        = objective_function;
 #endif
@@ -4447,9 +4447,9 @@ void CFEASolver::Compute_OFRefNode(CGeometry *geometry, CSolver **solver_contain
   }
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&objective_function,  &objective_function_reduce,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&difX,  &difX_reduce,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&difY,  &difY_reduce,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&objective_function,  &objective_function_reduce,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&difX,  &difX_reduce,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&difY,  &difY_reduce,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #else
     objective_function_reduce        = objective_function;
     difX_reduce                      = difX;
@@ -4615,8 +4615,8 @@ void CFEASolver::Stiffness_Penalty(CGeometry *geometry, CSolver **solver, CNumer
 // Reduce value across processors for parallelization
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&weightedValue,  &weightedValue_reduce,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&totalVolume,  &totalVolume_reduce,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&weightedValue,  &weightedValue_reduce,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&totalVolume,  &totalVolume_reduce,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #else
     weightedValue_reduce        = weightedValue;
     totalVolume_reduce          = totalVolume;
@@ -4770,7 +4770,7 @@ void CFEASolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfig *c
 #ifndef HAVE_MPI
   rbuf_NotMatching = sbuf_NotMatching;
 #else
-  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
 #endif
   if (rbuf_NotMatching != 0) {
     SU2_MPI::Error(string("The solution file ") + filename + string(" doesn't match with the mesh file!\n") +

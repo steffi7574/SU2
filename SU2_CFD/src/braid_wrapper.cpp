@@ -6,6 +6,8 @@
  *
  */
 
+ #if HAVE_XBRAID
+
 //#include <braid.hpp>
 #include <../include/util.hpp>
 #include <../include/braid_structure.hpp>
@@ -342,7 +344,7 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     /* Communicate the norm over all spatial processors */
     double mynorm = norm;
     norm = 0.0;
-    MPI_Allreduce(&mynorm, &norm, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+    MPI_Allreduce(&mynorm, &norm, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 
     /* Set the pointer */
     *norm_ptr = sqrt(norm);
@@ -600,3 +602,6 @@ std::string format(const char* format, ...) {
 
     return output;
 }
+
+
+#endif //HAVE_XBRAID

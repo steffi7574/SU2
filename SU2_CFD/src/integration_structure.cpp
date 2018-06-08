@@ -540,7 +540,7 @@ void CIntegration::Convergence_Monitoring(CGeometry *geometry, CConfig *config, 
     /*--- Convergence criteria ---*/
     
     sbuf_conv[0] = Convergence;
-    SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::GetComm());
     
     /*-- Compute global convergence criteria in the master node --*/
     
@@ -550,7 +550,7 @@ void CIntegration::Convergence_Monitoring(CGeometry *geometry, CConfig *config, 
       else sbuf_conv[0] = 0;
     }
     
-    SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
     
     if (sbuf_conv[0] == 1) { Convergence = true; Convergence_FullMG = true; }
     else { Convergence = false; Convergence_FullMG = false; }
@@ -631,9 +631,9 @@ void CIntegration::SetDualTime_Solver(CGeometry *geometry, CSolver *solver, CCon
       pitch  = config->GetAeroelastic_pitch(iMarker_Monitoring);
       
       /*--- Gather the data on the master node. ---*/
-      SU2_MPI::Gather(&plunge, 1, MPI_DOUBLE, plunge_all, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
-      SU2_MPI::Gather(&pitch, 1, MPI_DOUBLE, pitch_all, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
-      SU2_MPI::Gather(&owner, 1, MPI_UNSIGNED_LONG, owner_all, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
+      SU2_MPI::Gather(&plunge, 1, MPI_DOUBLE, plunge_all, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
+      SU2_MPI::Gather(&pitch, 1, MPI_DOUBLE, pitch_all, 1, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
+      SU2_MPI::Gather(&owner, 1, MPI_UNSIGNED_LONG, owner_all, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::GetComm());
       
       /*--- Set plunge and pitch on the master node ---*/
       
@@ -767,7 +767,7 @@ void CIntegration::Convergence_Monitoring_FEM(CGeometry *geometry, CConfig *conf
   /*--- Convergence criteria ---*/
   
   sbuf_conv[0] = Convergence;
-  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::GetComm());
   
   /*-- Compute global convergence criteria in the master node --*/
   
@@ -777,7 +777,7 @@ void CIntegration::Convergence_Monitoring_FEM(CGeometry *geometry, CConfig *conf
     else sbuf_conv[0] = 0;
   }
   
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
   
   if (sbuf_conv[0] == 1) { Convergence = true; }
   else { Convergence = false; }
@@ -819,7 +819,7 @@ void CIntegration::Convergence_Monitoring_FEM_Adj(CGeometry *geometry, CConfig *
   /*--- Convergence criteria ---*/
 
   sbuf_conv[0] = Convergence;
-  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::GetComm());
 
   /*-- Compute global convergence criteria in the master node --*/
 
@@ -829,7 +829,7 @@ void CIntegration::Convergence_Monitoring_FEM_Adj(CGeometry *geometry, CConfig *
     else sbuf_conv[0] = 0;
   }
 
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
 
   if (sbuf_conv[0] == 1) { Convergence = true; }
   else { Convergence = false; }
@@ -901,7 +901,7 @@ void CIntegration::Convergence_Monitoring_FSI(CGeometry *fea_geometry, CConfig *
     
 #ifdef HAVE_MPI
     /*--- We sum the squares of the norms across the different processors ---*/
-    SU2_MPI::Allreduce(&deltaURes, &deltaURes_recv, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&deltaURes, &deltaURes_recv, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
 #else
     deltaURes_recv         = deltaURes;
 #endif
@@ -940,7 +940,7 @@ void CIntegration::Convergence_Monitoring_FSI(CGeometry *fea_geometry, CConfig *
   /*--- Convergence criteria ---*/
   
   sbuf_conv[0] = Convergence_FSI;
-  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::GetComm());
   
   /*-- Compute global convergence criteria in the master node --*/
   
@@ -950,7 +950,7 @@ void CIntegration::Convergence_Monitoring_FSI(CGeometry *fea_geometry, CConfig *
     else sbuf_conv[0] = 0;
   }
   
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
   
   if (sbuf_conv[0] == 1) { Convergence_FSI = true; }
   else { Convergence_FSI = false; }
@@ -976,7 +976,7 @@ void CIntegration::Convergence_Monitoring_FSI(CGeometry *fea_geometry, CConfig *
     }
     else {
       WAitken = 1.0;
-      cout << "No relaxation parameter used. " << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "No relaxation parameter used. " << endl;
     }
     
     /*--- Store the Relaxation coefficient residual ---*/

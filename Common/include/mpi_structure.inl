@@ -40,6 +40,7 @@
 #ifdef HAVE_MPI
 
 inline void CBaseMPIWrapper::Error(std::string ErrorMsg, std::string FunctionName){
+  int Rank = GetGlobalRank(); 
   if (Rank == 0){
     std::cout << std::endl << std::endl;
     std::cout << "Error in \"" << FunctionName << "\": " << std::endl;
@@ -48,32 +49,60 @@ inline void CBaseMPIWrapper::Error(std::string ErrorMsg, std::string FunctionNam
     std::cout <<  "------------------------------ Error Exit -------------------------------" << std::endl;
     std::cout << std::endl << std::endl;    
   }
-  Abort(currentComm, 0);
+  Abort(MPI_COMM_WORLD, 0);
 }
 
 
 inline int CBaseMPIWrapper::GetRank(){
+  int Rank;
+  MPI_Comm_rank(space_comm, &Rank);  
+  return Rank;
+}
+
+inline int CBaseMPIWrapper::GetGlobalRank(){
+  int Rank;
+  MPI_Comm_rank(global_comm, &Rank);  
   return Rank;
 }
 
 inline int CBaseMPIWrapper::GetSize(){
+  int Size;
+  MPI_Comm_size(space_comm, &Size);
+  return Size;
+}
+
+inline int CBaseMPIWrapper::GetGlobalSize(){
+  int Size;
+  MPI_Comm_size(global_comm, &Size);
   return Size;
 }
 
 inline void CBaseMPIWrapper::SetComm(Comm newComm){
-  currentComm = newComm;
-  MPI_Comm_rank(currentComm, &Rank);  
-  MPI_Comm_size(currentComm, &Size);
+  space_comm = newComm;
+}
+
+inline void CBaseMPIWrapper::SetGlobalComm(Comm newComm){
+  global_comm = newComm;
+}
+
+inline void CBaseMPIWrapper::SetTimeComm(Comm newComm){
+  time_comm = newComm;
 }
 
 inline CBaseMPIWrapper::Comm CBaseMPIWrapper::GetComm(){
-  return currentComm;
+  return space_comm;
+}
+
+inline CBaseMPIWrapper::Comm CBaseMPIWrapper::GetGlobalComm(){
+  return global_comm;
+}
+
+inline CBaseMPIWrapper::Comm CBaseMPIWrapper::GetTimeComm(){
+  return time_comm;
 }
 
 inline void CBaseMPIWrapper::Init(int *argc, char ***argv) {
   MPI_Init(argc,argv);
-  MPI_Comm_rank(currentComm, &Rank);    
-  MPI_Comm_size(currentComm, &Size);  
 }
 
 inline void CBaseMPIWrapper::Buffer_attach(void *buffer, int size){
@@ -206,14 +235,6 @@ inline void CBaseMPIWrapper::Waitany(int nrequests, Request *request,
 inline void CMediMPIWrapper::Init(int *argc, char ***argv) {
   AMPI_Init(argc,argv);
   MediTool::init();
-  AMPI_Comm_rank(convertComm(currentComm), &Rank);    
-  AMPI_Comm_size(convertComm(currentComm), &Size);  
-}
-
-inline void CMediMPIWrapper::SetComm(Comm newComm){
-  currentComm = newComm;
-  AMPI_Comm_rank(convertComm(currentComm), &Rank);  
-  AMPI_Comm_size(convertComm(currentComm), &Size);
 }
 
 inline AMPI_Comm CMediMPIWrapper::convertComm(MPI_Comm comm) {
@@ -391,6 +412,7 @@ inline void CMediMPIWrapper::Waitany(int nrequests, Request *request,
 #else
 
 inline void CBaseMPIWrapper::Error(std::string ErrorMsg, std::string FunctionName){
+  int Rank = GetGlobalRank();
   if (Rank == 0){
     std::cout << std::endl << std::endl;
     std::cout << "Error in \"" << FunctionName << "\": " << std::endl;
@@ -399,23 +421,39 @@ inline void CBaseMPIWrapper::Error(std::string ErrorMsg, std::string FunctionNam
     std::cout <<  "------------------------------ Error Exit -------------------------------" << std::endl;
     std::cout << std::endl << std::endl;    
   }
-  Abort(currentComm, 0);
+  Abort(su2comm, 0);
 }
 
 inline int CBaseMPIWrapper::GetRank(){
-  return Rank;
+  return 0;
+}
+
+inline int CBaseMPIWrapper::GetGlobalRank(){
+  return 0;
 }
 
 inline int CBaseMPIWrapper::GetSize(){
-  return Size;
+  return 1;
+}
+
+inline int CBaseMPIWrapper::GetGlobalSize(){
+  return 1;
 }
 
 inline void CBaseMPIWrapper::SetComm(Comm newComm){
-  currentComm = newComm;
+  space_comm = newComm;
+}
+
+inline void CBaseMPIWrapper::SetGlobalComm(Comm newComm){
+  global_comm = newComm;
 }
 
 inline CBaseMPIWrapper::Comm CBaseMPIWrapper::GetComm(){
-  return currentComm;
+  return space_comm;
+}
+
+inline CBaseMPIWrapper::Comm CBaseMPIWrapper::GetGlobalComm(){
+  return global_comm;
 }
 
 inline void CBaseMPIWrapper::Init(int *argc, char ***argv) {}

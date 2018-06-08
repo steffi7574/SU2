@@ -206,18 +206,18 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
     if (!Derivative || ((config->GetKind_SU2() == SU2_CFD) && Derivative)) {
 
     	if (config->GetKind_Deform_Linear_Solver_Prec() == LU_SGS) {
-        if ((rank == MASTER_NODE) && Screen_Output) cout << "\n# LU_SGS preconditioner." << endl;
+        if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) cout << "\n# LU_SGS preconditioner." << endl;
     		mat_vec = new CSysMatrixVectorProduct(StiffMatrix, geometry, config);
     		precond = new CLU_SGSPreconditioner(StiffMatrix, geometry, config);
     	}
     	if (config->GetKind_Deform_Linear_Solver_Prec() == ILU) {
-        if ((rank == MASTER_NODE) && Screen_Output) cout << "\n# ILU preconditioner." << endl;
+        if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) cout << "\n# ILU preconditioner." << endl;
     		StiffMatrix.BuildILUPreconditioner();
     		mat_vec = new CSysMatrixVectorProduct(StiffMatrix, geometry, config);
     		precond = new CILUPreconditioner(StiffMatrix, geometry, config);
     	}
     	if (config->GetKind_Deform_Linear_Solver_Prec() == JACOBI) {
-        if ((rank == MASTER_NODE) && Screen_Output) cout << "\n# Jacobi preconditioner." << endl;
+        if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) cout << "\n# Jacobi preconditioner." << endl;
     		StiffMatrix.BuildJacobiPreconditioner();
     		mat_vec = new CSysMatrixVectorProduct(StiffMatrix, geometry, config);
     		precond = new CJacobiPreconditioner(StiffMatrix, geometry, config);
@@ -229,13 +229,13 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
 
     	if ((config->GetKind_Deform_Linear_Solver_Prec() == ILU) ||
     			(config->GetKind_Deform_Linear_Solver_Prec() == LU_SGS)) {
-        if ((rank == MASTER_NODE) && Screen_Output) cout << "\n# ILU preconditioner." << endl;
+        if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) cout << "\n# ILU preconditioner." << endl;
     		StiffMatrix.BuildILUPreconditioner(true);
     		mat_vec = new CSysMatrixVectorProductTransposed(StiffMatrix, geometry, config);
     		precond = new CILUPreconditioner(StiffMatrix, geometry, config);
     	}
     	if (config->GetKind_Deform_Linear_Solver_Prec() == JACOBI) {
-        if ((rank == MASTER_NODE) && Screen_Output) cout << "\n# Jacobi preconditioner." << endl;
+        if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) cout << "\n# Jacobi preconditioner." << endl;
     		StiffMatrix.BuildJacobiPreconditioner(true);
     		mat_vec = new CSysMatrixVectorProductTransposed(StiffMatrix, geometry, config);
     		precond = new CJacobiPreconditioner(StiffMatrix, geometry, config);
@@ -256,13 +256,13 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
 
           system->FGMRES_LinSolver(LinSysRes, LinSysSol, *mat_vec, *precond, NumError, 1, &Residual_Init, false);
 
-          if ((rank == MASTER_NODE) && Screen_Output) {
+          if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) {
             cout << "\n# FGMRES (with restart) residual history" << endl;
             cout << "# Residual tolerance target = " << NumError << endl;
             cout << "# Initial residual norm     = " << Residual_Init << endl;
           }
 
-          if (rank == MASTER_NODE) { cout << "     " << Tot_Iter << "     " << Residual_Init/Residual_Init << endl; }
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) { cout << "     " << Tot_Iter << "     " << Residual_Init/Residual_Init << endl; }
 
           while (Tot_Iter < Smoothing_Iter) {
 
@@ -272,13 +272,13 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
             IterLinSol = system->FGMRES_LinSolver(LinSysRes, LinSysSol, *mat_vec, *precond, NumError, MaxIter, &Residual, false);
             Tot_Iter += IterLinSol;
 
-            if ((rank == MASTER_NODE) && Screen_Output) { cout << "     " << Tot_Iter << "     " << Residual/Residual_Init << endl; }
+            if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) { cout << "     " << Tot_Iter << "     " << Residual/Residual_Init << endl; }
 
             if (Residual < Residual_Init*NumError) { break; }
 
           }
 
-          if ((rank == MASTER_NODE) && Screen_Output) {
+          if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && Screen_Output) {
             cout << "# FGMRES (with restart) final (true) residual:" << endl;
             cout << "# Iteration = " << Tot_Iter << ": |res|/|res0| = " << Residual/Residual_Init << ".\n" << endl;
           }
@@ -332,7 +332,7 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
 
     Set_nIterMesh(Tot_Iter);
 
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << "Non-linear iter.: " << iNonlinear_Iter+1 << "/" << Nonlinear_Iter  << ". Linear iter.: " << Tot_Iter << ". ";
       if (nDim == 2) cout << "Min. area: " << MinVolume << ". Error: " << Residual << "." << endl;
       else cout << "Min. volume: " << MinVolume << ". Error: " << Residual << "." << endl;
@@ -350,7 +350,7 @@ void CVolumetricMovement::ComputeDeforming_Element_Volume(CGeometry *geometry, s
   unsigned short nNodes = 0, iNodes, iDim;
   bool RightVol = true;
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << "Computing volumes of the grid elements." << endl;
   
   MaxVolume = -1E22; MinVolume = 1E22;
@@ -404,9 +404,9 @@ void CVolumetricMovement::ComputeDeforming_Element_Volume(CGeometry *geometry, s
   unsigned long ElemCounter_Local = ElemCounter; ElemCounter = 0;
   su2double MaxVolume_Local = MaxVolume; MaxVolume = 0.0;
   su2double MinVolume_Local = MinVolume; MinVolume = 0.0;
-  SU2_MPI::Allreduce(&ElemCounter_Local, &ElemCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
-  SU2_MPI::Allreduce(&MaxVolume_Local, &MaxVolume, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
-  SU2_MPI::Allreduce(&MinVolume_Local, &MinVolume, 1, MPI_DOUBLE, MPI_MIN, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&ElemCounter_Local, &ElemCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&MaxVolume_Local, &MaxVolume, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&MinVolume_Local, &MinVolume, 1, MPI_DOUBLE, MPI_MIN, SU2_MPI::GetComm());
 #endif
   
   /*--- Volume from  0 to 1 ---*/
@@ -416,7 +416,7 @@ void CVolumetricMovement::ComputeDeforming_Element_Volume(CGeometry *geometry, s
     geometry->elem[iElem]->SetVolume(Volume);
   }
   
-  if ((ElemCounter != 0) && (rank == MASTER_NODE))
+  if ((ElemCounter != 0) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
     cout <<"There are " << ElemCounter << " elements with negative volume.\n" << endl;
   
 }
@@ -507,8 +507,8 @@ void CVolumetricMovement::ComputeSolid_Wall_Distance(CGeometry *geometry, CConfi
     MinDistance_Local = MinDistance; MinDistance = 0.0;
     
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&MaxDistance_Local, &MaxDistance, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
-    SU2_MPI::Allreduce(&MinDistance_Local, &MinDistance, 1, MPI_DOUBLE, MPI_MIN, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&MaxDistance_Local, &MaxDistance, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&MinDistance_Local, &MinDistance, 1, MPI_DOUBLE, MPI_MIN, SU2_MPI::GetComm());
 #else
     MaxDistance = MaxDistance_Local;
     MinDistance = MinDistance_Local;
@@ -537,7 +537,7 @@ su2double CVolumetricMovement::SetFEAMethodContributions_Elem(CGeometry *geometr
   /*--- Compute min volume in the entire mesh. ---*/
   
   ComputeDeforming_Element_Volume(geometry, MinVolume, MaxVolume);
-  if (rank == MASTER_NODE) cout <<"Min. volume: "<< MinVolume <<", max. volume: "<< MaxVolume <<"." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout <<"Min. volume: "<< MinVolume <<", max. volume: "<< MaxVolume <<"." << endl;
   
   /*--- Compute the distance to the nearest surface if needed
    as part of the stiffness calculation.. ---*/
@@ -545,7 +545,7 @@ su2double CVolumetricMovement::SetFEAMethodContributions_Elem(CGeometry *geometr
   if ((config->GetDeform_Stiffness_Type() == SOLID_WALL_DISTANCE) ||
       (config->GetDeform_Limit() < 1E6)) {
     ComputeSolid_Wall_Distance(geometry, config, MinDistance, MaxDistance);
-    if (rank == MASTER_NODE) cout <<"Min. distance: "<< MinDistance <<", max. distance: "<< MaxDistance <<"." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout <<"Min. distance: "<< MinDistance <<", max. distance: "<< MaxDistance <<"." << endl;
   }
   
 	/*--- Compute contributions from each element by forming the stiffness matrix (FEA) ---*/
@@ -2323,7 +2323,7 @@ void CVolumetricMovement::Rigid_Plunging(CGeometry *geometry, CConfig *config, u
   
   /*--- As the body origin may have moved, print it to the console ---*/
   
-//  if (rank == MASTER_NODE) {
+//  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
 //    cout << " Body origin: (" << Center[0]+deltaX[0];
 //    cout << ", " << Center[1]+deltaX[1] << ", " << Center[2]+deltaX[2];
 //    cout << ")." << endl;
@@ -2408,7 +2408,7 @@ void CVolumetricMovement::Rigid_Translation(CGeometry *geometry, CConfig *config
 	deltaX[1] = xDot[1]*(time_new-time_old);
 	deltaX[2] = xDot[2]*(time_new-time_old);
 
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     cout << " New physical time: " << time_new << " seconds." << endl;
     if (iter == 0) {
     cout << " Translational velocity: (" << xDot[0]*config->GetVelocity_Ref() << ", " << xDot[1]*config->GetVelocity_Ref();
@@ -2473,7 +2473,7 @@ void CVolumetricMovement::SetVolume_Scaling(CGeometry *geometry, CConfig *config
   
   su2double Scale = config->GetDV_Value(0)*config->GetOpt_RelaxFactor();
   
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     cout << "Scaling the mesh by a constant factor of " << Scale << "." << endl;
   }
   
@@ -2517,7 +2517,7 @@ void CVolumetricMovement::SetVolume_Translation(CGeometry *geometry, CConfig *co
   length = sqrt(length);
   for (iDim = 0; iDim < nDim; iDim++)
     deltaX[iDim] = Ampl*deltaX[iDim]/length;
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     cout << "Translational displacement: (" << deltaX[0] << ", ";
     cout  << deltaX[1] << ", " << deltaX[2] << ")." << endl;
   }
@@ -2568,7 +2568,7 @@ void CVolumetricMovement::SetVolume_Rotation(CGeometry *geometry, CConfig *confi
   su2double theta = config->GetDV_Value(0)*Scale*PI_NUMBER/180.0;
   
   /*--- Print to the console. ---*/
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     cout << "Rotation axis vector: (" << u << ", ";
     cout << v << ", " << w << ")." << endl;
     cout << "Angle of rotation: " << config->GetDV_Value(0)*Scale;
@@ -2678,7 +2678,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
       
       /*--- If the FFDBox was not defined in the input file ---*/
       
-      if ((rank == MASTER_NODE) && (GetnFFDBox() != 0)) {
+      if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (GetnFFDBox() != 0)) {
         if (cartesian) cout << endl <<"----------------- FFD technique (cartesian -> parametric) ---------------" << endl;
         else if (cylindrical) cout << endl <<"----------------- FFD technique (cylinder -> parametric) ---------------" << endl;
         else if (spherical) cout << endl <<"----------------- FFD technique (spherical -> parametric) ---------------" << endl;
@@ -2723,7 +2723,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
         
         /*--- Output original FFD FFDBox ---*/
         
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
           if (config->GetOutput_FileFormat() == PARAVIEW) {
             cout << "Writing a Paraview file of the FFD boxes." << endl;
             FFDBox[iFFDBox]->SetParaview(geometry, iFFDBox, true);
@@ -2790,7 +2790,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
       
       /*--- Output original FFD FFDBox ---*/
       
-       if ((rank == MASTER_NODE) && (config->GetKind_SU2() != SU2_DOT)) {
+       if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (config->GetKind_SU2() != SU2_DOT)) {
         if (config->GetOutput_FileFormat() == PARAVIEW) {
           cout << "Writing a Paraview file of the FFD boxes." << endl;
           for (iFFDBox = 0; iFFDBox < GetnFFDBox(); iFFDBox++) {
@@ -2822,7 +2822,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
       
       /*--- Apply the deformation to the orifinal FFD box ---*/
       
-      if ((rank == MASTER_NODE) && (GetnFFDBox() != 0))
+      if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (GetnFFDBox() != 0))
         cout << endl <<"----------------- FFD technique (parametric -> cartesian) ---------------" << endl;
       
       /*--- Loop over all the FFD boxes levels ---*/
@@ -2839,13 +2839,13 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
             
             /*--- Check the dimension of the FFD compared with the design variables ---*/
             
-            if (rank == MASTER_NODE) cout << "Checking FFD box dimension." << endl;
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Checking FFD box dimension." << endl;
             CheckFFDDimension(geometry, config, FFDBox[iFFDBox], iFFDBox);
             
             /*--- Compute intersections of the FFD box with the surface to eliminate design
              variables and satisfy surface continuity ---*/
             
-            if (rank == MASTER_NODE) cout << "Checking FFD box intersections with the solid surfaces." << endl;
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Checking FFD box intersections with the solid surfaces." << endl;
             CheckFFDIntersections(geometry, config, FFDBox[iFFDBox], iFFDBox);
             
             /*--- Compute the parametric coordinates of the child box
@@ -2888,7 +2888,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
             
             if ((MaxDiff > BoundLimit) && (config->GetKind_SU2() == SU2_DEF)) {
               
-              if (rank == MASTER_NODE) cout << "Out-of-bounds, re-adjusting scale factor to safisfy line search limit." << endl;
+              if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Out-of-bounds, re-adjusting scale factor to safisfy line search limit." << endl;
               
               Current_Scale = config->GetOpt_RelaxFactor();
               Ratio = (BoundLimit/MaxDiff);
@@ -2959,7 +2959,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
         
         /*--- Output the deformed FFD Boxes ---*/
         
-        if ((rank == MASTER_NODE) && (config->GetKind_SU2() != SU2_DOT)) {
+        if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (config->GetKind_SU2() != SU2_DOT)) {
           if (config->GetOutput_FileFormat() == PARAVIEW) {
             cout << "Writing a Paraview file of the FFD boxes." << endl;
             for (iFFDBox = 0; iFFDBox < GetnFFDBox(); iFFDBox++) {
@@ -2996,7 +2996,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
      markers that are specified as part of the motion. ---*/
     if (Surface_File.fail()) {
       
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "No surface file found. Writing a new file: " << filename << "." << endl;
       
       Surface_File.open(filename.c_str(), ios::out);
@@ -3022,7 +3022,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
     
     else {
       Surface_File.close();
-      if (rank == MASTER_NODE) cout << "Updating the surface coordinates from the input file." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Updating the surface coordinates from the input file." << endl;
       SetExternal_Deformation(geometry, config, ZONE_0, 0);
     }
     
@@ -3089,7 +3089,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
   /*--- FFD setting ---*/
   
   else if (config->GetDesign_Variable(0) == FFD_SETTING) {
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "No surface deformation (setting FFD)." << endl;
   }
   
@@ -3123,7 +3123,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
         SetTranslation(geometry, config, iDV, false);
     }
     else {
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "No surface deformation (scaling, rotation, or translation)." << endl;
     }
   }
@@ -3131,7 +3131,7 @@ void CSurfaceMovement::SetSurface_Deformation(CGeometry *geometry, CConfig *conf
   /*--- Design variable not implement ---*/
   
   else {
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "Design Variable not implemented yet" << endl;
   }
   
@@ -3338,13 +3338,13 @@ void CSurfaceMovement::SetParametricCoord(CGeometry *geometry, CConfig *config, 
   }
 		
 #ifdef HAVE_MPI
-  SU2_MPI::Barrier(MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&my_MaxDiff, &MaxDiff, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  SU2_MPI::Barrier(SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&my_MaxDiff, &MaxDiff, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
 #else
   MaxDiff = my_MaxDiff;
 #endif
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << "Compute parametric coord      | FFD box: " << FFDBox->GetTag() << ". Max Diff: " << MaxDiff <<"."<< endl;
   
   
@@ -3374,7 +3374,7 @@ void CSurfaceMovement::SetParametricCoordCP(CGeometry *geometry, CConfig *config
 				FFDBoxChild->SetParCoordControlPoints(ParamCoord, iOrder, jOrder, kOrder);
 			}
 
-	if (rank == MASTER_NODE)
+	if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
 		cout << "Compute parametric coord (CP) | FFD parent box: " << FFDBoxParent->GetTag() << ". FFD child box: " << FFDBoxChild->GetTag() <<"."<< endl;
 
 
@@ -3401,7 +3401,7 @@ void CSurfaceMovement::GetCartesianCoordCP(CGeometry *geometry, CConfig *config,
         
 			}
 	
-	if (rank == MASTER_NODE)
+	if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
 		cout << "Update cartesian coord (CP)   | FFD parent box: " << FFDBoxParent->GetTag() << ". FFD child box: " << FFDBoxChild->GetTag() <<"."<< endl;
 
 }
@@ -3453,7 +3453,7 @@ void CSurfaceMovement::CheckFFDDimension(CGeometry *geometry, CConfig *config, C
     }
   }
   
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     if (OutOffLimits) {
       char buf1[100], buf2[100];
       SPRINTF(buf1, "Design variables out off FFD limits (%u, %u, %u).\n", lDegree, mDegree, nDegree);
@@ -3465,7 +3465,7 @@ void CSurfaceMovement::CheckFFDDimension(CGeometry *geometry, CConfig *config, C
   /*--- This barrier is important to guaranty that we will stop the software in a clean way ---*/
   
 #ifdef HAVE_MPI
-  SU2_MPI::Barrier(MPI_COMM_WORLD);
+  SU2_MPI::Barrier(SU2_MPI::GetComm());
 #endif
   
 }
@@ -3699,7 +3699,7 @@ void CSurfaceMovement::CheckFFDIntersections(CGeometry *geometry, CConfig *confi
     
     /*--- Add SU2_MPI::Allreduce information using all the nodes ---*/
     
-    SU2_MPI::Allreduce(&MyCode, &Code, 6, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&MyCode, &Code, 6, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
     
 #else
     
@@ -3717,7 +3717,7 @@ void CSurfaceMovement::CheckFFDIntersections(CGeometry *geometry, CConfig *confi
     
     /*--- Screen output ---*/
     
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       
       if (IPlane_Intersect_A || IPlane_Intersect_B ||
           JPlane_Intersect_A || JPlane_Intersect_B ||
@@ -3768,7 +3768,7 @@ void CSurfaceMovement::CheckFFDIntersections(CGeometry *geometry, CConfig *confi
    that we are looking for ---*/
   
   if (config->GetFFD_Continuity() == USER_INPUT) {
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "SU2 is fixing user's input planes." << endl;
     
     for (index = 0; index < config->GetnFFD_Fix_IDir(); index++)
@@ -3784,7 +3784,7 @@ void CSurfaceMovement::CheckFFDIntersections(CGeometry *geometry, CConfig *confi
   }
   
   if (config->GetFFD_Continuity() == DERIVATIVE_NONE) {
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "SU2 is fixing the planes to maintain a continuous surface." << endl;
     
     if (IPlane_Intersect_A) { FFDBox->Set_Fix_IPlane(0); }
@@ -3797,7 +3797,7 @@ void CSurfaceMovement::CheckFFDIntersections(CGeometry *geometry, CConfig *confi
   }
   
   if (config->GetFFD_Continuity() == DERIVATIVE_1ST) {
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "SU2 is fixing the planes to maintain a continuous 1st order derivative." << endl;
     
     if (IPlane_Intersect_A) { FFDBox->Set_Fix_IPlane(0); FFDBox->Set_Fix_IPlane(1); }
@@ -3810,7 +3810,7 @@ void CSurfaceMovement::CheckFFDIntersections(CGeometry *geometry, CConfig *confi
   }
   
   if (config->GetFFD_Continuity() == DERIVATIVE_2ND) {
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "SU2 is fixing the planes to maintain a continuous 2nd order derivative." << endl;
     
     if ((IPlane_Intersect_A) && (lDegree > 1)) { FFDBox->Set_Fix_IPlane(0); FFDBox->Set_Fix_IPlane(1); FFDBox->Set_Fix_IPlane(2); }
@@ -3886,12 +3886,12 @@ void CSurfaceMovement::UpdateParametricCoord(CGeometry *geometry, CConfig *confi
 	}
 		
 #ifdef HAVE_MPI
-	SU2_MPI::Allreduce(&my_MaxDiff, &MaxDiff, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
+	SU2_MPI::Allreduce(&my_MaxDiff, &MaxDiff, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
 #else
 	MaxDiff = my_MaxDiff;
 #endif
 	
-	if (rank == MASTER_NODE) 
+	if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
 		cout << "Update parametric coord       | FFD box: " << FFDBox->GetTag() << ". Max Diff: " << MaxDiff <<"."<< endl;
 	
 }
@@ -4003,12 +4003,12 @@ su2double CSurfaceMovement::SetCartesianCoord(CGeometry *geometry, CConfig *conf
   }
   
 #ifdef HAVE_MPI
-	SU2_MPI::Allreduce(&my_MaxDiff, &MaxDiff, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::comm_x);
+	SU2_MPI::Allreduce(&my_MaxDiff, &MaxDiff, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
 #else
   MaxDiff = my_MaxDiff;
 #endif
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << "Update cartesian coord        | FFD box: " << FFDBox->GetTag() << ". Max Diff: " << MaxDiff <<"."<< endl;
   
   return MaxDiff;
@@ -5111,7 +5111,7 @@ void CSurfaceMovement::SetHicksHenne(CGeometry *boundary, CConfig *config, unsig
   
   Buffer_Send_Coord[0] = TPCoord[0]; Buffer_Send_Coord[1] = TPCoord[1];
 
-	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::comm_x);
+	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::GetComm());
 
   TPCoord[0] = Buffer_Receive_Coord[0]; TPCoord[1] = Buffer_Receive_Coord[1];
   for (iProcessor = 1; iProcessor < nProcessor; iProcessor++) {
@@ -5142,7 +5142,7 @@ void CSurfaceMovement::SetHicksHenne(CGeometry *boundary, CConfig *config, unsig
   
   Buffer_Send_Coord[0] = LPCoord[0]; Buffer_Send_Coord[1] = LPCoord[1];
 
-	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::comm_x);
+	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::GetComm());
   
   Chord = 0.0;
   for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
@@ -5316,7 +5316,7 @@ void CSurfaceMovement::SetCST(CGeometry *boundary, CConfig *config, unsigned sho
   
   Buffer_Send_Coord[0] = TPCoord[0]; Buffer_Send_Coord[1] = TPCoord[1];
 
-	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::comm_x);
+	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::GetComm());
 
   TPCoord[0] = Buffer_Receive_Coord[0]; TPCoord[1] = Buffer_Receive_Coord[1];
   for (iProcessor = 1; iProcessor < nProcessor; iProcessor++) {
@@ -5347,7 +5347,7 @@ void CSurfaceMovement::SetCST(CGeometry *boundary, CConfig *config, unsigned sho
   
   Buffer_Send_Coord[0] = LPCoord[0]; Buffer_Send_Coord[1] = LPCoord[1];
 
-	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::comm_x);
+	SU2_MPI::Allgather(Buffer_Send_Coord, 2, MPI_DOUBLE, Buffer_Receive_Coord, 2, MPI_DOUBLE, SU2_MPI::GetComm());
   
   Chord = 0.0;
   for (iProcessor = 0; iProcessor < nProcessor; iProcessor++) {
@@ -5712,7 +5712,7 @@ void CSurfaceMovement::Surface_Translating(CGeometry *geometry, CConfig *config,
            iteration only (mostly for debugging purposes). ---*/
           // Note that the MASTER_NODE might not contain all the markers being moved.
           
-          if (rank == MASTER_NODE) {
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
             cout << " Storing translating displacement for marker: ";
             cout << Marker_Tag << "." << endl;
             if (iter == 0) {
@@ -5826,7 +5826,7 @@ void CSurfaceMovement::Surface_Plunging(CGeometry *geometry, CConfig *config,
            iteration only (mostly for debugging purposes). ---*/
           // Note that the MASTER_NODE might not contain all the markers being moved.
 
-          if (rank == MASTER_NODE) {
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
             cout << " Storing plunging displacement for marker: ";
             cout << Marker_Tag << "." << endl;
             if (iter == 0) {
@@ -5951,7 +5951,7 @@ void CSurfaceMovement::Surface_Pitching(CGeometry *geometry, CConfig *config,
            iteration only (mostly for debugging purposes). ---*/
           // Note that the MASTER_NODE might not contain all the markers being moved.
 
-          if (rank == MASTER_NODE) {
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
             cout << " Storing pitching displacement for marker: ";
             cout << Marker_Tag << "." << endl;
             if (iter == 0) {
@@ -6094,7 +6094,7 @@ void CSurfaceMovement::Surface_Rotating(CGeometry *geometry, CConfig *config,
            iteration only (mostly for debugging purposes). ---*/
           // Note that the MASTER_NODE might not contain all the markers being moved.
 
-          if (rank == MASTER_NODE) {
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
             cout << " Storing rotating displacement for marker: ";
             cout << Marker_Tag << "." << endl;
             if (iter == 0) {
@@ -6388,7 +6388,7 @@ void CSurfaceMovement::SetBoundary_Flutter3D(CGeometry *geometry, CConfig *confi
   alpha_old = Ampl[2]*sin(omega*time_old);
   alpha     = (1E-10 + (alpha_new - alpha_old))*(-PI_NUMBER/180.0);
 	
-	if (rank == MASTER_NODE)
+	if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
 		cout << "New dihedral angle (alpha): " << alpha_new/DEG2RAD << " degrees." << endl;
 	
 	unsigned short iOrder, jOrder, kOrder;
@@ -6477,7 +6477,7 @@ void CSurfaceMovement::SetExternal_Deformation(CGeometry *geometry, CConfig *con
       motion_filename.append(UnstExt);
     }
     
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "Reading in the arbitrary mesh motion from direct iteration " << flowIter << "." << endl;
   }
   
@@ -7016,7 +7016,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 			text_line.erase (0,9);
 			nFFDBox = atoi(text_line.c_str());
       
-			if (rank == MASTER_NODE) cout << nFFDBox << " Free Form Deformation boxes." << endl;
+			if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << nFFDBox << " Free Form Deformation boxes." << endl;
       
 			nCornerPoints = new unsigned short[nFFDBox];
 			nControlPoints = new unsigned short[nFFDBox];
@@ -7026,7 +7026,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 			text_line.erase (0,11);
 			nLevel = atoi(text_line.c_str());
       
-			if (rank == MASTER_NODE) cout << nLevel << " Free Form Deformation nested levels." << endl;
+			if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << nLevel << " Free Form Deformation nested levels." << endl;
 
 			for (iFFDBox = 0 ; iFFDBox < nFFDBox; iFFDBox++) {
 				
@@ -7049,7 +7049,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 				
 				string TagFFDBox = text_line.c_str();
         
-				if (rank == MASTER_NODE) cout << "FFD box tag: " << TagFFDBox <<". ";
+				if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "FFD box tag: " << TagFFDBox <<". ";
 
 				/*--- Read the level of the FFD box ---*/
         
@@ -7057,7 +7057,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 				text_line.erase (0,10);
 				LevelFFDBox = atoi(text_line.c_str());
         
-				if (rank == MASTER_NODE) cout << "FFD box level: " << LevelFFDBox <<". ";
+				if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "FFD box level: " << LevelFFDBox <<". ";
 				
 				/*--- Read the degree of the FFD box ---*/
         
@@ -7087,7 +7087,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
           text_line.erase (0,13); degree[2] = atoi(text_line.c_str());
         }
         
-				if (rank == MASTER_NODE) {
+				if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
 					if (nDim == 2) {
 						if (polar) cout << "Degrees: " << degree[0] << ", " << degree[2] << "." << endl;
 						else cout << "Degrees: " << degree[0] << ", " << degree[1] << "." << endl;
@@ -7121,7 +7121,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
             SplineOrder[2] = 2;
           }
         }
-        if (rank == MASTER_NODE){
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
           if (Blending == BSPLINE_UNIFORM){
             cout << "FFD Blending using B-Splines. ";
             cout << "Order: " << SplineOrder[0] << ", " << SplineOrder[1];
@@ -7141,7 +7141,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 				getline (mesh_file, text_line);
 				text_line.erase (0,12);
 				nParentFFDBox = atoi(text_line.c_str());
-				if (rank == MASTER_NODE) cout << "Number of parent boxes: " << nParentFFDBox <<". ";
+				if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Number of parent boxes: " << nParentFFDBox <<". ";
 				for (iParentFFDBox = 0; iParentFFDBox < nParentFFDBox; iParentFFDBox++) {
 					getline(mesh_file, text_line);
 					
@@ -7166,7 +7166,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 				getline (mesh_file, text_line);
 				text_line.erase (0,13);
 				nChildFFDBox = atoi(text_line.c_str());
-				if (rank == MASTER_NODE) cout << "Number of child boxes: " << nChildFFDBox <<"." << endl;
+				if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Number of child boxes: " << nChildFFDBox <<"." << endl;
         
         for (iChildFFDBox = 0; iChildFFDBox < nChildFFDBox; iChildFFDBox++) {
 					getline(mesh_file, text_line);
@@ -7191,7 +7191,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
         
 				getline (mesh_file, text_line);
 				text_line.erase (0,18); nCornerPoints[iFFDBox] = atoi(text_line.c_str());
-				if (rank == MASTER_NODE) cout << "Corner points: " << nCornerPoints[iFFDBox] <<". ";
+				if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Corner points: " << nCornerPoints[iFFDBox] <<". ";
         if (nDim == 2) nCornerPoints[iFFDBox] = nCornerPoints[iFFDBox]*SU2_TYPE::Int(2);
 
 
@@ -7285,7 +7285,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 				getline (mesh_file, text_line);
 				text_line.erase (0,19); nControlPoints[iFFDBox] = atoi(text_line.c_str());
         
-				if (rank == MASTER_NODE) cout << "Control points: " << nControlPoints[iFFDBox] <<". ";
+				if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Control points: " << nControlPoints[iFFDBox] <<". ";
 				
 				/*--- Method to identify if there is a FFDBox definition ---*/
         
@@ -7340,11 +7340,11 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
         
 #ifdef HAVE_MPI
         nSurfPoints = 0;
-        SU2_MPI::Allreduce(&my_nSurfPoints, &nSurfPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
-        if (rank == MASTER_NODE) cout << "Surface points: " << nSurfPoints <<"."<< endl;
+        SU2_MPI::Allreduce(&my_nSurfPoints, &nSurfPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Surface points: " << nSurfPoints <<"."<< endl;
 #else
 				nSurfPoints = my_nSurfPoints;
-        if (rank == MASTER_NODE) cout << "Surface points: " << nSurfPoints <<"."<< endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Surface points: " << nSurfPoints <<"."<< endl;
 #endif
         
 			}
@@ -7357,7 +7357,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 	mesh_file.close();
   
 	if (nFFDBox == 0) {
-		if (rank == MASTER_NODE) cout <<"There is no FFD box definition. Just in case, check the .su2 file" << endl;
+		if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout <<"There is no FFD box definition. Just in case, check the .su2 file" << endl;
 	}
 
 }
@@ -7383,13 +7383,13 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
   
   nFFDBox = config->GetnFFDBox();
   
-  if (rank == MASTER_NODE) cout << nFFDBox << " Free Form Deformation boxes." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << nFFDBox << " Free Form Deformation boxes." << endl;
   
   nCornerPoints = new unsigned short[nFFDBox];
   
   nLevel = 1; // Nested FFD is not active
   
-  if (rank == MASTER_NODE) cout << nLevel << " Free Form Deformation nested levels." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << nLevel << " Free Form Deformation nested levels." << endl;
   
   for (iFFDBox = 0 ; iFFDBox < nFFDBox; iFFDBox++) {
     
@@ -7397,13 +7397,13 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
     
     string TagFFDBox = config->GetTagFFDBox(iFFDBox);
     
-    if (rank == MASTER_NODE) cout << "FFD box tag: " << TagFFDBox <<". ";
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "FFD box tag: " << TagFFDBox <<". ";
     
     /*--- Read the level of the FFD box ---*/
     
     LevelFFDBox = 0; // Nested FFD is not active
     
-    if (rank == MASTER_NODE) cout << "FFD box level: " << LevelFFDBox <<". ";
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "FFD box level: " << LevelFFDBox <<". ";
     
     /*--- Read the degree of the FFD box ---*/
     
@@ -7425,7 +7425,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
     	degree[2] = config->GetDegreeFFDBox(iFFDBox, 2);
     }
 
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
 			if (nDim == 2) {
 				if (polar) cout << "Degrees: " << degree[0] << ", " << degree[2] << "." << endl;
 				else cout << "Degrees: " << degree[0] << ", " << degree[1] << "." << endl;
@@ -7433,7 +7433,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
 			else cout << "Degrees: " << degree[0] << ", " << degree[1] << ", " << degree[2] << "." << endl;
     }
     
-    if (rank == MASTER_NODE){
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       if (config->GetFFD_Blending() == BSPLINE_UNIFORM){
         cout << "FFD Blending using B-Splines. ";
         cout << "Order: " << SplineOrder[0] << ", " << SplineOrder[1];
@@ -7451,7 +7451,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
     /*--- Read the number of parents boxes ---*/
     
     nParentFFDBox = 0; // Nested FFD is not active
-    if (rank == MASTER_NODE) cout << "Number of parent boxes: " << nParentFFDBox <<". ";
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Number of parent boxes: " << nParentFFDBox <<". ";
     
     for (iParentFFDBox = 0; iParentFFDBox < nParentFFDBox; iParentFFDBox++) {
       string ParentFFDBox = "NONE"; // Nested FFD is not active
@@ -7461,7 +7461,7 @@ void CSurfaceMovement::ReadFFDInfo(CGeometry *geometry, CConfig *config, CFreeFo
     /*--- Read the number of children boxes ---*/
     
     nChildFFDBox = 0; // Nested FFD is not active
-    if (rank == MASTER_NODE) cout << "Number of child boxes: " << nChildFFDBox <<"." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Number of child boxes: " << nChildFFDBox <<"." << endl;
     
     for (iChildFFDBox = 0; iChildFFDBox < nChildFFDBox; iChildFFDBox++) {
       string ChildFFDBox = "NONE"; // Nested FFD is not active
@@ -7618,7 +7618,7 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
   unsigned long nLocalPoint = 0, MaxLocalPoint = 0;
   unsigned long nBuffer_Scalar = 0;
   
-  if (rank == MASTER_NODE) Buffer_Recv_nPoint = new unsigned long[nProcessor];
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) Buffer_Recv_nPoint = new unsigned long[nProcessor];
   
   for (iFFDBox = 0 ; iFFDBox < nFFDBox; iFFDBox++) {
     
@@ -7637,8 +7637,8 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
     /*--- Communicate the total number of nodes on this domain. ---*/
     
     SU2_MPI::Gather(&Buffer_Send_nPoint, 1, MPI_UNSIGNED_LONG,
-               Buffer_Recv_nPoint, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
-    SU2_MPI::Allreduce(&nLocalPoint, &MaxLocalPoint, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::comm_x);
+               Buffer_Recv_nPoint, 1, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&nLocalPoint, &MaxLocalPoint, 1, MPI_UNSIGNED_LONG, MPI_MAX, SU2_MPI::GetComm());
     
     nBuffer_Scalar = MaxLocalPoint;
 
@@ -7661,7 +7661,7 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
     
     /*--- Prepare the receive buffers in the master node only. ---*/
     
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       
       Buffer_Recv_X = new su2double[nProcessor*MaxLocalPoint];
       Buffer_Recv_Y = new su2double[nProcessor*MaxLocalPoint];
@@ -7713,15 +7713,15 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
     
     /*--- Gather the coordinate data on the master node using MPI. ---*/
     
-    SU2_MPI::Gather(Buffer_Send_X, nBuffer_Scalar, MPI_DOUBLE, Buffer_Recv_X, nBuffer_Scalar, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
-    SU2_MPI::Gather(Buffer_Send_Y, nBuffer_Scalar, MPI_DOUBLE, Buffer_Recv_Y, nBuffer_Scalar, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
-    SU2_MPI::Gather(Buffer_Send_Z, nBuffer_Scalar, MPI_DOUBLE, Buffer_Recv_Z, nBuffer_Scalar, MPI_DOUBLE, MASTER_NODE, SU2_MPI::comm_x);
-    SU2_MPI::Gather(Buffer_Send_Point, nBuffer_Scalar, MPI_UNSIGNED_LONG, Buffer_Recv_Point, nBuffer_Scalar, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::comm_x);
-    SU2_MPI::Gather(Buffer_Send_MarkerIndex_CfgFile, nBuffer_Scalar, MPI_UNSIGNED_SHORT, Buffer_Recv_MarkerIndex_CfgFile, nBuffer_Scalar, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::comm_x);
+    SU2_MPI::Gather(Buffer_Send_X, nBuffer_Scalar, MPI_DOUBLE, Buffer_Recv_X, nBuffer_Scalar, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
+    SU2_MPI::Gather(Buffer_Send_Y, nBuffer_Scalar, MPI_DOUBLE, Buffer_Recv_Y, nBuffer_Scalar, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
+    SU2_MPI::Gather(Buffer_Send_Z, nBuffer_Scalar, MPI_DOUBLE, Buffer_Recv_Z, nBuffer_Scalar, MPI_DOUBLE, MASTER_NODE, SU2_MPI::GetComm());
+    SU2_MPI::Gather(Buffer_Send_Point, nBuffer_Scalar, MPI_UNSIGNED_LONG, Buffer_Recv_Point, nBuffer_Scalar, MPI_UNSIGNED_LONG, MASTER_NODE, SU2_MPI::GetComm());
+    SU2_MPI::Gather(Buffer_Send_MarkerIndex_CfgFile, nBuffer_Scalar, MPI_UNSIGNED_SHORT, Buffer_Recv_MarkerIndex_CfgFile, nBuffer_Scalar, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
 
     /*--- The master node unpacks and sorts this variable by global index ---*/
     
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       
       jPoint = 0;
       
@@ -7756,7 +7756,7 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
     delete [] Buffer_Send_Point;
     delete [] Buffer_Send_MarkerIndex_CfgFile;
     
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       delete [] Buffer_Recv_X;
       delete [] Buffer_Recv_Y;
       delete [] Buffer_Recv_Z;
@@ -7766,7 +7766,7 @@ void CSurfaceMovement::MergeFFDInfo(CGeometry *geometry, CConfig *config) {
     
   }
 
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     delete [] Buffer_Recv_nPoint;
   }
   
@@ -7825,7 +7825,7 @@ void CSurfaceMovement::WriteFFDInfo(CSurfaceMovement** surface_movement, CGeomet
   
   /*--- Attach to the mesh file the FFD information (all information is in ZONE_0) ---*/
   
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     
     /*--- Read the name of the output file ---*/
     
@@ -9188,7 +9188,7 @@ void CElasticityMovement::SetVolume_Deformation_Elas(CGeometry *geometry, CConfi
 
     /*--- Compute the minimum and maximum area/volume for the mesh. ---*/
     SetMinMaxVolume(geometry, config);
-    if ((rank == MASTER_NODE) && (!discrete_adjoint)) {
+    if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!discrete_adjoint)) {
       if (nDim == 2) cout << scientific << "Min. area: "<< MinVolume <<", max. area: " << MaxVolume <<"." << endl;
       else           cout << scientific << "Min. volume: "<< MinVolume <<", max. volume: " << MaxVolume <<"." << endl;
     }
@@ -9213,7 +9213,7 @@ void CElasticityMovement::SetVolume_Deformation_Elas(CGeometry *geometry, CConfi
     /*--- In order to do this, we recompute the minimum and maximum area/volume for the mesh. ---*/
     SetMinMaxVolume(geometry, config);
 
-    if ((rank == MASTER_NODE) && (!discrete_adjoint)) {
+    if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!discrete_adjoint)) {
       cout << scientific << "Non-linear iter.: " << iNonlinear_Iter+1 << "/" << Nonlinear_Iter  << ". Linear iter.: " << nIterMesh << ". ";
       if (nDim == 2) cout << "Min. area: " << MinVolume << ". Error: " << valResidual << "." << endl;
       else cout << "Min. volume: " << MinVolume << ". Error: " << valResidual << "." << endl;
@@ -9631,7 +9631,7 @@ void CElasticityMovement::SetMinMaxVolume(CGeometry *geometry, CConfig *config) 
 
   su2double ElemVolume;
 
-  if ((rank == MASTER_NODE) && (!discrete_adjoint))
+  if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!discrete_adjoint))
     cout << "Computing volumes of the grid elements." << endl;
 
   MaxVolume = -1E22; MinVolume = 1E22;
@@ -9680,9 +9680,9 @@ void CElasticityMovement::SetMinMaxVolume(CGeometry *geometry, CConfig *config) 
   unsigned long ElemCounter_Local = ElemCounter; ElemCounter = 0;
   su2double MaxVolume_Local = MaxVolume; MaxVolume = 0.0;
   su2double MinVolume_Local = MinVolume; MinVolume = 0.0;
-  SU2_MPI::Allreduce(&ElemCounter_Local, &ElemCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MaxVolume_Local, &MaxVolume, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-  SU2_MPI::Allreduce(&MinVolume_Local, &MinVolume, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  SU2_MPI::Allreduce(&ElemCounter_Local, &ElemCounter, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&MaxVolume_Local, &MaxVolume, 1, MPI_DOUBLE, MPI_MAX, SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&MinVolume_Local, &MinVolume, 1, MPI_DOUBLE, MPI_MIN, SU2_MPI::GetComm());
 #endif
 
   /*--- Volume from  0 to 1 ---*/
@@ -9692,7 +9692,7 @@ void CElasticityMovement::SetMinMaxVolume(CGeometry *geometry, CConfig *config) 
     geometry->elem[iElem]->SetVolume(ElemVolume);
   }
 
-  if ((ElemCounter != 0) && (rank == MASTER_NODE))
+  if ((ElemCounter != 0) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
     cout <<"There are " << ElemCounter << " elements with negative volume.\n" << endl;
 
 }

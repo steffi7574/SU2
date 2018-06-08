@@ -37,9 +37,9 @@
 
 #include "../include/mpi_structure.hpp"
 
-int CBaseMPIWrapper::Rank = 0;
-int CBaseMPIWrapper::Size = 1;
-CBaseMPIWrapper::Comm CBaseMPIWrapper::currentComm = MPI_COMM_WORLD;
+CBaseMPIWrapper::Comm CBaseMPIWrapper::space_comm  = MPI_COMM_WORLD;
+CBaseMPIWrapper::Comm CBaseMPIWrapper::time_comm   = MPI_COMM_WORLD;
+CBaseMPIWrapper::Comm CBaseMPIWrapper::global_comm = MPI_COMM_WORLD;
 
 #ifdef HAVE_MPI
 #if defined CODI_REVERSE_TYPE || defined CODI_FORWARD_TYPE

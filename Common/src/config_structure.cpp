@@ -69,7 +69,7 @@ CConfig::CConfig(char case_filename[MAX_STRING_SIZE], unsigned short val_softwar
 
   /*--- Configuration file output ---*/
 
-  if ((rank == MASTER_NODE) && (verb_level == VERB_HIGH) && (val_iZone == 0))
+  if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (verb_level == VERB_HIGH) && (val_iZone == 0))
     SetOutput(val_software, val_iZone);
 
 }
@@ -2555,7 +2555,7 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
     Linear_Solver_Error = Linear_Solver_Error_Heat;
   }
 
-  if ((rank == MASTER_NODE) && ContinuousAdjoint && (Ref_NonDim == DIMENSIONAL) && (Kind_SU2 == SU2_CFD)) {
+  if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && ContinuousAdjoint && (Ref_NonDim == DIMENSIONAL) && (Kind_SU2 == SU2_CFD)) {
     cout << "WARNING: The adjoint solver should use a non-dimensional flow solution." << endl;
   }
   
@@ -3839,7 +3839,7 @@ void CConfig::SetMarkers(unsigned short val_software) {
   
 #ifdef HAVE_MPI
   if (val_software != SU2_MSH)
-    SU2_MPI::Comm_size(MPI_COMM_WORLD, &size);
+    SU2_MPI::Comm_size(SU2_MPI::GetComm(), &size);
 #endif
 
   /*--- Compute the total number of markers in the config file ---*/

@@ -955,7 +955,7 @@ void CSysMatrix::SendReceive_Solution(CSysVector & x, CGeometry *geometry, CConf
       /*--- Send/Receive information using Sendrecv ---*/
 
       SU2_MPI::Sendrecv(Buffer_Send, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
 
 #else
 
@@ -1043,7 +1043,7 @@ void CSysMatrix::SendReceive_SolutionTransposed(CSysVector & x, CGeometry *geome
       /*--- Send/Receive information using Sendrecv ---*/
 
       SU2_MPI::Sendrecv(Buffer_Send, nBufferS_Vector, MPI_DOUBLE, send_to, 0,
-                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::comm_x, &status);
+                   Buffer_Receive, nBufferR_Vector, MPI_DOUBLE, receive_from, 0, SU2_MPI::GetComm(), &status);
 
 #else
 
@@ -1406,7 +1406,7 @@ unsigned long CSysMatrix::Jacobi_Smoother(const CSysVector & b, CSysVector & x, 
   su2double norm_r = r.norm();
   su2double norm0  = b.norm();
   if ( (norm_r < tol*norm0) || (norm_r < eps) ) {
-    if (rank == MASTER_NODE) cout << "CSysMatrix::Jacobi_Smoother(): system solved by initial guess." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "CSysMatrix::Jacobi_Smoother(): system solved by initial guess." << endl;
     return 0;
   }
 
@@ -1417,7 +1417,7 @@ unsigned long CSysMatrix::Jacobi_Smoother(const CSysVector & b, CSysVector & x, 
   /*--- Output header information including initial residual ---*/
 
   int i = 0;
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "\n# " << "Jacobi Smoother" << " residual history" << endl;
     cout << "# Residual tolerance target = " << tol << endl;
     cout << "# Initial residual norm     = " << norm_r << endl;
@@ -1455,12 +1455,12 @@ unsigned long CSysMatrix::Jacobi_Smoother(const CSysVector & b, CSysVector & x, 
 
     norm_r = r.norm();
     if (norm_r < tol*norm0) break;
-    if (((monitoring) && (rank == MASTER_NODE)) && ((i+1) % 5 == 0))
+    if (((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) && ((i+1) % 5 == 0))
       cout << "     " << i << "     " << norm_r/norm0 << endl;
 
   }
 
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "# Jacobi smoother final (true) residual:" << endl;
     cout << "# Iteration = " << i << ": |res|/|res0| = "  << norm_r/norm0 << ".\n" << endl;
   }
@@ -1646,7 +1646,7 @@ unsigned long CSysMatrix::ILU_Smoother(const CSysVector & b, CSysVector & x, CMa
   su2double norm_r = r.norm();
   su2double norm0  = b.norm();
   if ( (norm_r < tol*norm0) || (norm_r < eps) ) {
-    if (rank == MASTER_NODE) cout << "CSysMatrix::ILU_Smoother(): system solved by initial guess." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "CSysMatrix::ILU_Smoother(): system solved by initial guess." << endl;
     return 0;
   }
 
@@ -1657,7 +1657,7 @@ unsigned long CSysMatrix::ILU_Smoother(const CSysVector & b, CSysVector & x, CMa
   /*--- Output header information including initial residual ---*/
 
   int i = 0;
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "\n# " << "ILU Smoother" << " residual history" << endl;
     cout << "# Residual tolerance target = " << tol << endl;
     cout << "# Initial residual norm     = " << norm_r << endl;
@@ -1746,12 +1746,12 @@ unsigned long CSysMatrix::ILU_Smoother(const CSysVector & b, CSysVector & x, CMa
 
     norm_r = r.norm();
     if (norm_r < tol*norm0) break;
-    if (((monitoring) && (rank == MASTER_NODE)) && ((i+1) % 5 == 0))
+    if (((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) && ((i+1) % 5 == 0))
       cout << "     " << i << "     " << norm_r/norm0 << endl;
 
   }
 
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "# ILU smoother final (true) residual:" << endl;
     cout << "# Iteration = " << i << ": |res|/|res0| = "  << norm_r/norm0 << ".\n" << endl;
   }
@@ -1827,7 +1827,7 @@ unsigned long CSysMatrix::LU_SGS_Smoother(const CSysVector & b, CSysVector & x, 
   su2double norm_r = r.norm();
   su2double norm0  = b.norm();
   if ( (norm_r < tol*norm0) || (norm_r < eps) ) {
-    if (rank == MASTER_NODE) cout << "CSysMatrix::LU_SGS_Smoother(): system solved by initial guess." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "CSysMatrix::LU_SGS_Smoother(): system solved by initial guess." << endl;
     return 0;
   }
 
@@ -1838,7 +1838,7 @@ unsigned long CSysMatrix::LU_SGS_Smoother(const CSysVector & b, CSysVector & x, 
   /*--- Output header information including initial residual ---*/
 
   int i = 0;
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "\n# " << "LU_SGS Smoother" << " residual history" << endl;
     cout << "# Residual tolerance target = " << tol << endl;
     cout << "# Initial residual norm     = " << norm_r << endl;
@@ -1900,12 +1900,12 @@ unsigned long CSysMatrix::LU_SGS_Smoother(const CSysVector & b, CSysVector & x, 
 
     norm_r = r.norm();
     if (norm_r < tol*norm0) break;
-    if (((monitoring) && (rank == MASTER_NODE)) && ((i+1) % 5 == 0))
+    if (((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) && ((i+1) % 5 == 0))
       cout << "     " << i << "     " << norm_r/norm0 << endl;
 
   }
 
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "# LU_SGS smoother final (true) residual:" << endl;
     cout << "# Iteration = " << i << ": |res|/|res0| = "  << norm_r/norm0 << ".\n" << endl;
   }
@@ -2071,8 +2071,8 @@ unsigned short CSysMatrix::BuildLineletPreconditioner(CGeometry *geometry, CConf
   Global_nPoints = Local_nPoints;
   Global_nLineLets = Local_nLineLets;
 #else
-  SU2_MPI::Allreduce(&Local_nPoints, &Global_nPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
-  SU2_MPI::Allreduce(&Local_nLineLets, &Global_nLineLets, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&Local_nPoints, &Global_nPoints, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
+  SU2_MPI::Allreduce(&Local_nLineLets, &Global_nLineLets, 1, MPI_UNSIGNED_LONG, MPI_SUM, SU2_MPI::GetComm());
 #endif
 
   MeanPoints = SU2_TYPE::Int(su2double(Global_nPoints)/su2double(Global_nLineLets));

@@ -55,8 +55,8 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
   int size = SINGLE_NODE;
   
 #ifdef HAVE_MPI
-  SU2_MPI::Comm_rank(MPI_COMM_WORLD, &rank);
-  SU2_MPI::Comm_size(MPI_COMM_WORLD, &size);
+  SU2_MPI::Comm_rank(SU2_MPI::GetComm(), &rank);
+  SU2_MPI::Comm_size(SU2_MPI::GetComm(), &size);
 #endif
   
   nPointTotal = geometry->GetnPoint();
@@ -124,7 +124,7 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
   strcpy (cstr, "partitioning.csv");
   Profile_File.precision(15);
   
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     /*--- Prepare and open the file ---*/
     Profile_File.open(cstr, ios::out);
     /*--- Create the CSV header ---*/
@@ -132,20 +132,22 @@ void Partition_Analysis(CGeometry *geometry, CConfig *config) {
     Profile_File.close();
   }
 #ifdef HAVE_MPI
-  SU2_MPI::Barrier(MPI_COMM_WORLD);
+  SU2_MPI::Barrier(SU2_MPI::GetComm());
 #endif
   
   /*--- Loop through the map and write the results to the file ---*/
   
-  for (iRank = 0; iRank < size; iRank++) {
-    if (rank == iRank) {
-      Profile_File.open(cstr, ios::out | ios::app);
-      Profile_File << rank << ", " << nNeighbors << ", " << nPointTotal << ", " << nEdge << "," << nPointGhost << ", " << nSendTotal << ", " << nRecvTotal << ", " << nElemTotal << "," << nElemBound << ", " << nElemHalo << ", " << nnz << endl;
-      Profile_File.close();
-    }
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
+    for (iRank = 0; iRank < size; iRank++) {
+      if (rank == iRank) {
+        Profile_File.open(cstr, ios::out | ios::app);
+        Profile_File << rank << ", " << nNeighbors << ", " << nPointTotal << ", " << nEdge << "," << nPointGhost << ", " << nSendTotal << ", " << nRecvTotal << ", " << nElemTotal << "," <<   nElemBound << ", " << nElemHalo << ", " << nnz << endl;
+        Profile_File.close();
+      }
 #ifdef HAVE_MPI
-    SU2_MPI::Barrier(MPI_COMM_WORLD);
+      SU2_MPI::Barrier(SU2_MPI::GetComm());
 #endif
+    }
   }
   
   delete [] isHalo;

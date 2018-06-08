@@ -50,14 +50,14 @@ CDriver::CDriver(char* confFile,
   unsigned short jZone, iSol;
   unsigned short Kind_Grid_Movement;
   bool initStaticMovement;
+  int global_rank, global_size;
 
   SU2_MPI::SetComm(MPICommunicator);
 
   rank = SU2_MPI::GetRank();
   size = SU2_MPI::GetSize();
-  int rank_t, size_t;
-  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
-  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
+  global_rank = SU2_MPI::GetGlobalRank();
+  global_size = SU2_MPI::GetGlobalSize();
 
   /*--- Create pointers to all of the classes that may be used throughout
    the SU2_CFD code. In general, the pointers are instantiated down a
@@ -127,7 +127,6 @@ CDriver::CDriver(char* confFile,
 
     config_container[iZone]->SetMPICommunicator(MPICommunicator);
 
-
     /*--- Definition of the geometry class to store the primal grid in the
      partitioning process. ---*/
 
@@ -170,14 +169,12 @@ CDriver::CDriver(char* confFile,
 
   }
 
-
-
   /*--- Preprocessing of the geometry for all zones. In this routine, the edge-
    based data structure is constructed, i.e. node and cell neighbors are
    identified and linked, face areas and volumes of the dual mesh cells are
    computed, and the multigrid levels are created using an agglomeration procedure. ---*/
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Geometry Preprocessing ------------------------" << endl;
 
   Geometrical_Preprocessing();
@@ -186,7 +183,7 @@ CDriver::CDriver(char* confFile,
 
     /*--- Computation of wall distances for turbulence modeling ---*/
 
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "Computing wall distances." << endl;
 
     if ((config_container[iZone]->GetKind_Solver() == RANS) ||
@@ -216,7 +213,7 @@ CDriver::CDriver(char* confFile,
 
   /*--- Output some information about the driver that has been instantiated for the problem. ---*/
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Driver information --------------------------" << endl;
 
   fsi = config_container[ZONE_0]->GetFSI_Simulation();
@@ -228,24 +225,24 @@ CDriver::CDriver(char* confFile,
         config_container[ZONE_0]->GetKind_Solver() == POISSON_EQUATION ||
         config_container[ZONE_0]->GetKind_Solver() == WAVE_EQUATION ||
         config_container[ZONE_0]->GetKind_Solver() == HEAT_EQUATION) ) {
-    if (rank == MASTER_NODE) cout << "A General driver has been instantiated." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "A General driver has been instantiated." << endl;
   }
   else if (config_container[ZONE_0]->GetUnsteady_Simulation() == HARMONIC_BALANCE) {
-    if (rank == MASTER_NODE) cout << "A Harmonic Balance driver has been instantiated." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "A Harmonic Balance driver has been instantiated." << endl;
   }
   else if (nZone == 2 && fsi) {
     if (disc_adj_fsi) {
       if (stat_fsi)
-        if (rank == MASTER_NODE) cout << "A Discrete-Adjoint driver for Fluid-Structure Interaction has been instantiated." << endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "A Discrete-Adjoint driver for Fluid-Structure Interaction has been instantiated." << endl;
     }
     else{
-      if (stat_fsi){if (rank == MASTER_NODE) cout << "A Static Fluid-Structure Interaction driver has been instantiated." << endl;}
-      else{if (rank == MASTER_NODE) cout << "A Dynamic Fluid-Structure Interaction driver has been instantiated." << endl;}
+      if (stat_fsi){if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "A Static Fluid-Structure Interaction driver has been instantiated." << endl;}
+      else{if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "A Dynamic Fluid-Structure Interaction driver has been instantiated." << endl;}
     }
 
   }
   else if (config_container[ZONE_0]->GetBoolZoneSpecific()) {
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << "A multi physical zones driver has been instantiated." << endl;
       for(unsigned short iZone = 0; iZone < nZone; iZone++) {
 
@@ -277,7 +274,7 @@ CDriver::CDriver(char* confFile,
     }
   }
   else {
-    if (rank == MASTER_NODE) cout << "A Fluid driver has been instantiated." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "A Fluid driver has been instantiated." << endl;
   }
 
   for (iZone = 0; iZone < nZone; iZone++) {
@@ -287,7 +284,7 @@ CDriver::CDriver(char* confFile,
      different physics in different zones (fluid-structure interaction), or couple multiple
      systems tightly within a single zone by creating a new iteration class (e.g., RANS). ---*/
     
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << endl <<"------------------------ Iteration Preprocessing ------------------------" << endl;
     }
     Iteration_Preprocessing();
@@ -299,7 +296,7 @@ CDriver::CDriver(char* confFile,
      fluxes, loops over the nodes to compute source terms, and routines for
      imposing various boundary condition type for the PDE. ---*/
 
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << endl <<"------------------------- Solver Preprocessing --------------------------" << endl;
 
     solver_container[iZone] = new CSolver** [config_container[iZone]->GetnMGLevels()+1];
@@ -314,7 +311,7 @@ CDriver::CDriver(char* confFile,
     Solver_Preprocessing(solver_container[iZone], geometry_container[iZone],
         config_container[iZone]);
 
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << endl <<"----------------- Integration and Numerics Preprocessing ----------------" << endl;
 
     /*--- Definition of the integration class: integration_container[#ZONES][#EQ_SYSTEMS].
@@ -328,7 +325,7 @@ CDriver::CDriver(char* confFile,
                               config_container[iZone]);
 
     
-    if (rank == MASTER_NODE) cout << "Integration Preprocessing." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Integration Preprocessing." << endl;
 
     /*--- Definition of the numerical method class:
      numerics_container[#ZONES][#MG_GRIDS][#EQ_SYSTEMS][#EQ_TERMS].
@@ -341,7 +338,7 @@ CDriver::CDriver(char* confFile,
     Numerics_Preprocessing(numerics_container[iZone], solver_container[iZone],
         geometry_container[iZone], config_container[iZone]);
 
-    if (rank == MASTER_NODE) cout << "Numerics Preprocessing." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Numerics Preprocessing." << endl;
 
   }
 
@@ -351,7 +348,7 @@ CDriver::CDriver(char* confFile,
    *--- Also, at the moment this capability is limited to two zones (nZone < 3).
    *--- This will change in the future. ---*/
 
-  if ((rank == MASTER_NODE) && nZone > 1)
+  if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && nZone > 1)
     cout << endl <<"------------------- Multizone Interface Preprocessing -------------------" << endl;
 
   if ( nZone > 1 ) {
@@ -375,7 +372,7 @@ CDriver::CDriver(char* confFile,
 
     if (config_container[iZone]->GetGrid_Movement() ||
         (config_container[iZone]->GetDirectDiff() == D_DESIGN)) {
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "Setting dynamic mesh structure for zone "<< iZone<<"." << endl;
       grid_movement[iZone] = new CVolumetricMovement(geometry_container[iZone][MESH_0], config_container[iZone]);
       FFDBox[iZone] = new CFreeFormDefBox*[MAX_NUMBER_FFD];
@@ -386,7 +383,7 @@ CDriver::CDriver(char* confFile,
     }
 
     if (config_container[iZone]->GetDirectDiff() == D_DESIGN) {
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "Setting surface/volume derivatives." << endl;
 
       /*--- Set the surface derivatives, i.e. the derivative of the surface mesh nodes with respect to the design variables ---*/
@@ -411,7 +408,7 @@ CDriver::CDriver(char* confFile,
     }
 
     if (config_container[iZone]->GetKind_GridMovement(iZone) == FLUID_STRUCTURE_STATIC){
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "Setting moving mesh structure for static FSI problems." << endl;
         /*--- Instantiate the container for the grid movement structure ---*/
       grid_movement[iZone]    = new CElasticityMovement(geometry_container[iZone][MESH_0], config_container[iZone]);
@@ -420,7 +417,7 @@ CDriver::CDriver(char* confFile,
   }
 
   if(fsi && (config_container[ZONE_0]->GetRestart() || config_container[ZONE_0]->GetDiscrete_Adjoint())){
-    if (rank == MASTER_NODE)cout << endl <<"Restarting Fluid and Structural Solvers." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl <<"Restarting Fluid and Structural Solvers." << endl;
 
     for (iZone = 0; iZone < nZone; iZone++) {
         Solver_Restart(solver_container[iZone], geometry_container[iZone],
@@ -436,18 +433,18 @@ CDriver::CDriver(char* confFile,
 
 
   if(initStaticMovement){
-    if (rank == MASTER_NODE)cout << endl <<"--------------------- Initialize Static Mesh Movement --------------------" << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl <<"--------------------- Initialize Static Mesh Movement --------------------" << endl;
 
       InitStaticMeshMovement();
   }
 
  if (config_container[ZONE_0]->GetBoolTurbomachinery()){
-   if (rank == MASTER_NODE)cout << endl <<"---------------------- Turbomachinery Preprocessing ---------------------" << endl;
+   if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl <<"---------------------- Turbomachinery Preprocessing ---------------------" << endl;
       TurbomachineryPreprocessing();
   }
 
 
-  if (rank == MASTER_NODE) cout << endl << "---------------------- Python Interface Preprocessing ---------------------" << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl << "---------------------- Python Interface Preprocessing ---------------------" << endl;
   PythonInterface_Preprocessing();
 
   /*--- Definition of the output class (one for all zones). The output class
@@ -462,7 +459,7 @@ CDriver::CDriver(char* confFile,
   if (rank == MASTER_NODE){
     ConvHist_file = new ofstream[nZone];
     for (iZone = 0; iZone < nZone; iZone++) {
-      output->SetConvHistory_Header(&ConvHist_file[iZone], config_container[ZONE_0], iZone, rank_t);
+      output->SetConvHistory_Header(&ConvHist_file[iZone], config_container[iZone], iZone, SU2_MPI::GetGlobalRank());
       config_container[iZone]->SetHistFile(&ConvHist_file[iZone]);
     }
   }
@@ -478,7 +475,7 @@ CDriver::CDriver(char* confFile,
   /*--- Open the FSI convergence history file ---*/
 
   if (fsi){
-      if (rank == MASTER_NODE) cout << endl <<"Opening FSI history file." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl <<"Opening FSI history file." << endl;
       unsigned short ZONE_FLOW = 0, ZONE_STRUCT = 1;
       output->SpecialOutput_FSI(&FSIHist_file, geometry_container, solver_container,
                                 config_container, integration_container, 0,
@@ -491,7 +488,7 @@ CDriver::CDriver(char* confFile,
 
   if ( xbraid ){
 
-      if (rank == MASTER_NODE) cout << endl <<"---------------------- XBraid Preprocessing ---------------------------" << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl <<"---------------------- XBraid Preprocessing ---------------------------" << endl;
 
       XBraidPreprocessing();
 
@@ -541,7 +538,7 @@ void CDriver::Postprocessing() {
   }
 
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
@@ -550,7 +547,7 @@ void CDriver::Postprocessing() {
     delete [] numerics_container[iZone];
   }
   delete [] numerics_container;
-  if (rank == MASTER_NODE) cout << "Deleted CNumerics container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CNumerics container." << endl;
   
   for (iZone = 0; iZone < nZone; iZone++) {
     Integration_Postprocessing(integration_container[iZone],
@@ -559,7 +556,7 @@ void CDriver::Postprocessing() {
     delete [] integration_container[iZone];
   }
   delete [] integration_container;
-  if (rank == MASTER_NODE) cout << "Deleted CIntegration container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CIntegration container." << endl;
   
   for (iZone = 0; iZone < nZone; iZone++) {
     Solver_Postprocessing(solver_container[iZone],
@@ -568,13 +565,13 @@ void CDriver::Postprocessing() {
     delete [] solver_container[iZone];
   }
   delete [] solver_container;
-  if (rank == MASTER_NODE) cout << "Deleted CSolver container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CSolver container." << endl;
   
   for (iZone = 0; iZone < nZone; iZone++) {
     delete iteration_container[iZone];
   }
   delete [] iteration_container;
-  if (rank == MASTER_NODE) cout << "Deleted CIteration container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CIteration container." << endl;
   
   if (interpolator_container != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -583,7 +580,7 @@ void CDriver::Postprocessing() {
       }
     }
     delete [] interpolator_container;
-    if (rank == MASTER_NODE) cout << "Deleted CInterpolator container." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CInterpolator container." << endl;
   }
   
   if (transfer_container != NULL) {
@@ -596,7 +593,7 @@ void CDriver::Postprocessing() {
       }
     }
     delete [] transfer_container;
-    if (rank == MASTER_NODE) cout << "Deleted CTransfer container." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CTransfer container." << endl;
   }
   
   if (transfer_types != NULL) {
@@ -616,25 +613,25 @@ void CDriver::Postprocessing() {
     }
   }
   delete [] geometry_container;
-  if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
     delete [] FFDBox[iZone];
   }
   delete [] FFDBox;
-  if (rank == MASTER_NODE) cout << "Deleted CFreeFormDefBox class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CFreeFormDefBox class." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
     delete surface_movement[iZone];
   }
   delete [] surface_movement;
-  if (rank == MASTER_NODE) cout << "Deleted CSurfaceMovement class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CSurfaceMovement class." << endl;
 
   for (iZone = 0; iZone < nZone; iZone++) {
     delete grid_movement[iZone];
   }
   delete [] grid_movement;
-  if (rank == MASTER_NODE) cout << "Deleted CVolumetricMovement class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CVolumetricMovement class." << endl;
 
   if (config_container!= NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -644,13 +641,13 @@ void CDriver::Postprocessing() {
     }
     delete [] config_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CConfig container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CConfig container." << endl;
 
   /*--- Deallocate output container ---*/
   if (output!= NULL) delete output;
-  if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted COutput class." << endl;
 
-  if (rank == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl;
 
 
   /*--- Synchronization point after a single solver iteration. Compute the
@@ -665,14 +662,14 @@ void CDriver::Postprocessing() {
   /*--- Compute/print the total time for performance benchmarking. ---*/
 
   UsedTime = StopTime-StartTime;
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     cout << "\nCompleted in " << fixed << UsedTime << " seconds on "<< size;
     if (size == 1) cout << " core." << endl; else cout << " cores." << endl;
   }
 
   /*--- Exit the solver cleanly ---*/
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Exit Success (SU2_CFD) ------------------------" << endl << endl;
 
 }
@@ -691,47 +688,47 @@ void CDriver::Geometrical_Preprocessing() {
 
     /*--- Compute elements surrounding points, points surrounding points ---*/
 
-    if (rank == MASTER_NODE) cout << "Setting point connectivity." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Setting point connectivity." << endl;
     geometry_container[iZone][MESH_0]->SetPoint_Connectivity();
 
     /*--- Renumbering points using Reverse Cuthill McKee ordering ---*/
 
-    if (rank == MASTER_NODE) cout << "Renumbering points (Reverse Cuthill McKee Ordering)." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Renumbering points (Reverse Cuthill McKee Ordering)." << endl;
     geometry_container[iZone][MESH_0]->SetRCM_Ordering(config_container[iZone]);
 
     /*--- recompute elements surrounding points, points surrounding points ---*/
 
-    if (rank == MASTER_NODE) cout << "Recomputing point connectivity." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Recomputing point connectivity." << endl;
     geometry_container[iZone][MESH_0]->SetPoint_Connectivity();
 
     /*--- Compute elements surrounding elements ---*/
 
-    if (rank == MASTER_NODE) cout << "Setting element connectivity." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Setting element connectivity." << endl;
     geometry_container[iZone][MESH_0]->SetElement_Connectivity();
 
     /*--- Check the orientation before computing geometrical quantities ---*/
 
     geometry_container[iZone][MESH_0]->SetBoundVolume();
     if (config_container[iZone]->GetReorientElements()) {
-      if (rank == MASTER_NODE) cout << "Checking the numerical grid orientation." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Checking the numerical grid orientation." << endl;
       geometry_container[iZone][MESH_0]->Check_IntElem_Orientation(config_container[iZone]);
       geometry_container[iZone][MESH_0]->Check_BoundElem_Orientation(config_container[iZone]);
     }
 
     /*--- Create the edge structure ---*/
 
-    if (rank == MASTER_NODE) cout << "Identifying edges and vertices." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Identifying edges and vertices." << endl;
     geometry_container[iZone][MESH_0]->SetEdges();
     geometry_container[iZone][MESH_0]->SetVertex(config_container[iZone]);
 
     /*--- Compute cell center of gravity ---*/
 
-    if ((rank == MASTER_NODE) && (!fea)) cout << "Computing centers of gravity." << endl;
+    if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!fea)) cout << "Computing centers of gravity." << endl;
     geometry_container[iZone][MESH_0]->SetCoord_CG();
 
     /*--- Create the control volume structures ---*/
 
-    if ((rank == MASTER_NODE) && (!fea)) cout << "Setting the control volume structure." << endl;
+    if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!fea)) cout << "Setting the control volume structure." << endl;
     geometry_container[iZone][MESH_0]->SetControlVolume(config_container[iZone], ALLOCATE);
     geometry_container[iZone][MESH_0]->SetBoundControlVolume(config_container[iZone], ALLOCATE);
 
@@ -743,25 +740,25 @@ void CDriver::Geometrical_Preprocessing() {
 
     /*--- Identify closest normal neighbor ---*/
 
-    if (rank == MASTER_NODE) cout << "Searching for the closest normal neighbors to the surfaces." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Searching for the closest normal neighbors to the surfaces." << endl;
     geometry_container[iZone][MESH_0]->FindNormal_Neighbor(config_container[iZone]);
 
     /*--- Store the global to local mapping. ---*/
 
-    if (rank == MASTER_NODE) cout << "Storing a mapping from global to local point index." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Storing a mapping from global to local point index." << endl;
     geometry_container[iZone][MESH_0]->SetGlobal_to_Local_Point();
 
     /*--- Compute the surface curvature ---*/
 
-    if ((rank == MASTER_NODE) && (!fea)) cout << "Compute the surface curvature." << endl;
+    if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!fea)) cout << "Compute the surface curvature." << endl;
     geometry_container[iZone][MESH_0]->ComputeSurf_Curvature(config_container[iZone]);
 
     /*--- Check for periodicity and disable MG if necessary. ---*/
 
-    if (rank == MASTER_NODE) cout << "Checking for periodicity." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Checking for periodicity." << endl;
     geometry_container[iZone][MESH_0]->Check_Periodicity(config_container[iZone]);
 
-    if ((config_container[iZone]->GetnMGLevels() != 0) && (rank == MASTER_NODE))
+    if ((config_container[iZone]->GetnMGLevels() != 0) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) )
       cout << "Setting the multigrid structure." << endl;
 
   }
@@ -2569,7 +2566,7 @@ void CDriver::Iteration_Preprocessing() {
 
   /*--- Initial print to console for this zone. ---*/
 
-  if (rank == MASTER_NODE) cout << "Zone " << iZone+1;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Zone " << iZone+1;
 
   /*--- Loop over all zones and instantiate the physics iteration. ---*/
 
@@ -2578,62 +2575,62 @@ void CDriver::Iteration_Preprocessing() {
     case EULER: case NAVIER_STOKES: case RANS:
 
       if(config_container[iZone]->GetBoolTurbomachinery()){
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << ": Euler/Navier-Stokes/RANS turbomachinery fluid iteration." << endl;
       iteration_container[iZone] = new CTurboIteration(config_container[iZone]);
 
       }
       else{
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << ": Euler/Navier-Stokes/RANS fluid iteration." << endl;
       iteration_container[iZone] = new CFluidIteration(config_container[iZone]);
       }
       break;
 
     case WAVE_EQUATION:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": wave iteration." << endl;
       iteration_container[iZone] = new CWaveIteration(config_container[iZone]);
       break;
 
     case HEAT_EQUATION:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": heat iteration." << endl;
       iteration_container[iZone] = new CHeatIteration(config_container[iZone]);
       break;
 
     case HEAT_EQUATION_FVM:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": heat iteration (finite volume method)." << endl;
       iteration_container[iZone] = new CHeatIteration(config_container[iZone]);
       break;
 
     case POISSON_EQUATION:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": poisson iteration." << endl;
       iteration_container[iZone] = new CPoissonIteration(config_container[iZone]);
       break;
 
     case FEM_ELASTICITY:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": FEM iteration." << endl;
       iteration_container[iZone] = new CFEAIteration(config_container[iZone]);
       break;
 
     case ADJ_EULER: case ADJ_NAVIER_STOKES: case ADJ_RANS:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": adjoint Euler/Navier-Stokes/RANS fluid iteration." << endl;
       iteration_container[iZone] = new CAdjFluidIteration(config_container[iZone]);
       break;
 
     case DISC_ADJ_EULER: case DISC_ADJ_NAVIER_STOKES: case DISC_ADJ_RANS:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": discrete adjoint Euler/Navier-Stokes/RANS fluid iteration." << endl;
       iteration_container[iZone] = new CDiscAdjFluidIteration(config_container[iZone]);
       break;
 
     case DISC_ADJ_FEM:
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << ": discrete adjoint FEM structural iteration." << endl;
       iteration_container[iZone] = new CDiscAdjFEAIteration(config_container[iZone]);
       break;
@@ -2726,7 +2723,7 @@ void CDriver::Interface_Preprocessing() {
 
         /*--- We gather a vector in MASTER_NODE that determines if the boundary is not on the processor because of the partition or because the zone does not include it ---*/
 
-        SU2_MPI::Gather(&markDonor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+        SU2_MPI::Gather(&markDonor , 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
       if (rank == MASTER_NODE) {
         for (iRank = 0; iRank < nProcessor; iRank++) {
@@ -2738,9 +2735,9 @@ void CDriver::Interface_Preprocessing() {
           }
         }
 
-        SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+        SU2_MPI::Bcast(&Donor_check , 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
-        SU2_MPI::Gather(&markTarget, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+        SU2_MPI::Gather(&markTarget, 1, MPI_INT, Buffer_Recv_mark, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
       if (rank == MASTER_NODE){
         for (iRank = 0; iRank < nProcessor; iRank++){
@@ -2752,7 +2749,7 @@ void CDriver::Interface_Preprocessing() {
           }
         }
 
-        SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::comm_x);
+        SU2_MPI::Bcast(&Target_check, 1, MPI_INT, MASTER_NODE, SU2_MPI::GetComm());
 
 #else
       Donor_check  = markDonor;
@@ -2819,14 +2816,14 @@ void CDriver::Interface_Preprocessing() {
           /*--- If at least one of the components is structural ---*/
           nVar = nDim;
 
-      if (rank == MASTER_NODE) cout << "From zone " << donorZone << " to zone " << targetZone << ": ";
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "From zone " << donorZone << " to zone " << targetZone << ": ";
 
         /*--- Match Zones ---*/
-      if (rank == MASTER_NODE) cout << "Setting coupling "<<endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Setting coupling "<<endl;
 
         /*--- If the mesh is matching: match points ---*/
       if ( config_container[donorZone]->GetMatchingMesh() ) {
-        if (rank == MASTER_NODE) 
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
             cout << "between matching meshes. " << endl;
         geometry_container[donorZone][MESH_0]->MatchZone(config_container[donorZone], geometry_container[targetZone][MESH_0], config_container[targetZone], donorZone, nZone);
         }
@@ -2836,33 +2833,33 @@ void CDriver::Interface_Preprocessing() {
 
           case NEAREST_NEIGHBOR:
             interpolator_container[donorZone][targetZone] = new CNearestNeighbor(geometry_container, config_container, donorZone, targetZone);
-            if (rank == MASTER_NODE) cout << "using a nearest-neighbor approach." << endl;
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "using a nearest-neighbor approach." << endl;
 
             break;
 
           case ISOPARAMETRIC:
             interpolator_container[donorZone][targetZone] = new CIsoparametric(geometry_container, config_container, donorZone, targetZone);
-            if (rank == MASTER_NODE) cout << "using an isoparametric approach." << endl;
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "using an isoparametric approach." << endl;
 
             break;
 
           case WEIGHTED_AVERAGE:
             interpolator_container[donorZone][targetZone] = new CSlidingMesh(geometry_container, config_container, donorZone, targetZone);
-            if (rank == MASTER_NODE) cout << "using an sliding mesh approach." << endl;
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "using an sliding mesh approach." << endl;
 
             break;
 
           case CONSISTCONSERVE:
             if ( targetZone > 0 && structural_target ) {
               interpolator_container[donorZone][targetZone] = new CMirror(geometry_container, config_container, donorZone, targetZone);
-              if (rank == MASTER_NODE) cout << "using a mirror approach: matching coefficients from opposite mesh." << endl;
+              if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "using a mirror approach: matching coefficients from opposite mesh." << endl;
             }
             else{
               interpolator_container[donorZone][targetZone] = new CIsoparametric(geometry_container, config_container, donorZone, targetZone);
-              if (rank == MASTER_NODE) cout << "using an isoparametric approach." << endl;
+              if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "using an isoparametric approach." << endl;
             }
             if ( targetZone == 0 && structural_target ) {
-              if (rank == MASTER_NODE) cout << "Consistent and conservative interpolation assumes the structure model mesh is evaluated second. Somehow this has not happened. The isoparametric coefficients will be calculated for both meshes, and are not guaranteed to be consistent." << endl;
+              if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Consistent and conservative interpolation assumes the structure model mesh is evaluated second. Somehow this has not happened. The isoparametric coefficients will be calculated for both meshes, and are not guaranteed to be consistent." << endl;
             }
 
 
@@ -2872,39 +2869,39 @@ void CDriver::Interface_Preprocessing() {
         }
 
         /*--- Initialize the appropriate transfer strategy ---*/
-      if (rank == MASTER_NODE) cout << "Transferring ";
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Transferring ";
 
       if (fluid_donor && structural_target && (!discrete_adjoint)) {
         transfer_types[donorZone][targetZone] = FLOW_TRACTION;
         nVarTransfer = 2;
         transfer_container[donorZone][targetZone] = new CTransfer_FlowTraction(nVar, nVarTransfer, config_container[donorZone]);
-        if (rank == MASTER_NODE) cout << "flow tractions. "<< endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "flow tractions. "<< endl;
       }
       else if (structural_donor && fluid_target && (!discrete_adjoint)) {
         transfer_types[donorZone][targetZone] = STRUCTURAL_DISPLACEMENTS;
         nVarTransfer = 0;
         transfer_container[donorZone][targetZone] = new CTransfer_StructuralDisplacements(nVar, nVarTransfer, config_container[donorZone]);
-        if (rank == MASTER_NODE) cout << "structural displacements. "<< endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "structural displacements. "<< endl;
       }
       else if (fluid_donor && structural_target && discrete_adjoint) {
         transfer_types[donorZone][targetZone] = FLOW_TRACTION;
         nVarTransfer = 2;
         transfer_container[donorZone][targetZone] = new CTransfer_FlowTraction_DiscAdj(nVar, nVarTransfer, config_container[donorZone]);
 
-        if (rank == MASTER_NODE) cout << "flow tractions. "<< endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "flow tractions. "<< endl;
       }
       else if (structural_donor && fluid_target && discrete_adjoint){
         transfer_types[donorZone][targetZone] = STRUCTURAL_DISPLACEMENTS_DISC_ADJ;
         nVarTransfer = 0;
         transfer_container[donorZone][targetZone] = new CTransfer_StructuralDisplacements_DiscAdj(nVar, nVarTransfer, config_container[donorZone]);
-        if (rank == MASTER_NODE) cout << "structural displacements. "<< endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "structural displacements. "<< endl;
       }
       else if (fluid_donor && fluid_target) {
         transfer_types[donorZone][targetZone] = SLIDING_INTERFACE;
         nVarTransfer = 0;
         nVar = solver_container[donorZone][MESH_0][FLOW_SOL]->GetnPrimVar();
         transfer_container[donorZone][targetZone] = new CTransfer_SlidingInterface(nVar, nVarTransfer, config_container[donorZone]);
-        if (rank == MASTER_NODE) cout << "sliding interface. " << endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "sliding interface. " << endl;
       }
       else if (fluid_donor && heat_target) {
         nVarTransfer = 0;
@@ -2915,7 +2912,7 @@ void CDriver::Interface_Preprocessing() {
           transfer_types[donorZone][targetZone] = CONJUGATE_HEAT_WEAKLY_FS;
         else { }
         transfer_container[donorZone][targetZone] = new CTransfer_ConjugateHeatVars(nVar, nVarTransfer, config_container[donorZone]);
-        if (rank == MASTER_NODE) cout << "conjugate heat variables. " << endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "conjugate heat variables. " << endl;
       }
       else if (heat_donor && fluid_target) {
         nVarTransfer = 0;
@@ -2926,7 +2923,7 @@ void CDriver::Interface_Preprocessing() {
           transfer_types[donorZone][targetZone] = CONJUGATE_HEAT_WEAKLY_SF;
         else { }
         transfer_container[donorZone][targetZone] = new CTransfer_ConjugateHeatVars(nVar, nVarTransfer, config_container[donorZone]);
-        if (rank == MASTER_NODE) cout << "conjugate heat variables. " << endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "conjugate heat variables. " << endl;
       }
       else if (heat_donor && heat_target) {
         SU2_MPI::Error("Conjugate heat transfer between solids not implemented yet.", CURRENT_FUNCTION);
@@ -2935,7 +2932,7 @@ void CDriver::Interface_Preprocessing() {
         transfer_types[donorZone][targetZone] = CONSERVATIVE_VARIABLES;
         nVarTransfer = 0;
         transfer_container[donorZone][targetZone] = new CTransfer_ConservativeVars(nVar, nVarTransfer, config_container[donorZone]);
-        if (rank == MASTER_NODE) cout << "generic conservative variables. " << endl;  
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "generic conservative variables. " << endl;  
       }
 
       break;
@@ -2947,7 +2944,7 @@ void CDriver::Interface_Preprocessing() {
       	nVarTransfer = 0;
       	nVar = solver_container[donorZone][MESH_0][FLOW_SOL]->GetnVar();
       	transfer_container[donorZone][targetZone] = new CTransfer_MixingPlaneInterface(nVar, nVarTransfer, config_container[donorZone], config_container[targetZone]);
-        if (rank == MASTER_NODE) cout << "Set mixing-plane interface from donor zone "<< donorZone << " to target zone " << targetZone <<"."<<endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Set mixing-plane interface from donor zone "<< donorZone << " to target zone " << targetZone <<"."<<endl;
       }
 
     }
@@ -2975,7 +2972,7 @@ void CDriver::InitStaticMeshMovement(){
 
       /*--- Fixed wall velocities: set the grid velocities only one time
          before the first iteration flow solver. ---*/
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << endl << " Setting the moving wall velocities." << endl;
 
       surface_movement[iZone]->Moving_Walls(geometry_container[iZone][MESH_0],
@@ -2993,7 +2990,7 @@ void CDriver::InitStaticMeshMovement(){
       /*--- Steadily rotating frame: set the grid velocities just once
          before the first iteration flow solver. ---*/
 
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << endl << " Setting rotating frame grid velocities";
         cout << " for zone " << iZone << "." << endl;
       }
@@ -3014,7 +3011,7 @@ void CDriver::InitStaticMeshMovement(){
          the calculation (similar to rotating frame, but there is no extra
          source term for translation). ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << endl << " Setting translational grid velocities." << endl;
 
       /*--- Set the translational velocity on all grid levels. ---*/
@@ -3039,12 +3036,12 @@ void CDriver::TurbomachineryPreprocessing(){
   su2double areaIn, areaOut, nBlades, flowAngleIn, flowAngleOut;
 
   /*--- Create turbovertex structure ---*/
-  if (rank == MASTER_NODE) cout<<endl<<"Initialize Turbo Vertex Structure." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<endl<<"Initialize Turbo Vertex Structure." << endl;
   for (iZone = 0; iZone < nZone; iZone++) {
     if (config_container[iZone]->GetBoolTurbomachinery()){
       geometry_container[iZone][MESH_0]->ComputeNSpan(config_container[iZone], iZone, INFLOW, true);
       geometry_container[iZone][MESH_0]->ComputeNSpan(config_container[iZone], iZone, OUTFLOW, true);
-      if (rank == MASTER_NODE) cout <<"Number of span-wise sections in Zone "<< iZone<<": "<< config_container[iZone]->GetnSpanWiseSections() <<"."<< endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout <<"Number of span-wise sections in Zone "<< iZone<<": "<< config_container[iZone]->GetnSpanWiseSections() <<"."<< endl;
       if (config_container[iZone]->GetnSpanWiseSections() > nSpanMax){
         nSpanMax = config_container[iZone]->GetnSpanWiseSections();
       }
@@ -3062,16 +3059,16 @@ void CDriver::TurbomachineryPreprocessing(){
       config_container[iZone]->SetnSpanMaxAllZones(nSpanMax);
     }
   }
-  if (rank == MASTER_NODE) cout<<"Max number of span-wise sections among all zones: "<< nSpanMax<<"."<< endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<"Max number of span-wise sections among all zones: "<< nSpanMax<<"."<< endl;
 
 
-  if (rank == MASTER_NODE) cout<<"Initialize solver containers for average and performance quantities." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<"Initialize solver containers for average and performance quantities." << endl;
   for (iZone = 0; iZone < nZone; iZone++) {
     solver_container[iZone][MESH_0][FLOW_SOL]->InitTurboContainers(geometry_container[iZone][MESH_0],config_container[iZone]);
   }
 
 //TODO(turbo) make it general for turbo HB
-  if (rank == MASTER_NODE) cout<<"Compute inflow and outflow average geometric quantities." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<"Compute inflow and outflow average geometric quantities." << endl;
   for (iZone = 0; iZone < nZone; iZone++) {
     geometry_container[iZone][MESH_0]->SetAvgTurboValue(config_container[iZone], iZone, INFLOW, true);
     geometry_container[iZone][MESH_0]->SetAvgTurboValue(config_container[iZone],iZone, OUTFLOW, true);
@@ -3080,7 +3077,7 @@ void CDriver::TurbomachineryPreprocessing(){
 
 
   if(mixingplane){
-    if (rank == MASTER_NODE) cout << "Set span-wise sections between zones on Mixing-Plane interface." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Set span-wise sections between zones on Mixing-Plane interface." << endl;
     for (donorZone = 0; donorZone < nZone; donorZone++) {
       for (targetZone = 0; targetZone < nZone; targetZone++) {
         if (targetZone != donorZone){
@@ -3090,7 +3087,7 @@ void CDriver::TurbomachineryPreprocessing(){
     }
   }
 
-  if (rank == MASTER_NODE) cout << "Transfer average geometric quantities to zone 0." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Transfer average geometric quantities to zone 0." << endl;
   for (iZone = 1; iZone < nZone; iZone++) {
     transfer_container[iZone][ZONE_0]->GatherAverageTurboGeoValues(geometry_container[iZone][MESH_0],geometry_container[ZONE_0][MESH_0], iZone);
   }
@@ -3114,7 +3111,7 @@ void CDriver::TurbomachineryPreprocessing(){
 
 
   if(mixingplane){
-    if (rank == MASTER_NODE) cout<<"Preprocessing of the Mixing-Plane Interface." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<"Preprocessing of the Mixing-Plane Interface." << endl;
     for (donorZone = 0; donorZone < nZone; donorZone++) {
       nMarkerInt     = config_container[donorZone]->GetnMarker_MixingPlaneInterface()/2;
       for (iMarkerInt = 1; iMarkerInt <= nMarkerInt; iMarkerInt++){
@@ -3130,13 +3127,13 @@ void CDriver::TurbomachineryPreprocessing(){
   }
 
   if(!restart && !discrete_adjoint){
-    if (rank == MASTER_NODE) cout<<"Initialize turbomachinery solution quantities." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<"Initialize turbomachinery solution quantities." << endl;
     for(iZone = 0; iZone < nZone; iZone++) {
       solver_container[iZone][MESH_0][FLOW_SOL]->SetFreeStream_TurboSolution(config_container[iZone]);
     }
   }
 
-  if (rank == MASTER_NODE) cout<<"Initialize inflow and outflow average solution quantities." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<"Initialize inflow and outflow average solution quantities." << endl;
   for(iZone = 0; iZone < nZone; iZone++) {
     solver_container[iZone][MESH_0][FLOW_SOL]->PreprocessAverage(solver_container[iZone][MESH_0], geometry_container[iZone][MESH_0],config_container[iZone],INFLOW);
     solver_container[iZone][MESH_0][FLOW_SOL]->PreprocessAverage(solver_container[iZone][MESH_0], geometry_container[iZone][MESH_0],config_container[iZone],OUTFLOW);
@@ -3160,16 +3157,13 @@ void CDriver::TurbomachineryPreprocessing(){
 
 void CDriver::XBraidPreprocessing(){
 
-  int rank_t = MASTER_NODE;
-  int size_t = SINGLE_NODE;
-  int rank_x = MASTER_NODE;
-  int size_x = SINGLE_NODE;
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
-  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank_x);
-  MPI_Comm_size(SU2_MPI::comm_x, &size_x);
-#endif
+#if HAVE_XBRAID
+
+  int rank_t, size_t, rank_x, size_x;
+  rank_x = SU2_MPI::GetRank();
+  size_x = SU2_MPI::GetSize();
+  SU2_MPI::Comm_rank(SU2_MPI::GetTimeComm(), &rank_t);
+  SU2_MPI::Comm_size(SU2_MPI::GetTimeComm(), &size_t);
 
     int nPoint              = geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nDim                = geometry_container[ZONE_0][MESH_0]->GetnDim();
@@ -3186,8 +3180,8 @@ void CDriver::XBraidPreprocessing(){
     app = new my_App;
 
     /* Information concerning spacial and temporal communication */
-    app->comm_x = SU2_MPI::comm_x;
-    app->comm_t = SU2_MPI::comm_t;
+    app->comm_x = SU2_MPI::GetComm();
+    app->comm_t = SU2_MPI::GetTimeComm();
 
     /* Set ranks and size of communicators*/
     app->su2rank = rank_x;
@@ -3266,7 +3260,7 @@ void CDriver::XBraidPreprocessing(){
 
 
     /* Initialize xBraid */
-    braid_Init(SU2_MPI::comm, app->comm_t, app->tstart, app->tstop, app->ntime, app,
+    braid_Init(SU2_MPI::GetComm(), app->comm_t, app->tstart, app->tstop, app->ntime, app,
             my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
             my_Access, my_BufSize, my_BufPack, my_BufUnpack, &xbraidcore);
 
@@ -3308,8 +3302,9 @@ void CDriver::XBraidPreprocessing(){
     /* Report on the processor grid */
     if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE)
           cout<< "Time-parallel processor splitting with " << size_t
-              << " temporal times " << size_x << " spacial cores." << endl;
+              << " temporal times " << size_x << " spatial cores." << endl;
 
+#endif //HAVE_XBRAID
 
 }
 
@@ -3317,15 +3312,9 @@ void CDriver::XBraidPreprocessing(){
 
 void CDriver::StartSolver() {
 
-  int size_t, rank_t;
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_t, &rank_t);
-  MPI_Comm_size(SU2_MPI::comm_t, &size_t);
-#endif
-
   /*--- Main external loop of the solver. Within this loop, each iteration ---*/
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)
     cout << endl <<"------------------------------ Begin Solver -----------------------------" << endl;
 
 
@@ -3340,7 +3329,7 @@ void CDriver::StartSolver() {
 
           PreprocessExtIter(ExtIter);
 
-      /*--- Run a single iteration of the problem (fluid, elasticity, wave, heat, ...). ---*/
+      /*--- Perform a single iteration of the chosen PDE solver. ---*/
 
           if (!fsi) {
 
@@ -3386,6 +3375,8 @@ void CDriver::StartSolver() {
 
      /*--- Time-parallel XBraid solver ---*/
 
+#if HAVE_XBRAID
+    
     for (int iter = 0; iter < config_container[ZONE_0]->GetBraid_Max_Iter(); iter++){
 
 
@@ -3407,7 +3398,7 @@ void CDriver::StartSolver() {
         /*--- Collect time-averaged drag coefficient from all time-processors---*/
         double MyTotalAvg = app->Total_CD_avg;
         app->Total_CD_avg = 0.0;
-        MPI_Allreduce(&MyTotalAvg, &app->Total_CD_avg, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_t);
+        MPI_Allreduce(&MyTotalAvg, &app->Total_CD_avg, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetGlobalComm());
         app->Total_CD_avg = 1.0 / ( app->config_container[ZONE_0]->GetnExtIter() ) * app->Total_CD_avg;
 
 
@@ -3434,6 +3425,8 @@ void CDriver::StartSolver() {
 
     /* Run a final FAccess in order to write the restart files */
 //    _braid_FAccess(xbraidcore, 0, 1);
+
+#endif //HAVE_XBRAID
 
   }
 
@@ -3472,7 +3465,7 @@ void CDriver::PreprocessExtIter(unsigned long ExtIter) {
   }
 
 #ifdef HAVE_MPI
-  SU2_MPI::Barrier(MPI_COMM_WORLD);
+  SU2_MPI::Barrier(SU2_MPI::GetComm());
 #endif
 
 }
@@ -3597,7 +3590,7 @@ void CDriver::Output(unsigned long ExtIter) {
   
   if (output_files) {
     
-    if (rank == MASTER_NODE) cout << endl << "-------------------------- File Output Summary --------------------------";
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl << "-------------------------- File Output Summary --------------------------";
     
     /*--- Execute the routine for writing restart, volume solution,
      surface solution, and surface comma-separated value files. ---*/
@@ -3605,7 +3598,7 @@ void CDriver::Output(unsigned long ExtIter) {
     output->SetResult_Files_Parallel(solver_container, geometry_container, config_container, ExtIter, nZone);
     
     
-    if (rank == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl << endl;
     
   }
 
@@ -4220,14 +4213,7 @@ void CDiscAdjFluidDriver::Run() {
       solver_container[iZone][MESH_0][ADJFLOW_SOL]->SetSensitivity(geometry_container[iZone][MESH_0],config_container[iZone]);
     }
 
-<<<<<<< HEAD
-#ifdef HAVE_MPI
-  int rank;
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-=======
     /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
->>>>>>> SU2_original/develop
 
     AD::ClearAdjoints();
   }
@@ -4534,29 +4520,9 @@ CHBDriver::CHBDriver(char* confFile,
         MPICommunicator) {
   unsigned short kZone;
 
-<<<<<<< HEAD
-bool CTurbomachineryDriver::Monitor(unsigned long ExtIter) {
-
-  su2double CFL;
-  su2double rot_z_ini, rot_z_final ,rot_z;
-  su2double outPres_ini, outPres_final, outPres;
-  unsigned long rampFreq, finalRamp_Iter;
-  unsigned short iMarker, KindBC, KindBCOption;
-  string Marker_Tag;
-
-  int rank = MASTER_NODE;
-  bool print;
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-
-  /*--- Synchronization point after a single solver iteration. Compute the
-   wall clock time required. ---*/
-=======
   D = NULL;
   /*--- allocate dynamic memory for the Harmonic Balance operator ---*/
   D = new su2double*[nZone]; for (kZone = 0; kZone < nZone; kZone++) D[kZone] = new su2double[nZone];
->>>>>>> SU2_original/develop
 
 }
 
@@ -4631,20 +4597,8 @@ void CHBDriver::ResetConvergence() {
       integration_container[iZone][HEAT_SOL]->SetConvergence(false);
       break;
 
-<<<<<<< HEAD
-
-
-CDiscAdjFluidDriver::CDiscAdjFluidDriver(char* confFile,
-                                                 unsigned short val_nZone,
-                                                 unsigned short val_nDim, SU2_Comm MPICommunicator) : CFluidDriver(confFile,
-																										 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	val_nZone,
-                                                                                    val_nDim, MPICommunicator) {
-  RecordingState = NONE;
-  unsigned short iZone;
-=======
     case POISSON_EQUATION:
       break;
->>>>>>> SU2_original/develop
 
     case FEM_ELASTICITY:
       integration_container[iZone][FEA_SOL]->SetConvergence(false);
@@ -4948,11 +4902,6 @@ void CHBDriver::ComputeHB_Operator() {
   const   complex<su2double> J(0.0,1.0);
   unsigned short i, j, k, iZone;
 
-<<<<<<< HEAD
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-=======
   su2double *Omega_HB       = new su2double[nZone];
   complex<su2double> **E    = new complex<su2double>*[nZone];
   complex<su2double> **Einv = new complex<su2double>*[nZone];
@@ -4962,7 +4911,6 @@ void CHBDriver::ComputeHB_Operator() {
     Einv[iZone] = new complex<su2double>[nZone];
     DD[iZone]   = new complex<su2double>[nZone];
   }
->>>>>>> SU2_original/develop
 
   /*--- Get simualation period from config file ---*/
   su2double Period = config_container[ZONE_0]->GetHarmonicBalance_Period();
@@ -5090,13 +5038,7 @@ void CHBDriver::ComputeHB_Operator() {
     }
   }
 
-<<<<<<< HEAD
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-=======
   unsigned short row, col, inner;
->>>>>>> SU2_original/develop
 
   for (row = 0; row < nZone; row++) {
     for (col = 0; col < nZone; col++) {
@@ -5106,25 +5048,12 @@ void CHBDriver::ComputeHB_Operator() {
     }
   }
 
-<<<<<<< HEAD
-}
-
-void CDiscAdjFluidDriver::SetObjFunction(){
-
-  int rank = MASTER_NODE;
-#ifdef HAVE_MPI
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-
-  ObjFunc = 0.0;
-=======
   /*---  Take just the real part of the HB operator matrix ---*/
   for (i = 0; i < nZone; i++) {
     for (k = 0; k < nZone; k++) {
       D[i][k] = real(Dcpx[i][k]);
     }
   }
->>>>>>> SU2_original/develop
 
   /*--- Deallocate dynamic memory ---*/
   for (iZone = 0; iZone < nZone; iZone++){
@@ -5561,8 +5490,8 @@ bool CFSIDriver::BGSConvergence(unsigned long IntIter, unsigned short ZONE_FLOW,
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
   int size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_rank(SU2_MPI::GetComm(), &rank);
+  MPI_Comm_size(SU2_MPI::GetComm(), &size);
 #endif
 
   unsigned short iMarker;
@@ -5631,7 +5560,7 @@ bool CFSIDriver::BGSConvergence(unsigned long IntIter, unsigned short ZONE_FLOW,
 //                 (flow_converged_relative && struct_converged_relative) ||
 //                 (flow_converged_relative && struct_converged_absolute));
 
-  if (rank == MASTER_NODE){
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
 
     cout << endl << "-------------------------------------------------------------------------" << endl;
     cout << endl;
@@ -6962,7 +6891,7 @@ bool CDiscAdjFSIDriver::CheckConvergence(unsigned long IntIter,
   /*--- Convergence criteria ---*/
 
   sbuf_conv[0] = adjoint_convergence;
-  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::GetComm());
 
   /*-- Compute global convergence criteria in the master node --*/
 
@@ -6972,7 +6901,7 @@ bool CDiscAdjFSIDriver::CheckConvergence(unsigned long IntIter,
     else sbuf_conv[0] = 0;
   }
 
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
 
   if (sbuf_conv[0] == 1) { adjoint_convergence = true;}
   else { adjoint_convergence = false;}
@@ -6997,12 +6926,12 @@ void CDiscAdjFSIDriver::ConvergenceHistory(unsigned long IntIter,
 
   ofstream ConvHist_file;
   if (rank == MASTER_NODE)
-    output->SetConvHistory_Header(&ConvHist_file, config_container[ZONE_0], ZONE_0);
+    output->SetConvHistory_Header(&ConvHist_file, config_container[ZONE_0], ZONE_0, 1);
 
 
   if (kind_recording == FLOW_CONS_VARS) {
 
-    if (rank == MASTER_NODE){
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       if (IntIter == 0){
         cout << endl;
         cout << " IntIter" << "    BGSIter" << "   Res[Psi_Rho]" << "     Res[Psi_E]" << endl;
@@ -7045,7 +6974,7 @@ void CDiscAdjFSIDriver::Iterate_Block_FlowOF(unsigned short ZONE_FLOW,
 
   for (iFSIIter = 0; iFSIIter < nFSIIter; iFSIIter++){
 
-    if (rank == MASTER_NODE){
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << endl << "                    ****** BGS ITERATION ";
       cout << iFSIIter;
       cout << " ******" << endl;
@@ -7103,7 +7032,7 @@ void CDiscAdjFSIDriver::Iterate_Block_StructuralOF(unsigned short ZONE_FLOW,
 
   for (iFSIIter = 0; iFSIIter < nFSIIter; iFSIIter++){
 
-    if (rank == MASTER_NODE){
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << endl << "                    ****** BGS ITERATION ";
       cout << iFSIIter;
       cout << " ******" << endl;
@@ -7310,15 +7239,8 @@ bool CDiscAdjFSIDriver::BGSConvergence(unsigned long IntIter,
         myfile_res << endl;
       }
 
-<<<<<<< HEAD
-#ifdef HAVE_MPI
-  int rank = MASTER_NODE;
-  MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-=======
       myfile_res.close();
     }
->>>>>>> SU2_original/develop
 
 
   }
@@ -7334,7 +7256,7 @@ bool CDiscAdjFSIDriver::BGSConvergence(unsigned long IntIter,
   /*--- Convergence criteria ---*/
 
   sbuf_conv[0] = Convergence;
-  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::GetComm());
 
   /*-- Compute global convergence criteria in the master node --*/
 
@@ -7344,7 +7266,7 @@ bool CDiscAdjFSIDriver::BGSConvergence(unsigned long IntIter,
     else sbuf_conv[0] = 0;
   }
 
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, MPI_COMM_WORLD);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
 
   if (sbuf_conv[0] == 1) { Convergence = true;}
   else { Convergence = false;}
@@ -7466,14 +7388,7 @@ void CMultiphysicsZonalDriver::Run() {
 
     /*--- For each zone runs one single iteration including the data transfers to it ---*/
 
-<<<<<<< HEAD
-#ifdef HAVE_MPI
-	int rank;
-	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-=======
     for (iZone = 0; iZone < nZone; iZone++) {
->>>>>>> SU2_original/develop
 
       // When running a unsteady simulation, we have to adapt CFL values here.
       if (unsteady && (config_container[ZONE_0]->GetCFL_Adapt() == YES)) {
@@ -7507,14 +7422,7 @@ void CMultiphysicsZonalDriver::Run() {
         checkConvergence += (int) integration_container[iZone][HEAT_SOL]->GetConvergence();
     }
 
-<<<<<<< HEAD
-#ifdef HAVE_MPI
-	int rank;
-	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-=======
     /*--- If convergence was reached in every zone --*/
->>>>>>> SU2_original/develop
 
     if (checkConvergence == nZone) break;
   }
@@ -7531,14 +7439,7 @@ void CMultiphysicsZonalDriver::Update() {
 
 void CMultiphysicsZonalDriver::DynamicMeshUpdate(unsigned long ExtIter) {
 
-<<<<<<< HEAD
-#ifdef HAVE_MPI
-	int rank;
-	MPI_Comm_rank(SU2_MPI::comm_x, &rank);
-#endif
-=======
   bool harmonic_balance;
->>>>>>> SU2_original/develop
 
   for (iZone = 0; iZone < nZone; iZone++) {
    harmonic_balance = (config_container[iZone]->GetUnsteady_Simulation() == HARMONIC_BALANCE);

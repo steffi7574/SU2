@@ -158,37 +158,37 @@ int main(int argc, char *argv[]) {
 
     /*--- Computational grid preprocesing ---*/
 
-    if (rank == MASTER_NODE) cout << endl << "----------------------- Preprocessing computations ----------------------" << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << endl << "----------------------- Preprocessing computations ----------------------" << endl;
 
     /*--- Compute elements surrounding points, points surrounding points ---*/
 
-    if (rank == MASTER_NODE) cout << "Setting local point connectivity." <<endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Setting local point connectivity." <<endl;
     geometry_container[iZone]->SetPoint_Connectivity();
 
     /*--- Check the orientation before computing geometrical quantities ---*/
 
     geometry_container[iZone]->SetBoundVolume();
     if (config_container[iZone]->GetReorientElements()) {
-      if (rank == MASTER_NODE) cout << "Checking the numerical grid orientation of the interior elements." <<endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Checking the numerical grid orientation of the interior elements." <<endl;
       geometry_container[iZone]->Check_IntElem_Orientation(config_container[iZone]);
       geometry_container[iZone]->Check_BoundElem_Orientation(config_container[iZone]);
     }
 
     /*--- Create the edge structure ---*/
 
-    if (rank == MASTER_NODE) cout << "Identify edges and vertices." <<endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Identify edges and vertices." <<endl;
     geometry_container[iZone]->SetEdges(); geometry_container[iZone]->SetVertex(config_container[iZone]);
 
     if (config_container[iZone]->GetDesign_Variable(0) != NO_DEFORMATION) {
       
       /*--- Compute center of gravity ---*/
       
-      if (rank == MASTER_NODE) cout << "Computing centers of gravity." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Computing centers of gravity." << endl;
       geometry_container[iZone]->SetCoord_CG();
       
       /*--- Create the dual control volume structures ---*/
       
-      if (rank == MASTER_NODE) cout << "Setting the bound control volume structure." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Setting the bound control volume structure." << endl;
       geometry_container[iZone]->SetBoundControlVolume(config_container[iZone], ALLOCATE);
       
     }
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
     
     if (config_container[iZone]->GetDesign_Variable(0) != NO_DEFORMATION) {
       
-      if (rank == MASTER_NODE) cout << endl << "--------------------- Surface grid deformation (ZONE " << iZone <<") -----------------" << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << endl << "--------------------- Surface grid deformation (ZONE " << iZone <<") -----------------" << endl;
       
       /*--- Definition and initialization of the surface deformation class ---*/
       
@@ -225,12 +225,12 @@ int main(int argc, char *argv[]) {
       
       /*--- Surface grid deformation ---*/
       
-      if (rank == MASTER_NODE) cout << "Performing the deformation of the surface grid." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Performing the deformation of the surface grid." << endl;
       surface_movement[iZone]->SetSurface_Deformation(geometry_container[iZone], config_container[iZone]);
       
       if (config_container[iZone]->GetDesign_Variable(0) != FFD_SETTING) {
         
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << endl << "------------------- Volumetric grid deformation (ZONE " << iZone <<") ----------------" << endl;
         
         /*--- Definition of the Class for grid movement ---*/
@@ -252,28 +252,28 @@ int main(int argc, char *argv[]) {
       
       if (config_container[iZone]->GetDesign_Variable(0) == SCALE && allmoving) {
         
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << "Performing a scaling of the volumetric grid." << endl;
         
         grid_movement[iZone]->SetVolume_Scaling(geometry_container[iZone], config_container[iZone], false);
         
       } else if (config_container[iZone]->GetDesign_Variable(0) == TRANSLATION && allmoving) {
         
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << "Performing a translation of the volumetric grid." << endl;
         
         grid_movement[iZone]->SetVolume_Translation(geometry_container[iZone], config_container[iZone], false);
         
       } else if (config_container[iZone]->GetDesign_Variable(0) == ROTATION && allmoving) {
         
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << "Performing a rotation of the volumetric grid." << endl;
         
         grid_movement[iZone]->SetVolume_Rotation(geometry_container[iZone], config_container[iZone], false);
         
       } else if (config_container[iZone]->GetDesign_Variable(0) != FFD_SETTING) {
         
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << "Performing the deformation of the volumetric grid." << endl;
         
         grid_movement[iZone]->SetVolume_Deformation(geometry_container[iZone], config_container[iZone], false);
@@ -286,7 +286,7 @@ int main(int argc, char *argv[]) {
   
   /*--- Computational grid preprocesing ---*/
   
-  if (rank == MASTER_NODE) cout << endl << "----------------------- Write deformed grid files -----------------------" << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << endl << "----------------------- Write deformed grid files -----------------------" << endl;
   
   /*--- Output deformed grid for visualization, if requested (surface and volumetric), in parallel 
    requires to move all the data to the master node---*/
@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
   
     /*--- Write the the free-form deformation boxes after deformation. ---*/
     
-    if (rank == MASTER_NODE) cout << "Adding any FFD information to the SU2 file." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Adding any FFD information to the SU2 file." << endl;
     
     surface_movement[ZONE_0]->WriteFFDInfo(surface_movement, geometry_container, config_container);
     
@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
   
   delete config;
   config = NULL;
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
   
   if (geometry_container != NULL) {
@@ -319,7 +319,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] geometry_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CGeometry container." << endl;
   
   if (surface_movement != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] surface_movement;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CSurfaceMovement class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CSurfaceMovement class." << endl;
   
   if (grid_movement != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] grid_movement;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CVolumetricMovement class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CVolumetricMovement class." << endl;
   
   if (config_container != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -349,10 +349,10 @@ int main(int argc, char *argv[]) {
     }
     delete [] config_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CConfig container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CConfig container." << endl;
   
   if (output != NULL) delete output;
-  if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted COutput class." << endl;
 
   /*--- Synchronization point after a single solver iteration. Compute the
    wall clock time required. ---*/
@@ -366,14 +366,14 @@ int main(int argc, char *argv[]) {
   /*--- Compute/print the total time for performance benchmarking. ---*/
   
   UsedTime = StopTime-StartTime;
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     cout << "\nCompleted in " << fixed << UsedTime << " seconds on "<< size;
     if (size == 1) cout << " core." << endl; else cout << " cores." << endl;
   }
   
   /*--- Exit the solver cleanly ---*/
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
   cout << endl << "------------------------- Exit Success (SU2_DEF) ------------------------" << endl << endl;
 
   /*--- Finalize MPI parallelization ---*/

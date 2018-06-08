@@ -324,7 +324,7 @@ int main(int argc, char *argv[]) {
     
 	}
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
   
   if (geometry_container != NULL) {
@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] geometry_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CGeometry container." << endl;
   
   
   if (config_container != NULL) {
@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] config_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CConfig container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CConfig container." << endl;
   
   delete config;
   config = NULL;
@@ -363,7 +363,7 @@ int main(int argc, char *argv[]) {
   /*--- Compute/print the total time for performance benchmarking. ---*/
   
   UsedTime = StopTime-StartTime;
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
     cout << "\nCompleted in " << fixed << UsedTime << " seconds on "<< size;
     if (size == 1) cout << " core." << endl; else cout << " cores." << endl;
   }

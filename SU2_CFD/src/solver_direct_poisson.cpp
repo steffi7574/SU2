@@ -93,7 +93,7 @@ CPoissonSolver::CPoissonSolver(CGeometry *geometry, CConfig *config) : CSolver()
   }
   
   /*--- Initialization of the structure of the whole Jacobian ---*/
-  if (rank == MASTER_NODE) cout << "Initialize Jacobian structure (Poisson equation)." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Initialize Jacobian structure (Poisson equation)." << endl;
   StiffMatrix.Initialize(nPoint, nPointDomain, nVar, nVar, true, geometry, config);
   
   /*--- Solution and residual vectors ---*/

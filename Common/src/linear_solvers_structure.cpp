@@ -120,7 +120,7 @@ void CSysSolve::ModGramSchmidt(int i, vector<vector<su2double> > & Hsbg, vector<
   /*--- Convergence criteria ---*/
 
   sbuf_conv[0] = Convergence;
-  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Reduce(sbuf_conv, rbuf_conv, 1, MPI_UNSIGNED_SHORT, MPI_SUM, MASTER_NODE, SU2_MPI::GetComm());
 
   /*-- Compute global convergence criteria in the master node --*/
 
@@ -130,7 +130,7 @@ void CSysSolve::ModGramSchmidt(int i, vector<vector<su2double> > & Hsbg, vector<
     else sbuf_conv[0] = 0;
   }
 
-  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::comm_x);
+  SU2_MPI::Bcast(sbuf_conv, 1, MPI_UNSIGNED_SHORT, MASTER_NODE, SU2_MPI::GetComm());
 
   if (sbuf_conv[0] == 1) Convergence = true;
   else Convergence = false;
@@ -215,7 +215,7 @@ unsigned long CSysSolve::CG_LinSolver(const CSysVector & b, CSysVector & x, CMat
   su2double norm_r = r.norm();
   su2double norm0 = b.norm();
   if ( (norm_r < tol*norm0) || (norm_r < eps) ) {
-    if (rank == MASTER_NODE) cout << "CSysSolve::ConjugateGradient(): system solved by initial guess." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "CSysSolve::ConjugateGradient(): system solved by initial guess." << endl;
     return 0;
   }
 
@@ -278,7 +278,7 @@ unsigned long CSysSolve::CG_LinSolver(const CSysVector & b, CSysVector & x, CMat
 
 
 
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "# Conjugate Gradient final (true) residual:" << endl;
     cout << "# Iteration = " << i << ": |res|/|res0| = "  << norm_r/norm0 << ".\n" << endl;
   }
@@ -293,7 +293,7 @@ unsigned long CSysSolve::CG_LinSolver(const CSysVector & b, CSysVector & x, CMat
     su2double true_res = r.norm();
     
     if (fabs(true_res - norm_r) > tol*10.0) {
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << "# WARNING in CSysSolve::CG_LinSolver(): " << endl;
         cout << "# true residual norm and calculated residual norm do not agree." << endl;
         cout << "# true_res = " << true_res <<", calc_res = " << norm_r <<", tol = " << tol*10 <<"."<< endl;
@@ -358,7 +358,7 @@ unsigned long CSysSolve::FGMRES_LinSolver(const CSysVector & b, CSysVector & x, 
 
     /*---  System is already solved ---*/
 
-    if (rank == MASTER_NODE) cout << "CSysSolve::FGMRES(): system solved by initial guess." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "CSysSolve::FGMRES(): system solved by initial guess." << endl;
     return 0;
   }
 
@@ -429,7 +429,7 @@ unsigned long CSysSolve::FGMRES_LinSolver(const CSysVector & b, CSysVector & x, 
     x.Plus_AX(y[k], z[k]);
   }
 
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "# FGMRES final (true) residual:" << endl;
     cout << "# Iteration = " << i << ": |res|/|res0| = " << beta/norm0 << ".\n" << endl;
   }
@@ -442,7 +442,7 @@ unsigned long CSysSolve::FGMRES_LinSolver(const CSysVector & b, CSysVector & x, 
     su2double res = w[0].norm();
     
     if (fabs(res - beta) > tol*10) {
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << "# WARNING in CSysSolve::FGMRES_LinSolver(): " << endl;
         cout << "# true residual norm and calculated residual norm do not agree." << endl;
         cout << "# res = " << res <<", beta = " << beta <<", tol = " << tol*10 <<"."<< endl;
@@ -486,7 +486,7 @@ unsigned long CSysSolve::BCGSTAB_LinSolver(const CSysVector & b, CSysVector & x,
   su2double norm_r = r.norm();
   su2double norm0 = b.norm();
   if ( (norm_r < tol*norm0) || (norm_r < eps) ) {
-    if (rank == MASTER_NODE) cout << "CSysSolve::BCGSTAB(): system solved by initial guess." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "CSysSolve::BCGSTAB(): system solved by initial guess." << endl;
     return 0;
   }
   
@@ -564,7 +564,7 @@ unsigned long CSysSolve::BCGSTAB_LinSolver(const CSysVector & b, CSysVector & x,
     
   }
   
-  if ((monitoring) && (rank == MASTER_NODE)) {
+  if ((monitoring) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
     cout << "# BCGSTAB final (true) residual:" << endl;
     cout << "# Iteration = " << i << ": |res|/|res0| = "  << norm_r/norm0 << ".\n" << endl;
   }
@@ -575,7 +575,7 @@ unsigned long CSysSolve::BCGSTAB_LinSolver(const CSysVector & b, CSysVector & x,
     r = b; r -= A_x;
     su2double true_res = r.norm();
     
-    if ((fabs(true_res - norm_r) > tol*10.0) && (rank == MASTER_NODE)) {
+    if ((fabs(true_res - norm_r) > tol*10.0) && (SU2_MPI::GetGlobalRank() == MASTER_NODE) ) {
       cout << "# WARNING in CSysSolve::BCGSTAB_LinSolver(): " << endl;
       cout << "# true residual norm and calculated residual norm do not agree." << endl;
       cout << "# true_res = " << true_res <<", calc_res = " << norm_r <<", tol = " << tol*10 <<"."<< endl;

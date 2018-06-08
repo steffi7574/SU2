@@ -3,15 +3,6 @@ BUILD:
 falls erstmalig auf einem anderen Rechner installiert ODER configuration.ac geändert wurde: 
 > autoreconf    // macht aus configure.ac neues configure und erstellt die Makefile.in 
 
-Primal:
----------------
-in SU2/:
->./configure --prefix=$PWD --enable-mpi --with-cxx=mpicxx --with-cc=mpicc --with-adtoolbox-include=/home/sguenther/Software/AdToolbox/include/tools/io/ --with-xbraid-lib=/home/sguenther/Software/braid_warm_restart_export/ --with-xbraid-include=/home/sguenther/Software/braid_warm_restart_export
-
-
-in SU2:
->make -j4 install
-
 
 Primal+Adjoint:
 ----------------
@@ -19,13 +10,12 @@ in SU2/:
 clean distribution, if configure has been executed before. 
 >make distclean
 
-in SU2:
->./preconfigure.py  mit den gleichen args wie oben plus --enable-autodiff // erstellt SU2_BASE und SU2_AD Ordner und macht dann configure in beiden:
+in SU2/:
+>./preconfigure.py --prefix=$PWD --enable-mpi --with-cxx=mpicxx --with-cc=mpicc --with-xbraid-lib=/home/sguenther/Software/braid_warm_restart_export/ --with-xbraid-include=/home/sguenther/Software/braid_warm_restart_export --enable-autodiff
+// erstellt SU2_BASE und SU2_AD Ordner und macht dann configure in beiden:
 
->./preconfigure --prefix=$PWD --enable-mpi --with-cxx=mpicxx --with-cc=mpicc --with-adtoolbox-include=/home/sguenther/Software/AdToolbox/include/tools/io/ --with-xbraid-lib=/home/sguenther/Software/braid_warm_restart_export/ --with-xbraid-include=/home/sguenther/Software/braid_warm_restart_export --enable-autodiff
 
-
->make -j4 install 
+>make -j install 
 %compiliert beides, wenn es im Hauptordner ausgeführt wird -> 2 binaries: su2_CFD & su2_CFD_AD für normale und die Codi Variante
 
 

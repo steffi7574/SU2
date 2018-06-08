@@ -93,23 +93,35 @@ public:
   typedef MPI_Op       Op;
   typedef MPI_Comm     Comm;
 
-  static Comm comm_x, comm_t;
-  
+
 protected:
   
-  static int Rank, Size;
-  static Comm currentComm;
+  static Comm space_comm;
+  static Comm time_comm;
+  static Comm global_comm;
   
 public:
   
   static int GetRank();
   
+  static int GetGlobalRank();
+  
   static int GetSize();
   
-  static Comm GetComm();
+  static int GetGlobalSize();
   
+  static Comm GetComm();
+
+  static Comm GetGlobalComm();
+
+  static Comm GetTimeComm();
+
   static void SetComm(Comm NewComm);
 
+  static void SetGlobalComm(Comm NewComm);
+
+  static void SetTimeComm(Comm NewComm);
+  
   static void Error(std::string ErrorMsg, std::string FunctionName);
 
   static void Init(int *argc, char***argv);
@@ -210,8 +222,6 @@ public:
 
   static AMPI_Datatype convertDatatype(MPI_Datatype datatype);
 
-  static void SetComm(Comm NewComm);
-  
   static void Init(int *argc, char***argv);
 
   static void Buffer_attach(void *buffer, int size);
@@ -319,17 +329,29 @@ public:
   };
 
 private:
-  static int Rank, Size;
-  static Comm currentComm;
+  static Comm space_comm;
+  static Comm global_comm;
 
 public:
   static int GetRank();
   
-  static int GetSize();  
+  static int GetGlobalRank();
+  
+  static int GetSize();
+  
+  static int GetGlobalSize();
   
   static Comm GetComm();
-  
+
+  static Comm GetGlobalComm();
+
+  static Comm GetTimeComm();
+
   static void SetComm(Comm NewComm);
+
+  static void SetGlobalComm(Comm NewComm);
+  
+  static void SetTimeComm(Comm NewComm);
   
   static void Error(std::string ErrorMsg, std::string FunctionName);
     

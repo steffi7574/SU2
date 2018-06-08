@@ -42,12 +42,12 @@ void CDriver::PythonInterface_Preprocessing(){
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::GetComm(), &rank);
 #endif
 
   /* --- Initialize boundary conditions customization, this is achieve through the Python wrapper --- */
   for(iZone=0; iZone < nZone; iZone++){
-    if (rank == MASTER_NODE) cout << "Setting customized boundary conditions for zone " << iZone << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Setting customized boundary conditions for zone " << iZone << endl;
     for (iMesh = 0; iMesh <= config_container[iZone]->GetnMGLevels(); iMesh++) {
       geometry_container[iZone][iMesh]->SetCustomBoundary(config_container[iZone]);
     }
@@ -841,15 +841,15 @@ void CGeneralDriver::StaticMeshUpdate() {
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::GetComm(), &rank);
 #endif
 
-  if(rank == MASTER_NODE) cout << " Deforming the volume grid." << endl;
+  if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << " Deforming the volume grid." << endl;
   grid_movement[ZONE_0]->SetVolume_Deformation(geometry_container[ZONE_0][MESH_0], config_container[ZONE_0], true);
 
-  if(rank == MASTER_NODE) cout << "No grid velocity to be computed : static grid deformation." << endl;
+  if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "No grid velocity to be computed : static grid deformation." << endl;
 
-  if(rank == MASTER_NODE) cout << " Updating multigrid structure." << endl;
+  if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << " Updating multigrid structure." << endl;
   grid_movement[ZONE_0]->UpdateMultiGrid(geometry_container[ZONE_0], config_container[ZONE_0]);
 
 }
@@ -881,10 +881,10 @@ void CGeneralDriver::BoundaryConditionsUpdate(){
   unsigned short iZone;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::GetComm(), &rank);
 #endif
 
-  if(rank == MASTER_NODE) cout << "Updating boundary conditions." << endl;
+  if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Updating boundary conditions." << endl;
   for(iZone = 0; iZone < nZone; iZone++){
     geometry_container[iZone][MESH_0]->UpdateCustomBoundaryConditions(geometry_container[iZone], config_container[iZone]);
   }
@@ -931,16 +931,16 @@ void CFluidDriver::StaticMeshUpdate() {
   int rank = MASTER_NODE;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::GetComm(), &rank);
 #endif
 
   for(iZone = 0; iZone < nZone; iZone++) {
-    if(rank == MASTER_NODE) cout << " Deforming the volume grid." << endl;
+    if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << " Deforming the volume grid." << endl;
     grid_movement[iZone]->SetVolume_Deformation(geometry_container[iZone][MESH_0], config_container[iZone], true);
 
-    if(rank == MASTER_NODE) cout << "No grid velocity to be computde : static grid deformation." << endl;
+    if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "No grid velocity to be computde : static grid deformation." << endl;
 
-    if(rank == MASTER_NODE) cout << " Updating multigrid structure." << endl;
+    if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << " Updating multigrid structure." << endl;
     grid_movement[iZone]->UpdateMultiGrid(geometry_container[iZone], config_container[iZone]);
   }
 }
@@ -1004,10 +1004,10 @@ void CFluidDriver::BoundaryConditionsUpdate(){
   unsigned short iZone;
 
 #ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(SU2_MPI::GetComm(), &rank);
 #endif
 
-  if(rank == MASTER_NODE) cout << "Updating boundary conditions." << endl;
+  if(SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Updating boundary conditions." << endl;
   for(iZone = 0; iZone < nZone; iZone++){
     geometry_container[iZone][MESH_0]->UpdateCustomBoundaryConditions(geometry_container[iZone], config_container[iZone]);
   }

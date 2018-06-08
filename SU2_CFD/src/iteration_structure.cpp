@@ -75,7 +75,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
   case RIGID_MOTION:
 
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << endl << " Performing rigid mesh transformation." << endl;
       }
 
@@ -101,7 +101,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
     case DEFORMING:
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << endl << " Updating surface positions." << endl;
 
       /*--- Translating ---*/
@@ -112,7 +112,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
                                             config_container[val_iZone], ExtIter, val_iZone);
       /*--- Deform the volume grid around the new boundary locations ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << " Deforming the volume grid." << endl;
       grid_movement[val_iZone]->SetVolume_Deformation(geometry_container[val_iZone][MESH_0],
                                            config_container[val_iZone], true);
@@ -125,7 +125,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
                                          config_container[val_iZone], ExtIter, val_iZone);
       /*--- Deform the volume grid around the new boundary locations ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << " Deforming the volume grid." << endl;
       grid_movement[val_iZone]->SetVolume_Deformation(geometry_container[val_iZone][MESH_0],
                                            config_container[val_iZone], true);
@@ -138,7 +138,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
                                          config_container[val_iZone], ExtIter, val_iZone);
       /*--- Deform the volume grid around the new boundary locations ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << " Deforming the volume grid." << endl;
       grid_movement[val_iZone]->SetVolume_Deformation(geometry_container[val_iZone][MESH_0],
                                            config_container[val_iZone], true);
@@ -151,7 +151,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
                                          config_container[val_iZone], ExtIter, val_iZone);
       /*--- Deform the volume grid around the new boundary locations ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << " Deforming the volume grid." << endl;
       grid_movement[val_iZone]->SetVolume_Deformation(geometry_container[val_iZone][MESH_0],
                                            config_container[val_iZone], true);
@@ -160,7 +160,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
        differencing based on node coordinates at previous times. ---*/
 
       if (!adjoint) {
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << " Computing grid velocities by finite differencing." << endl;
         geometry_container[val_iZone][MESH_0]->SetGridVelocity(config_container[val_iZone], ExtIter);
       }
@@ -177,7 +177,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
       /*--- Apply rigid rotation to entire grid first, if necessary ---*/
 
       if (Kind_Grid_Movement == EXTERNAL_ROTATION) {
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << " Updating node locations by rigid rotation." << endl;
         grid_movement[val_iZone]->Rigid_Rotation(geometry_container[val_iZone][MESH_0],
                                       config_container[val_iZone], val_iZone, ExtIter);
@@ -185,14 +185,14 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
       /*--- Load new surface node locations from external files ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << " Updating surface locations from file." << endl;
       surface_movement[val_iZone]->SetExternal_Deformation(geometry_container[val_iZone][MESH_0],
                                                 config_container[val_iZone], val_iZone, ExtIter);
 
       /*--- Deform the volume grid around the new boundary locations ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << " Deforming the volume grid." << endl;
       grid_movement[val_iZone]->SetVolume_Deformation(geometry_container[val_iZone][MESH_0],
                                            config_container[val_iZone], true);
@@ -201,7 +201,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
        differencing based on node coordinates at previous times. ---*/
 
       if (!adjoint) {
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << " Computing grid velocities by finite differencing." << endl;
         geometry_container[val_iZone][MESH_0]->SetGridVelocity(config_container[val_iZone], ExtIter);
       }
@@ -219,7 +219,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
       if (IntIter == 0) {
         if (Kind_Grid_Movement == AEROELASTIC_RIGID_MOTION) {
 
-          if (rank == MASTER_NODE) {
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
             cout << endl << " Performing rigid mesh transformation." << endl;
           }
 
@@ -247,7 +247,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
       /*--- Use the if statement to move the grid only at selected dual time step iterations. ---*/
       else if (IntIter % config_container[val_iZone]->GetAeroelasticIter() == 0) {
 
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << endl << " Solving aeroelastic equations and updating surface positions." << endl;
 
         /*--- Solve the aeroelastic equations for the new node locations of the moving markers(surfaces) ---*/
@@ -256,7 +256,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
         /*--- Deform the volume grid around the new boundary locations ---*/
 
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << " Deforming the volume grid due to the aeroelastic movement." << endl;
         grid_movement[val_iZone]->SetVolume_Deformation(geometry_container[val_iZone][MESH_0],
                                              config_container[val_iZone], true);
@@ -264,7 +264,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
         /*--- Update the grid velocities on the fine mesh using finite
          differencing based on node coordinates at previous times. ---*/
 
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << " Computing grid velocities by finite differencing." << endl;
         geometry_container[val_iZone][MESH_0]->SetGridVelocity(config_container[val_iZone], ExtIter);
 
@@ -280,7 +280,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
       if (ExtIter != 0) {
 
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << " Deforming the grid using the Linear Elasticity solution." << endl;
 
         /*--- Update the coordinates of the grid using the linear elasticity solution. ---*/
@@ -300,12 +300,12 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
     case FLUID_STRUCTURE:
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << endl << "Deforming the grid for Fluid-Structure Interaction applications." << endl;
 
       /*--- Deform the volume grid around the new boundary locations ---*/
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "Deforming the volume grid." << endl;
       grid_movement[val_iZone]->SetVolume_Deformation(geometry_container[val_iZone][MESH_0],
                                            config_container[val_iZone], true);
@@ -314,12 +314,12 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
       stat_mesh = (nIterMesh == 0);
 
       if (!adjoint && !stat_mesh) {
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << "Computing grid velocities by finite differencing." << endl;
         geometry_container[val_iZone][MESH_0]->SetGridVelocity(config_container[val_iZone], ExtIter);
       }
       else if (stat_mesh) {
-          if (rank == MASTER_NODE)
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
             cout << "The mesh is up-to-date. Using previously stored grid velocities." << endl;
       }
 
@@ -335,18 +335,18 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
 
     case FLUID_STRUCTURE_STATIC:
 
-      if ((rank == MASTER_NODE) && (!discrete_adjoint))
+      if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!discrete_adjoint))
         cout << endl << "Deforming the grid for static Fluid-Structure Interaction applications." << endl;
 
       /*--- Deform the volume grid around the new boundary locations ---*/
 
-      if ((rank == MASTER_NODE) && (!discrete_adjoint))
+      if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!discrete_adjoint))
         cout << "Deforming the volume grid." << endl;
 
       grid_movement[val_iZone]->SetVolume_Deformation_Elas(geometry_container[val_iZone][MESH_0],
                                                            config_container[val_iZone], true, false);
 
-      if ((rank == MASTER_NODE) && (!discrete_adjoint))
+      if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (!discrete_adjoint))
         cout << "There is no grid velocity." << endl;
 
       /*--- Update the multigrid structure after moving the finest grid,
@@ -359,7 +359,7 @@ void CIteration::SetGrid_Movement(CGeometry ***geometry_container,
     case NO_MOVEMENT: case GUST: default:
 
       /*--- There is no mesh motion specified for this zone. ---*/
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "No mesh motion specified." << endl;
 
       break;
@@ -618,11 +618,11 @@ void CFluidIteration::SetWind_GustField(CConfig *config_container, CGeometry **g
   // If the gust derivatives are zero the source term is also zero.
   // The source term itself is implemented in the class CSourceWindGust
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl << "Running simulation with a Wind Gust." << endl;
   unsigned short iDim, nDim = geometry_container[MESH_0]->GetnDim(); //We assume nDim = 2
   if (nDim != 2) {
-    if (rank == MASTER_NODE) {
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << endl << "WARNING - Wind Gust capability is only verified for 2 dimensional simulations." << endl;
     }
   }
@@ -761,7 +761,7 @@ void CFluidIteration::SetWind_GustField(CConfig *config_container, CGeometry **g
           case NONE: default:
             
             /*--- There is no wind gust specified. ---*/
-            if (rank == MASTER_NODE) {
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
               cout << "No wind gust specified." << endl;
             }
             break;
@@ -1366,7 +1366,7 @@ void CFEAIteration::Iterate(COutput *output,
 
           solver_container[val_iZone][MESH_0][FEA_SOL]->SetLoad_Increment(loadIncrement);
 
-          if (rank == MASTER_NODE) {
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
             cout << endl;
             cout << "-- Incremental load: increment " << iIncrement + 1 << " ----------------------------------------" << endl;
           }
@@ -2264,7 +2264,7 @@ void CDiscAdjFEAIteration::Preprocess(COutput *output,
 
   if (CurrentRecording != FEA_DISP_VARS || dynamic){
 
-    if (rank == MASTER_NODE){
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       cout << "Direct iteration to store computational graph." << endl;
       cout << "Compute residuals to check the convergence of the direct problem." << endl;
     }

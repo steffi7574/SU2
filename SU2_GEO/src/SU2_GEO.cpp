@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
   
   /*--- Evaluation of the objective function ---*/
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"----------------------- Preprocessing computations ----------------------" << endl;
   
   /*--- Set the number of sections, and allocate the memory ---*/
@@ -204,44 +204,44 @@ int main(int argc, char *argv[]) {
   
   /*--- Compute elements surrounding points, points surrounding points ---*/
   
-  if (rank == MASTER_NODE) cout << "Setting local point connectivity." <<endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Setting local point connectivity." <<endl;
   geometry_container[ZONE_0]->SetPoint_Connectivity();
   
   /*--- Check the orientation before computing geometrical quantities ---*/
   
   if (config_container[ZONE_0]->GetReorientElements()) {
-    if (rank == MASTER_NODE) cout << "Checking the numerical grid orientation of the interior elements." <<endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Checking the numerical grid orientation of the interior elements." <<endl;
     geometry_container[ZONE_0]->Check_IntElem_Orientation(config_container[ZONE_0]);
   }
   
   /*--- Create the edge structure ---*/
   
-  if (rank == MASTER_NODE) cout << "Identify edges and vertices." <<endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Identify edges and vertices." <<endl;
   geometry_container[ZONE_0]->SetEdges(); geometry_container[ZONE_0]->SetVertex(config_container[ZONE_0]);
   
   /*--- Compute center of gravity ---*/
   
-  if (rank == MASTER_NODE) cout << "Computing centers of gravity." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Computing centers of gravity." << endl;
   geometry_container[ZONE_0]->SetCoord_CG();
   
   /*--- Create the dual control volume structures ---*/
   
-  if (rank == MASTER_NODE) cout << "Setting the bound control volume structure." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Setting the bound control volume structure." << endl;
   geometry_container[ZONE_0]->SetBoundControlVolume(config_container[ZONE_0], ALLOCATE);
   
   /*--- Compute the surface curvature ---*/
   
-  if (rank == MASTER_NODE) cout << "Compute the surface curvature." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Compute the surface curvature." << endl;
   geometry_container[ZONE_0]->ComputeSurf_Curvature(config_container[ZONE_0]);
   
   /*--- Computation of positive surface area in the z-plane ---*/
   
-  if (rank == MASTER_NODE) cout << "Setting reference area and span." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Setting reference area and span." << endl;
   geometry_container[ZONE_0]->SetPositive_ZArea(config_container[ZONE_0]);
   
   /*--- Create plane structure ---*/
   
-  if (rank == MASTER_NODE) cout << "Set plane structure." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Set plane structure." << endl;
   
   if (geometry_container[ZONE_0]->GetnDim() == 2) {
     Plane_Normal[0][0] = 0.0;   Plane_P0[0][0] = 0.0;
@@ -303,7 +303,7 @@ int main(int argc, char *argv[]) {
     
     if (config_container[ZONE_0]->GetGeo_Description() == FUSELAGE) {
       
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << "Computing the fuselage continuous description." << endl << endl;
       }
       
@@ -315,7 +315,7 @@ int main(int argc, char *argv[]) {
       
       /*--- Screen output for the wing definition ---*/
       
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         if (config_container[ZONE_0]->GetSystemMeasurements() == US) cout << "Fuselage volume: "    << Fuselage_Volume << " in^3. ";
         else cout << "Fuselage volume: "    << Fuselage_Volume << " m^3. ";
         if (config_container[ZONE_0]->GetSystemMeasurements() == US) cout << "Fuselage wetted area: "    << Fuselage_WettedArea << " in^2. " << endl;
@@ -340,7 +340,7 @@ int main(int argc, char *argv[]) {
     
     else if (config_container[ZONE_0]->GetGeo_Description() == NACELLE) {
       
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << "Computing the nacelle continuous description." << endl << endl;
       }
       
@@ -351,7 +351,7 @@ int main(int argc, char *argv[]) {
 
       /*--- Screen output for the wing definition ---*/
       
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         if (config_container[ZONE_0]->GetSystemMeasurements() == US) cout << "Nacelle volume: "    << Nacelle_Volume << " in^3. ";
         else cout << "Nacelle volume: "    << Nacelle_Volume << " m^3. ";
         if (config_container[ZONE_0]->GetSystemMeasurements() == US) cout << "Nacelle min. thickness: "  << Nacelle_MinThickness << " in. ";
@@ -376,7 +376,7 @@ int main(int argc, char *argv[]) {
     
     else {
       
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << "Computing the wing continuous description." << endl << endl;
       }
       
@@ -387,7 +387,7 @@ int main(int argc, char *argv[]) {
       
       /*--- Screen output for the wing definition ---*/
       
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         if (config_container[ZONE_0]->GetSystemMeasurements() == US) cout << "Wing volume: "    << Wing_Volume << " in^3. ";
         else cout << "Wing volume: "    << Wing_Volume << " m^3. ";
         if (config_container[ZONE_0]->GetSystemMeasurements() == US) cout << "Wing min. thickness: "  << Wing_MinThickness << " in. ";
@@ -422,7 +422,7 @@ int main(int argc, char *argv[]) {
                                                        Variable_Airfoil[iPlane], true, config_container[ZONE_0]);
   }
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"-------------------- Objective function evaluation ----------------------" << endl;
   
   if (rank == MASTER_NODE) {
@@ -609,7 +609,7 @@ int main(int argc, char *argv[]) {
     FFDBox = new CFreeFormDefBox*[MAX_NUMBER_FFD];
     for (iFFDBox = 0; iFFDBox < MAX_NUMBER_FFD; iFFDBox++) FFDBox[iFFDBox] = NULL;
     
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << endl << endl << "------------- Gradient evaluation using finite differences --------------" << endl;
     
     /*--- Write the gradient in a external file ---*/
@@ -639,7 +639,7 @@ int main(int argc, char *argv[]) {
         
         if (iDV == 0) {
           
-          if (rank == MASTER_NODE) cout << "Read the FFD information from mesh file." << endl;
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Read the FFD information from mesh file." << endl;
           
           /*--- Read the FFD information from the grid file ---*/
           
@@ -671,21 +671,21 @@ int main(int argc, char *argv[]) {
           
           for (iFFDBox = 0; iFFDBox < surface_movement->GetnFFDBox(); iFFDBox++) {
             
-            if (rank == MASTER_NODE) cout << "Checking FFD box dimension." << endl;
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Checking FFD box dimension." << endl;
             surface_movement->CheckFFDDimension(geometry_container[ZONE_0], config_container[ZONE_0], FFDBox[iFFDBox], iFFDBox);
             
             
-            if (rank == MASTER_NODE) cout << "Check the FFD box intersections with the solid surfaces." << endl;
+            if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Check the FFD box intersections with the solid surfaces." << endl;
             surface_movement->CheckFFDIntersections(geometry_container[ZONE_0], config_container[ZONE_0], FFDBox[iFFDBox], iFFDBox);
             
           }
           
-          if (rank == MASTER_NODE)
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
             cout <<"-------------------------------------------------------------------------" << endl;
           
         }
         
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 3D deformation of the surface." << endl;
         }
@@ -725,7 +725,7 @@ int main(int argc, char *argv[]) {
       /*--- Hicks Henne design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == HICKS_HENNE) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -736,7 +736,7 @@ int main(int argc, char *argv[]) {
       /*--- Surface bump design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == SURFACE_BUMP) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -747,7 +747,7 @@ int main(int argc, char *argv[]) {
       /*--- CST design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == CST) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -758,7 +758,7 @@ int main(int argc, char *argv[]) {
       /*--- Translation design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == TRANSLATION) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -769,7 +769,7 @@ int main(int argc, char *argv[]) {
       /*--- Scale design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == SCALE) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -780,7 +780,7 @@ int main(int argc, char *argv[]) {
       /*--- Rotation design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == ROTATION) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -791,7 +791,7 @@ int main(int argc, char *argv[]) {
       /*--- NACA_4Digits design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == NACA_4DIGITS) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -802,7 +802,7 @@ int main(int argc, char *argv[]) {
       /*--- Parabolic design variable ---*/
       
       else if (config_container[ZONE_0]->GetDesign_Variable(iDV) == PARABOLIC) {
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << endl << "Design variable number "<< iDV <<"." << endl;
           cout << "Perform 2D deformation of the surface." << endl;
         }
@@ -813,7 +813,7 @@ int main(int argc, char *argv[]) {
       /*--- Design variable not implement ---*/
       
       else {
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << "Design Variable not implemented yet" << endl;
       }
       
@@ -1233,7 +1233,7 @@ int main(int argc, char *argv[]) {
     
   }
 		
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
   
   delete [] Xcoord_Airfoil; delete [] Ycoord_Airfoil; delete [] Zcoord_Airfoil;
@@ -1250,7 +1250,7 @@ int main(int argc, char *argv[]) {
   delete config;
   config = NULL;
 
-  if (rank == MASTER_NODE) cout << "Deleted main variables." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted main variables." << endl;
   
   
   if (geometry_container != NULL) {
@@ -1261,10 +1261,10 @@ int main(int argc, char *argv[]) {
     }
     delete [] geometry_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CGeometry container." << endl;
 
   if (surface_movement != NULL) delete surface_movement;
-  if (rank == MASTER_NODE) cout << "Deleted CSurfaceMovement class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CSurfaceMovement class." << endl;
   
   if (FFDBox != NULL) {
     for (iFFDBox = 0; iFFDBox < MAX_NUMBER_FFD; iFFDBox++) {
@@ -1274,7 +1274,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] FFDBox;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CFreeFormDefBox class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CFreeFormDefBox class." << endl;
   
   if (config_container != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -1284,7 +1284,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] config_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CConfig container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CConfig container." << endl;
   
   /*--- Synchronization point after a single solver iteration. Compute the
    wall clock time required. ---*/
@@ -1298,14 +1298,14 @@ int main(int argc, char *argv[]) {
   /*--- Compute/print the total time for performance benchmarking. ---*/
   
   UsedTime = StopTime-StartTime;
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
     cout << "\n\nCompleted in " << fixed << UsedTime << " seconds on "<< size;
     if (size == 1) cout << " core." << endl; else cout << " cores." << endl;
   }
   
   /*--- Exit the solver cleanly ---*/
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Exit Success (SU2_GEO) ------------------------" << endl << endl;
   
   

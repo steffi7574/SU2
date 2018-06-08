@@ -12288,7 +12288,7 @@ private:
   su2double Total_Sens_ModVel;    /*!< \brief Total sensitivity to inlet velocity (incompressible). */
   su2double ObjFunc_Value;        /*!< \brief Value of the objective function. */
   su2double Mach, Alpha, Beta, Pressure, Temperature, BPressure, ModVel;
-  unsigned long nMarker;        /*!< \brief Total number of markers using the grid information. */
+  //unsigned long nMarker;        /*!< \brief Total number of markers using the grid information. */
   unsigned short nMarker, nMarker_InletUnst;				/*!< \brief Total number of markers using the grid information. */
   su2double **Total_Sens_FlowParam,
             **Local_Sens_FlowParam;

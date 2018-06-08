@@ -141,12 +141,12 @@ int main(int argc, char *argv[]) {
 
     /*--- Create the vertex structure (required for MPI) ---*/
 
-    if (rank == MASTER_NODE) cout << "Identify vertices." <<endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Identify vertices." <<endl;
     geometry_container[iZone]->SetVertex(config_container[iZone]);
 
     /*--- Store the global to local mapping after preprocessing. ---*/
 
-    if (rank == MASTER_NODE) cout << "Storing a mapping from global to local point index." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Storing a mapping from global to local point index." << endl;
     geometry_container[iZone]->SetGlobal_to_Local_Point();
 
   }
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
   StartTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
 #endif
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Solution Postprocessing -----------------------" << endl;
   
 	/*--- Definition of the output class (one for all the zones) ---*/
@@ -254,7 +254,7 @@ int main(int argc, char *argv[]) {
         }
           solver_container[ZONE_1]->LoadRestart_FSI(geometry_container[ZONE_1], &solver_container, config_container[ZONE_1], SU2_TYPE::Int(MESH_0));
 
-        if (rank == MASTER_NODE) cout << "Writing the volume solution for time step " << iExtIter << "." << endl;
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Writing the volume solution for time step " << iExtIter << "." << endl;
         output->SetBaselineResult_Files(solver_container, geometry_container, config_container, iExtIter, nZone);
       }
 
@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
                   solver_container[iZone]->LoadRestart(geometry_container, &solver_container, config_container[iZone], SU2_TYPE::Int(MESH_0), true);
               }
 
-              if (rank == MASTER_NODE)
+              if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
                 cout << "Writing the volume solution for time step " << iExtIter << "." << endl;
               output->SetBaselineResult_Files(solver_container, geometry_container, config_container, iExtIter, nZone);
             }
@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
         solver_container[iZone]->LoadRestart(geometry_container, &solver_container, config_container[iZone], SU2_TYPE::Int(MESH_0), true);
 
         /*--- Print progress in solution writing to the screen. ---*/
-        if (rank == MASTER_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
           cout << "Storing the volume solution for time instance " << iZone << "." << endl;
         }
 
@@ -397,7 +397,7 @@ int main(int argc, char *argv[]) {
                   solver_container[iZone]->LoadRestart(geometry_container, &solver_container, config_container[iZone], SU2_TYPE::Int(MESH_0), true);
               }
 
-              if (rank == MASTER_NODE)
+              if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
                 cout << "Writing the volume solution for time step " << iExtIter << "." << endl;
               output->SetBaselineResult_Files(solver_container, geometry_container, config_container, iExtIter, nZone);
             }
@@ -427,7 +427,7 @@ int main(int argc, char *argv[]) {
   delete config;
   config = NULL;
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
   
   if (geometry_container != NULL) {
@@ -438,7 +438,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] geometry_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CGeometry container." << endl;
   
   if (solver_container != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -448,7 +448,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] solver_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CSolver class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CSolver class." << endl;
   
   if (config_container != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -458,10 +458,10 @@ int main(int argc, char *argv[]) {
     }
     delete [] config_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CConfig container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CConfig container." << endl;
   
   if (output != NULL) delete output;
-  if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted COutput class." << endl;
   
   /*--- Synchronization point after a single solver iteration. Compute the
    wall clock time required. ---*/
@@ -475,14 +475,14 @@ int main(int argc, char *argv[]) {
   /*--- Compute/print the total time for performance benchmarking. ---*/
   
   UsedTime = StopTime-StartTime;
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
     cout << "\nCompleted in " << fixed << UsedTime << " seconds on "<< size;
     if (size == 1) cout << " core." << endl; else cout << " cores." << endl;
   }
   
   /*--- Exit the solver cleanly ---*/
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Exit Success (SU2_SOL) ------------------------" << endl << endl;
   
   /*--- Finalize MPI parallelization ---*/

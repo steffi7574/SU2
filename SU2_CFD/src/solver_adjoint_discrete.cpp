@@ -127,13 +127,6 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
       CSensitivity[iMarker]        = new su2double [geometry->nVertex[iMarker]];
   }
 
-  Sens_Geo  = new su2double[nMarker];
-  Sens_Mach = new su2double[nMarker];
-  Sens_AoA  = new su2double[nMarker];
-  Sens_Press = new su2double[nMarker];
-  Sens_Temp  = new su2double[nMarker];
-
-
   Local_Sens_FlowParam = NULL;
   Total_Sens_FlowParam = NULL;
 
@@ -288,13 +281,13 @@ void CDiscAdjSolver::RegisterSolution(CGeometry *geometry, CConfig *config) {
   for (iPoint = 0; iPoint < nPoint; iPoint++) {
     direct_solver->node[iPoint]->RegisterSolution(input);
   }
-  if (time_n_needed){
-    for (iPoint = 0; iPoint < nPoint; iPoint++){
+  if (time_n_needed) {
+    for (iPoint = 0; iPoint < nPoint; iPoint++) {
       direct_solver->node[iPoint]->RegisterSolution_time_n(input);
     }
   }
-  if (time_n1_needed){
-    for (iPoint = 0; iPoint < nPoint; iPoint++){
+  if (time_n1_needed) {
+    for (iPoint = 0; iPoint < nPoint; iPoint++) {
       direct_solver->node[iPoint]->RegisterSolution_time_n1(input);
     }
   }
@@ -373,6 +366,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
         }
       }
     }
+  }
 
   /*--- Register incompressible initialization values as input ---*/
 
@@ -397,7 +391,6 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
       AD::RegisterInput(BPressure);
       AD::RegisterInput(Temperature);
     }
-
 
     /*--- Set the BC values in the config class. ---*/
 
@@ -591,10 +584,10 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
     Local_Sens_Press = SU2_TYPE::GetDerivative(Pressure);
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&Local_Sens_Mach,  &Total_Sens_Mach,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
-    SU2_MPI::Allreduce(&Local_Sens_AoA,   &Total_Sens_AoA,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
-    SU2_MPI::Allreduce(&Local_Sens_Temp,  &Total_Sens_Temp,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
-    SU2_MPI::Allreduce(&Local_Sens_Press, &Total_Sens_Press, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&Local_Sens_Mach,  &Total_Sens_Mach,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&Local_Sens_AoA,   &Total_Sens_AoA,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&Local_Sens_Temp,  &Total_Sens_Temp,  1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&Local_Sens_Press, &Total_Sens_Press, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #else
     Total_Sens_Mach  = Local_Sens_Mach;
     Total_Sens_AoA   = Local_Sens_AoA;
@@ -610,8 +603,8 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
     Local_Sens_Temperature = SU2_TYPE::GetDerivative(Temperature);
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&Local_Sens_BPress,   &Total_Sens_BPress,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
-    SU2_MPI::Allreduce(&Local_Sens_Temperature,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+    SU2_MPI::Allreduce(&Local_Sens_BPress,   &Total_Sens_BPress,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&Local_Sens_Temperature,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 
 #else
     Total_Sens_BPress = Local_Sens_BPress;
@@ -647,9 +640,9 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
     Local_Sens_Temp   = SU2_TYPE::GetDerivative(Temperature);
 
 #ifdef HAVE_MPI
-    SU2_MPI::Allreduce(&Local_Sens_ModVel, &Total_Sens_ModVel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&Local_Sens_BPress, &Total_Sens_BPress, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    SU2_MPI::Allreduce(&Local_Sens_Temp,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    SU2_MPI::Allreduce(&Local_Sens_ModVel, &Total_Sens_ModVel, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&Local_Sens_BPress, &Total_Sens_BPress, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
+    SU2_MPI::Allreduce(&Local_Sens_Temp,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #else
     Total_Sens_ModVel = Local_Sens_ModVel;
     Total_Sens_BPress = Local_Sens_BPress;
@@ -934,7 +927,7 @@ void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CConfig *config) {
       }
   
   #ifdef HAVE_MPI
-      SU2_MPI::Allreduce(Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total], Buffer_Recv_Sens_FlowParam[iMarker_InletUnst_Total], 5, MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+      SU2_MPI::Allreduce(Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total], Buffer_Recv_Sens_FlowParam[iMarker_InletUnst_Total], 5, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
   #else
       for (iParam = 0; iParam < 5 ; iParam++){
          Buffer_Recv_Sens_FlowParam[iMarker_InletUnst_Total][iParam] = Buffer_Send_Sens_FlowParam[iMarker_InletUnst_Total][iParam];
@@ -1026,7 +1019,7 @@ void CDiscAdjSolver::SetSurface_Sensitivity(CGeometry *geometry, CConfig *config
     Sens_Geo[iMarker_Monitoring]   = 0.0;
   }
 
-  SU2_MPI::Allreduce(MySens_Geo, Sens_Geo, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(MySens_Geo, Sens_Geo, config->GetnMarker_Monitoring(), MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
   delete [] MySens_Geo;
 #endif
 
@@ -1136,7 +1129,7 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
 #ifndef HAVE_MPI
   rbuf_NotMatching = sbuf_NotMatching;
 #else
-  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::comm_x);
+  SU2_MPI::Allreduce(&sbuf_NotMatching, &rbuf_NotMatching, 1, MPI_UNSIGNED_SHORT, MPI_SUM, SU2_MPI::GetComm());
 #endif
   if (rbuf_NotMatching != 0) {
     SU2_MPI::Error(string("The solution file ") + filename + string(" doesn't match with the mesh file!\n") +

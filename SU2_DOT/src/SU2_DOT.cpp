@@ -162,55 +162,55 @@ int main(int argc, char *argv[]) {
   
   for (iZone = 0; iZone < nZone; iZone++){
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"----------------------- Preprocessing computations ----------------------" << endl;
   
   /*--- Compute elements surrounding points, points surrounding points ---*/
   
-  if (rank == MASTER_NODE) cout << "Setting local point connectivity." <<endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Setting local point connectivity." <<endl;
     geometry_container[iZone]->SetPoint_Connectivity();
   
   /*--- Check the orientation before computing geometrical quantities ---*/
   
     geometry_container[iZone]->SetBoundVolume();
     if (config_container[iZone]->GetReorientElements()) {
-      if (rank == MASTER_NODE) cout << "Checking the numerical grid orientation of the elements." <<endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Checking the numerical grid orientation of the elements." <<endl;
       geometry_container[iZone]->Check_IntElem_Orientation(config_container[iZone]);
       geometry_container[iZone]->Check_BoundElem_Orientation(config_container[iZone]);
     }
   
   /*--- Create the edge structure ---*/
   
-  if (rank == MASTER_NODE) cout << "Identify edges and vertices." <<endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Identify edges and vertices." <<endl;
     geometry_container[iZone]->SetEdges(); geometry_container[iZone]->SetVertex(config_container[iZone]);
   
   /*--- Compute center of gravity ---*/
   
-  if (rank == MASTER_NODE) cout << "Computing centers of gravity." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Computing centers of gravity." << endl;
   geometry_container[iZone]->SetCoord_CG();
   
   /*--- Create the dual control volume structures ---*/
   
-  if (rank == MASTER_NODE) cout << "Setting the bound control volume structure." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Setting the bound control volume structure." << endl;
   geometry_container[iZone]->SetBoundControlVolume(config_container[ZONE_0], ALLOCATE);
 
   /*--- Store the global to local mapping after preprocessing. ---*/
  
-  if (rank == MASTER_NODE) cout << "Storing a mapping from global to local point index." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Storing a mapping from global to local point index." << endl;
   geometry_container[iZone]->SetGlobal_to_Local_Point();
  
   /*--- Load the surface sensitivities from file. This is done only
    once: if this is an unsteady problem, a time-average of the surface
    sensitivities at each node is taken within this routine. ---*/
     if (!config_container[iZone]->GetDiscrete_Adjoint()){
-      if (rank == MASTER_NODE) cout << "Reading surface sensitivities at each node from file." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Reading surface sensitivities at each node from file." << endl;
       geometry_container[iZone]->SetBoundSensitivity(config_container[iZone]);
     } else {
-      if (rank == MASTER_NODE) cout << "Reading volume sensitivities at each node from file." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Reading volume sensitivities at each node from file." << endl;
       grid_movement[iZone] = new CVolumetricMovement(geometry_container[iZone], config_container[iZone]);
       geometry_container[iZone]->SetSensitivity(config_container[iZone]);
 
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << endl <<"---------------------- Mesh sensitivity computation ---------------------" << endl;
       grid_movement[iZone]->SetVolume_Deformation(geometry_container[iZone], config_container[iZone], false, true);
 
@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
   }
 
    if (config_container[ZONE_0]->GetDiscrete_Adjoint()){
-     if (rank == MASTER_NODE)
+     if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
        cout << endl <<"------------------------ Mesh sensitivity Output ------------------------" << endl;
      output = new COutput(config_container[ZONE_0]);
      output->SetSensitivity_Files(geometry_container, config_container, nZone);
@@ -237,7 +237,7 @@ int main(int argc, char *argv[]) {
        }
      }
 
-     if (rank == MASTER_NODE)
+     if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
        cout << endl <<"---------- Start gradient evaluation using sensitivity information ----------" << endl;
 
      /*--- Write the gradient in a external file ---*/
@@ -287,7 +287,7 @@ int main(int argc, char *argv[]) {
   delete config;
   config = NULL;
 
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Solver Postprocessing -------------------------" << endl;
   
   if (geometry_container != NULL) {
@@ -298,7 +298,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] geometry_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CGeometry container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CGeometry container." << endl;
   
   if (surface_movement != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] surface_movement;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CSurfaceMovement class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CSurfaceMovement class." << endl;
   
   if (grid_movement != NULL) {
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
     }
     delete [] grid_movement;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CVolumetricMovement class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CVolumetricMovement class." << endl;
   
   delete config;
   config = NULL;
@@ -330,10 +330,10 @@ int main(int argc, char *argv[]) {
     }
     delete [] config_container;
   }
-  if (rank == MASTER_NODE) cout << "Deleted CConfig container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted CConfig container." << endl;
   
   if (output != NULL) delete output;
-  if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Deleted COutput class." << endl;
 
   if (cstr != NULL) delete cstr;
   
@@ -349,14 +349,14 @@ int main(int argc, char *argv[]) {
   /*--- Compute/print the total time for performance benchmarking. ---*/
 
   UsedTime = StopTime-StartTime;
-  if (rank == MASTER_NODE) {
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
     cout << "\nCompleted in " << fixed << UsedTime << " seconds on "<< size;
     if (size == 1) cout << " core." << endl; else cout << " cores." << endl;
   }
   
   /*--- Exit the solver cleanly ---*/
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << endl <<"------------------------- Exit Success (SU2_DOT) ------------------------" << endl << endl;
   
   /*--- Finalize MPI parallelization ---*/
@@ -401,7 +401,7 @@ void SetProjection_FD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
 
   /*--- Continuous adjoint gradient computation ---*/
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout << "Evaluate functional gradient using Finite Differences." << endl;
   
   for (iDV = 0; iDV < nDV; iDV++) {
@@ -428,7 +428,7 @@ void SetProjection_FD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
       
       if (iDV == 0) {
         
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout << "Read the FFD information from mesh file." << endl;
         
         /*--- Read the FFD information from the grid file ---*/
@@ -442,20 +442,20 @@ void SetProjection_FD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
         
         for (iFFDBox = 0; iFFDBox < surface_movement->GetnFFDBox(); iFFDBox++) {
           
-          if (rank == MASTER_NODE) cout << "Checking FFD box dimension." << endl;
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Checking FFD box dimension." << endl;
           surface_movement->CheckFFDDimension(geometry, config, FFDBox[iFFDBox], iFFDBox);
           
-          if (rank == MASTER_NODE) cout << "Check the FFD box intersections with the solid surfaces." << endl;
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  cout << "Check the FFD box intersections with the solid surfaces." << endl;
           surface_movement->CheckFFDIntersections(geometry, config, FFDBox[iFFDBox], iFFDBox);
           
         }
         
-        if (rank == MASTER_NODE)
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
           cout <<"-------------------------------------------------------------------------" << endl;
         
       }
       
-      if (rank == MASTER_NODE) {
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
         cout << endl << "Design variable number "<< iDV <<"." << endl;
         cout << "Performing 3D deformation of the surface." << endl;
       }
@@ -552,7 +552,7 @@ void SetProjection_FD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
     /*--- Design variable not implement ---*/
     
     else {
-      if (rank == MASTER_NODE)
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
         cout << "Design Variable not implement yet" << endl;
     }
     
@@ -646,7 +646,7 @@ void SetProjection_AD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
 
   /*--- Discrete adjoint gradient computation ---*/
   
-  if (rank == MASTER_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
     cout  << endl << "Evaluate functional gradient using Algorithmic Differentiation (ZONE " << config->GetiZone() << ")." << endl;
 
   /*--- Start recording of operations ---*/
@@ -768,7 +768,7 @@ void OutputGradient(su2double** Gradient, CConfig* config, ofstream& Gradient_fi
   
   for (iDV = 0; iDV  < nDV; iDV++){
     nDV_Value = config->GetnDV_Value(iDV);
-    if (rank == MASTER_NODE){
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
       
       /*--- Print the kind of design variable on screen ---*/
       

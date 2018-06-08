@@ -371,7 +371,7 @@ void CFEAElasticity::ReadDV(CConfig *config) {
 
   filename = input_name;
 
-  if (rank == MASTER_NODE) cout << "Filename: " << filename << "." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Filename: " << filename << "." << endl;
 
   properties_file.open(filename.data(), ios::in);
 
@@ -379,7 +379,7 @@ void CFEAElasticity::ReadDV(CConfig *config) {
 
   if (properties_file.fail()) {
 
-    if (rank == MASTER_NODE)
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) 
       cout << "There is no design variable file." << endl;
 
     n_DV   = 1;

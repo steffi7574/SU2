@@ -6,6 +6,8 @@
  *
  */
 
+#if HAVE_XBRAID
+
 #pragma once
 
 #include <braid.hpp>
@@ -306,3 +308,6 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
 
 std::string vformat(const char* format, va_list list);
 std::string format(const char* format, ...);
+
+
+#endif //HAVE_XBRAID
