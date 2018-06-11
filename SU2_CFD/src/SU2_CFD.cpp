@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
 
   /*--- Launch the main external loop of the solver ---*/
   
-  // driver->StartSolver();
+  driver->StartSolver();
 
   /*--- Postprocess all the containers, close history file, exit SU2 ---*/
   

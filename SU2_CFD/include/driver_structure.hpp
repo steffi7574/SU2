@@ -77,8 +77,7 @@ protected:
                 **transfer_types;               /*!< \brief Type of coupling between the distinct (physical) zones.*/
   bool StopCalc,                                /*!< \brief Stop computation flag.*/
        mixingplane,                             /*!< \brief mixing-plane simulation flag.*/
-       fsi,                                     /*!< \brief FSI simulation flag.*/
-       xbraid;                                  /*!< \brief Time-parallel XBraid flag. */
+       fsi;                                     /*!< \brief FSI simulation flag.*/
   CIteration **iteration_container;             /*!< \brief Container vector with all the iteration methods. */
   COutput *output;                              /*!< \brief Pointer to the COutput class. */
   CIntegration ***integration_container;        /*!< \brief Container vector with all the integration methods. */
@@ -95,8 +94,10 @@ protected:
             PyWrapNodalForce[3],                /*!< \brief This is used to store the force at each vertex. */
             PyWrapNodalForceDensity[3],         /*!< \brief This is used to store the force density at each vertex. */
             PyWrapNodalHeatFlux[3];             /*!< \brief This is used to store the heat flux at each vertex. */
+#if HAVE_XBRAID
   braid_Core xbraidcore;                        /*!< \brief Core driver for time-parallel XBraid run. */
   _braid_App_struct *app;                       /*!< \brief Application structure that holds additional information for time-parallel XBraid run */
+#endif
 
 public:
 	

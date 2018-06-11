@@ -50,14 +50,11 @@ CDriver::CDriver(char* confFile,
   unsigned short jZone, iSol;
   unsigned short Kind_Grid_Movement;
   bool initStaticMovement;
-  int global_rank, global_size;
 
   SU2_MPI::SetComm(MPICommunicator);
 
   rank = SU2_MPI::GetRank();
   size = SU2_MPI::GetSize();
-  global_rank = SU2_MPI::GetGlobalRank();
-  global_size = SU2_MPI::GetGlobalSize();
 
   /*--- Create pointers to all of the classes that may be used throughout
    the SU2_CFD code. In general, the pointers are instantiated down a
@@ -483,15 +480,9 @@ CDriver::CDriver(char* confFile,
   }
 
 
-  /* Preprocess XBraid */
-  xbraid = config_container[ZONE_0]->GetBraid_Run();
-
-  if ( xbraid ){
-
+  if (config_container[ZONE_0]->GetBraid_Run()){
       if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl <<"---------------------- XBraid Preprocessing ---------------------------" << endl;
-
       XBraidPreprocessing();
-
   }
 
 
@@ -528,7 +519,7 @@ void CDriver::Postprocessing() {
 
 
   /* Finalize Time-parallel XBraid */
-  if ( xbraid ) {
+  if (config_container[ZONE_0]->GetBraid_Run()) {
 
       braid_PrintStats(xbraidcore);
       braid_Destroy(xbraidcore);
@@ -3159,12 +3150,6 @@ void CDriver::XBraidPreprocessing(){
 
 #if HAVE_XBRAID
 
-  int rank_t, size_t, rank_x, size_x;
-  rank_x = SU2_MPI::GetRank();
-  size_x = SU2_MPI::GetSize();
-  SU2_MPI::Comm_rank(SU2_MPI::GetTimeComm(), &rank_t);
-  SU2_MPI::Comm_size(SU2_MPI::GetTimeComm(), &size_t);
-
     int nPoint              = geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nDim                = geometry_container[ZONE_0][MESH_0]->GetnDim();
     int nVar                = solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
@@ -3179,15 +3164,13 @@ void CDriver::XBraidPreprocessing(){
     /* --- Set up the application structure for xBraid --- */
     app = new my_App;
 
-    /* Information concerning spacial and temporal communication */
+    /* Set Information concerning spacial and temporal communication */
     app->comm_x = SU2_MPI::GetComm();
     app->comm_t = SU2_MPI::GetTimeComm();
-
-    /* Set ranks and size of communicators*/
-    app->su2rank = rank_x;
-    app->su2size = size_x;
-    app->braidrank = rank_t;
-    app->braidsize = size_t;
+    SU2_MPI::Comm_rank(app->comm_t, &(app->su2rank));
+    SU2_MPI::Comm_size(app->comm_t, &(app->su2size));
+    SU2_MPI::Comm_rank(app->comm_x, &(app->braidrank));
+    SU2_MPI::Comm_size(app->comm_x, &(app->braidsize));
 
     /* Set the SU2 containers for running a SU2_CFD simulation */
     app->driver                 = this;
@@ -3217,6 +3200,7 @@ void CDriver::XBraidPreprocessing(){
         cout << endl << "ERROR: Not a dual-time-stepping method. Use 1st or 2nd order dual-time stepping for XBraid.";
         exit(EXIT_FAILURE);
     }
+
     /* Set the number of time steps and end time */
     if (app->BDF2){
         if ( config_container[ZONE_0]->GetnExtIter() % 2 == 0 )
@@ -3229,6 +3213,12 @@ void CDriver::XBraidPreprocessing(){
         app->tstop = app->tstart + app->ntime * app->initialDT;
     }
 
+    /* Sanity check if xBraid's tstop is bigger that SU2's end time */
+    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
+        cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
+        exit(EXIT_FAILURE);
+    }
+
     /* --- Grab the initial condition from SU2 and store pointer in app --- */
     TwoStepSolution *initial_condition  = new TwoStepSolution(app->BDF2, nPoint, nVar);
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
@@ -3237,8 +3227,6 @@ void CDriver::XBraidPreprocessing(){
         if(app->BDF2) initial_condition->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
       }
     }
- 
-    // Store pointer to the vector that holds the initial condition //
     app->initial_condition = initial_condition;
 
 //    /* Prepare history file for output of CDrag, CLift etc. */
@@ -3252,15 +3240,8 @@ void CDriver::XBraidPreprocessing(){
 
 
 
-    /* Sanity check if xBraid's tstop is bigger that SU2's end time */
-    if (app->tstop > config_container[ZONE_0]->GetTotal_UnstTimeND() ){
-        cout << "\nERROR: tstop > Total_UnstTime ! " << app->tstop << " \n\n";
-        exit(EXIT_FAILURE);
-    }
-
-
     /* Initialize xBraid */
-    braid_Init(SU2_MPI::GetComm(), app->comm_t, app->tstart, app->tstop, app->ntime, app,
+    braid_Init(SU2_MPI::GetGlobalComm(), app->comm_t, app->tstart, app->tstop, app->ntime, app,
             my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
             my_Access, my_BufSize, my_BufPack, my_BufUnpack, &xbraidcore);
 
@@ -3300,9 +3281,8 @@ void CDriver::XBraidPreprocessing(){
 
 
     /* Report on the processor grid */
-    if (app->braidrank == MASTER_NODE && app->su2rank == MASTER_NODE)
-          cout<< "Time-parallel processor splitting with " << size_t
-              << " temporal times " << size_x << " spatial cores." << endl;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE)
+         cout<< "Time-parallel processor splitting: " << app->braidsize << " temporal times " << app->su2size << " spatial cores." << endl;
 
 #endif //HAVE_XBRAID
 
@@ -3319,7 +3299,7 @@ void CDriver::StartSolver() {
 
 
 
-  if( !xbraid ) {
+  if(!config_container[ZONE_0]->GetBraid_Run()) {
 
       /*--- Time-serial solver ---*/
 
