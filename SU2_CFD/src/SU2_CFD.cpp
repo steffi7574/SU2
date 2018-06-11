@@ -53,7 +53,8 @@ int main(int argc, char *argv[]) {
   SU2_MPI::Init(&argc, &argv);
   SU2_MPI::Buffer_attach( malloc(BUFSIZE), BUFSIZE );
   SU2_Comm MPICommunicator(MPI_COMM_WORLD);
-  SU2_MPI::Comm comm_su2, comm_braid;
+  SU2_MPI::Comm su2_comm = MPI_COMM_WORLD; 
+  SU2_MPI::Comm braid_comm = MPI_COMM_WORLD;
 #else
   SU2_Comm MPICommunicator(0);
 #endif
@@ -87,27 +88,21 @@ int main(int argc, char *argv[]) {
 
   /* --- Preprocess the processor grid --- */
 
+#ifdef HAVE_XBRAID
   if ( config->GetBraid_Run() ){
     if ( SU2_MPI::GetGlobalSize() % config->GetBraid_NProc_Time() != 0 ){
       SU2_MPI::Error(" XBraid: npx * npt does not equal to the number of processes used! ", CURRENT_FUNCTION);
     } else {
       /* Split communicators for the time and space dimensions */
       int px = SU2_MPI::GetGlobalSize()/ config->GetBraid_NProc_Time();
-      SU2_MPI::Comm comm = MPI_COMM_WORLD;
-      braid_SplitCommworld(&(comm), px, &comm_su2, &comm_braid);
-      SU2_MPI::SetComm(comm_su2);
-      SU2_MPI::SetTimeComm(comm_braid);
-      MPICommunicator = comm_su2;
+      SU2_MPI::Comm commworld = MPI_COMM_WORLD;
+      braid_SplitCommworld(&(commworld), px, &su2_comm, &braid_comm);
+      SU2_MPI::SetComm(su2_comm);
+      SU2_MPI::SetTimeComm(braid_comm);
+      MPICommunicator = su2_comm;
     }
   }
-
-
-  //csg: TESTING
-  int rank_su2, size_su2, rank_braid, size_braid, rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  rank_su2   = SU2_MPI::GetRank();
-  rank_braid = SU2_MPI::GetGlobalRank();
-  cout << rank << ": " << rank_braid << " "<< rank_su2 << endl;
+#endif
 
 
   /*--- First, given the basic information about the number of zones and the

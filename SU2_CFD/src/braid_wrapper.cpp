@@ -6,7 +6,7 @@
  *
  */
 
- #if HAVE_XBRAID
+ #ifdef HAVE_XBRAID
 
 //#include <braid.hpp>
 #include <../include/util.hpp>
