@@ -94,7 +94,7 @@ protected:
             PyWrapNodalForce[3],                /*!< \brief This is used to store the force at each vertex. */
             PyWrapNodalForceDensity[3],         /*!< \brief This is used to store the force density at each vertex. */
             PyWrapNodalHeatFlux[3];             /*!< \brief This is used to store the heat flux at each vertex. */
-#if HAVE_XBRAID
+#ifdef HAVE_XBRAID
   braid_Core xbraidcore;                        /*!< \brief Core driver for time-parallel XBraid run. */
   _braid_App_struct *app;                       /*!< \brief Application structure that holds additional information for time-parallel XBraid run */
 #endif

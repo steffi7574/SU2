@@ -6,7 +6,7 @@
  *
  */
 
-#if HAVE_XBRAID
+#ifdef HAVE_XBRAID
 
 #pragma once
 
@@ -84,36 +84,28 @@ typedef struct _braid_App_struct
   double initialstart = 0.0;    /* Initial starting time USED FOR TESTING ONLY */
   bool BDF2           = false;  /* Boolean: 1 if 2nd order dual time-stepping,
                                             0 if 1st order dual time-stepping */
-  bool done           = false;  /* Boolean: 1 if XBraid has finished */
 
 
-  /* Information about communication */
-  MPI_Comm comm_t;      /* temporal communicator */
-  MPI_Comm comm_x;      /* spatial communicator */
-  int su2rank, su2size; /* Rank and size of su2 communicator*/
-  int braidrank, braidsize;        /* Rank and size of braid communicator*/
-
-
-  /* Information about the braid grid */
-  int ilower;              // smallest time index that belongs to this processor
-  int iupper;              // largest time index that belongs to this processor
+  /* Information about temporal and spatial communicators */
+  int rank_x, size_x;   /* Rank and size of spatial communicator*/
+  int rank_t, size_t;   /* Rank and size of temporal communicator*/
 
 
   /* Add the SU2 containers for SU2_CFD computations */
   /* TODO: Add only ZONE_0 ! (*_container[ZONE_0]) */
   CDriver *driver;
-  CIteration **iteration_container;
+  // CIteration **iteration_container;
   COutput *output;
   CIntegration ***integration_container;
   CGeometry ***geometry_container;
   CSolver ****solver_container;
-  CNumerics *****numerics_container;
+  // CNumerics *****numerics_container;
   CConfig **config_container;
-  CSurfaceMovement **surface_movement;
-  CVolumetricMovement **grid_movement;
-  CFreeFormDefBox*** FFDBox;
-  CInterpolator ***interpolator_container;
-  CTransfer ***transfer_container;
+  // CSurfaceMovement **surface_movement;
+  // CVolumetricMovement **grid_movement;
+  // CFreeFormDefBox*** FFDBox;
+  // CInterpolator ***interpolator_container;
+  // CTransfer ***transfer_container;
 
   /* Stores the initial condition */
   TwoStepSolution* initial_condition;
@@ -122,28 +114,17 @@ typedef struct _braid_App_struct
   stringstream* history_stream;
 
   /* Information for optimization */
-  double primal_norm    = 0.0;    // Norm of primal xBraid residual
-  double adjoint_norm   = 0.0;    // Norm of the adjoint xBraid residual
-  double Total_CD_avg   = 0.0;    // Time-averaged drag coefficient
-  double Total_CL_avg   = 0.0;    // Time-averaged lift funtion
+  // double primal_norm    = 0.0;    // Norm of primal xBraid residual
+  // double adjoint_norm   = 0.0;    // Norm of the adjoint xBraid residual
+  // double Total_CD_avg   = 0.0;    // Time-averaged drag coefficient
+  // double Total_CL_avg   = 0.0;    // Time-averaged lift funtion
 //  double Total_Cd_avg_b = 1.0;    // Seed for adjoint sensitivity computation
 //  double redgrad_norm   = 0.0;    // Norm of the gradient
-  int iter;                      // Iteration number of XBraid loop.
-  int ncpoints;                  // Number of coarse grid points on that processor
+  // int iter;                      // Iteration number of XBraid loop.
+  // int ncpoints;                  // Number of coarse grid points on that processor
 
   /* Reduced gradient */
 //  double** redgrad;
-
-  /* Adjoint optimization variables */
-//  std::vector<TwoStepSolution*> optimadjoint;
-
-  /* Temprary adjoint variables used inside step_adjoint */
-//  su2double** tmpadj;
-//  su2double** tmpadj_n;
-//  su2double** tmpadj_n1;
-
-  /* Constructor */
-//  _braid_App_struct() : optimadjoint() {}
 
 
 } my_App;
