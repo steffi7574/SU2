@@ -745,18 +745,14 @@ private:
   unsigned long Braid_Max_Level;   /*!< \brief Maximum number of XBRAID levels (one is serial time computation) */
   unsigned short Braid_Min_Coarse; /*!< \brief Minimum possible coarse grid size  */
   long Braid_NRelax;               /*!< \brief Number of CF relaxation sweeps on all levels */
-  long Braid_NRelax0;              /*!< \brief Number of CF relaxations only for level 0 -- overrides nrelax */
   su2double Braid_Tol;             /*!< \brief Halting tolerance */
-  unsigned short Braid_TNorm;      /*!< \brief Halting norm to use (see docstring below) */
+  unsigned short Braid_TNorm;      /*!< \brief Temporal Norm */
   long Braid_CFactor;              /*!< \brief Coarsening factor */
-  long Braid_CFactor0;              /*!< \brief Coarsening factor for only level 0 -- overrides cfactor */
   unsigned long Braid_Max_Iter;     /*!< \brief Maximum number of iterations */
   unsigned short Braid_FMG;         /*!< \brief Boolean, if 1, do FMG cycle. If 0, use a V cycle */
   unsigned short Braid_Print_Level; /*!< \brief Level of XBraid printing to the screen */
   unsigned short Braid_Access_Level; /*!< \brief Frequency of calls to access routine: 1 is for only after simulation */
   unsigned short Braid_Skip; /*!< \brief Boolean, whether to skip all work on first down cycle */
-  unsigned short Braid_Warm_Restart; /*!< \brief Whether to use the warm_restart utility. Make sure to turn skip off if using warm_restarts! */
-  unsigned short Braid_Action_Verb; /*!< \brief Verbosity of the xBraid actions. */  
 su2double Gamma,			/*!< \brief Ratio of specific heats of the gas. */
   Bulk_Modulus,			/*!< \brief Value of the bulk modulus for incompressible flows. */
   ArtComp_Factor,			/*!< \brief Value of the artificial compresibility factor for incompressible flows. */
@@ -8121,12 +8117,6 @@ public:
   long GetBraid_NRelax(void);
 
   /*!
-   * \brief Get the Number of CF relaxations only for XBRAID's level 0 -- overrides nrelax
-   * \return Number of CF relaxations only for level 0 -- overrides nrelax
-   */
-  long GetBraid_NRelax0(void);
-
-  /*!
    * \brief Get the Halting tolerance for XBRAID
    * \return Halting tolerance
    */
@@ -8145,11 +8135,6 @@ public:
   long GetBraid_CFactor(void);
 
   /*!
-   * \brief Get the coarsening factor for XBRAID only level 0 -- overrides cfactor
-   */
-  long GetBraid_CFactor0(void);
-
-  /*!
    * \brief Get the maximum number of XBRAID iterations
    * \return Maximum number of xBraid iterations
    */
@@ -8160,12 +8145,6 @@ public:
    * \return Boolean: if 1: skip all work on the down cycle
    */
   unsigned long GetBraid_Skip(void);
-
-  /*!
-   * \brief Get the Boolean that determines whether XBRAID runs in Warm-restart mode or not
-   * \return Boolean: if 1: do warm-restart iterations
-   */
-  unsigned long GetBraid_Warm_Restart(void);
 
   /*!
    * \brief Get the Boolean, that determines if XBRAID performes FMG cycles (1) or V cycles (0)
@@ -8180,17 +8159,10 @@ public:
   unsigned short GetBraid_Print_Level(void);
 
   /*!
-   * \brief Get the level of Verbosity of the XBraid Actions (0=none, 1=medium)
-   * \return Level of XBRAID Printing
-   */
-  unsigned short GetBraid_Action_Verb(void);
-
-  /*!
    * \brief Get the frequency of calls to the access routine: 1 is for only after simulation
    * \return Frequency of calls to access routine
    */
   unsigned short GetBraid_Access_Level(void);
-
 
 
   /*!

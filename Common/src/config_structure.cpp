@@ -2152,9 +2152,6 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /* DESCRIPTION: Number of CF relaxation sweeps on all levels */
   addLongOption("BRAID_NRELAX", Braid_NRelax, 1);
 
-  /* DESCRIPTION: Number of CF relaxations only for level 0 -- overrides nrelax */
-  addLongOption("BRAID_NRELAX0", Braid_NRelax0, -1);
-
   /* DESCRIPTION: Halting tolerance */
   addDoubleOption("BRAID_TOL", Braid_Tol, 1.0e-06);
 
@@ -2164,26 +2161,17 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /* DESCRIPTION: Coarsening factor */
   addLongOption("BRAID_CFACTOR", Braid_CFactor, 2);
 
-  /* DESCRIPTION: Coarsening factor for only level 0 -- overrides cfactor */
-  addLongOption("BRAID_CFACTOR0", Braid_CFactor0, -1);
-
   /* DESCRIPTION: Maximum number of iterations */
   addUnsignedLongOption("BRAID_MAX_ITER", Braid_Max_Iter, 100);
 
   /* DESCRIPTION: Maximum number of iterations */
   addUnsignedShortOption("BRAID_SKIP", Braid_Skip, 0);
 
-  /* DESCRIPTION: Maximum number of iterations */
-  addUnsignedShortOption("BRAID_WARM_RESTART", Braid_Warm_Restart, 1);
-
   /* DESCRIPTION: Boolean, if 1, do FMG cycle. If 0, use a V cycle */
   addUnsignedShortOption("BRAID_FMG", Braid_FMG, 0);
 
   /* DESCRIPTION: Level of XBraid printing to the screen */
   addUnsignedShortOption("BRAID_PRINT_LEVEL", Braid_Print_Level, 1);
-
-  /* DESCRIPTION: Level of XBraid Action verbosity*/
-  addUnsignedShortOption("BRAID_ACTION_VERB", Braid_Action_Verb, 0);
 
   /* DESCRIPTION: Frequency of calls to access routine: 1 is for only after simulation */
   addUnsignedShortOption("BRAID_ACCESS_LEVEL", Braid_Access_Level, 1);

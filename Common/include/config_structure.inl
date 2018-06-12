@@ -1758,27 +1758,19 @@ inline unsigned short CConfig::GetBraid_Min_Coarse(void) { return Braid_Min_Coar
 
 inline long CConfig::GetBraid_NRelax(void) { return Braid_NRelax; }
 
-inline long CConfig::GetBraid_NRelax0(void) { return Braid_NRelax0; }
-
 inline su2double CConfig::GetBraid_Tol(void) { return Braid_Tol; }
 
 inline unsigned short CConfig::GetBraid_TNorm(void) { return Braid_TNorm; }
 
 inline long CConfig::GetBraid_CFactor(void) { return Braid_CFactor; }
 
-inline long CConfig::GetBraid_CFactor0(void) { return Braid_CFactor0; }
-
 inline unsigned long CConfig::GetBraid_Max_Iter(void) { return Braid_Max_Iter; }
 
 inline unsigned long CConfig::GetBraid_Skip(void) { return Braid_Skip; }
 
-inline unsigned long CConfig::GetBraid_Warm_Restart(void) { return Braid_Warm_Restart; }
-
 inline unsigned short CConfig::GetBraid_FMG(void) { return Braid_FMG; }
 
 inline unsigned short CConfig::GetBraid_Print_Level(void) { return Braid_Print_Level; }
-
-inline unsigned short CConfig::GetBraid_Action_Verb(void) { return Braid_Action_Verb; }
 
 inline unsigned short CConfig::GetBraid_Access_Level(void) { return Braid_Access_Level; }
 
