@@ -59,7 +59,7 @@ int my_Step( braid_App        app,
   }
   iExtIter = (int) round( tstop  / app->initialDT ); 
   app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
-  app->config_container[ZONE_0]->SetExtIter(iExtIter);
+  app->config_container[ZONE_0]->SetExtIter(iExtIter); //TODO: Check if BDF2
 
   /* Set the solution vectors (Solution, Solution_time_n and Solution_time_n1*/
   su2double *cast_n, *cast_n1;
@@ -281,6 +281,8 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
+    su2double* cast = new su2double[nVar];
+
     /* Grab variables from the app */
     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
@@ -290,79 +292,36 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
     double t;
     braid_AccessStatusGetT(astatus, &t);
     int iExtIter = (int) round( t / app->initialDT ); 
-    app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
-    /* Write to history file */
     if (iExtIter > 0){
 
+        /* --- Write history and solution at time n ---*/
 
-    // /* Only continue if iExtIter > 0 !! Otherwise xbraid tries to write at timestep -1*/
-    // // if (iExtIter>0){
-  
-        /* --- Write Solution_time_n to restart file ---*/
-  
-        /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
-        su2double *cast_n, *cast_n1;
-        cast_n = new su2double[nVar];
-        if(app->BDF2) cast_n1 = new su2double[nVar];
+        app->config_container[ZONE_0]->SetExtIter(iExtIter);
+
+        /* Trick SU2 with the current solution */
         for (int iPoint = 0; iPoint < nPoint; iPoint++){
            for (int iVar = 0; iVar < nVar; iVar++){
-               cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
-               if(app->BDF2) cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
+               cast[iVar]  = u->Solution->time_n[iPoint][iVar];
            }
-           app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
-        //    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
-        //   if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
+           app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
         }
-        delete [] cast_n;
-        if (app->BDF2) delete [] cast_n1;
 
-
-        app->driver->Monitor(iExtIter);
-        
         /* Compute the primitive Variables from the conservative ones */
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
   
-        /* Call the SU2 output routine */
+        /* Write to the history file */
+        app->driver->Monitor(iExtIter);
+
+        /* Write the solution files */
         app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
                                    app->config_container, iExtIter, 1);
-    //     if (app->rank_x==MASTER_NODE)
-    //         cout << "rank_t " << app->rank_t << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
- //         }
 
-    }
+        /* TODO: Also write time_n1 if BDF2!!  */
 
-  
+   }
 
-        //  if (app->BDF2) {
-//        /* --- Write Solution_time_n1 to restart file ---*/
-
-//             /* Trick SU2 with the correct iExtIter = iExtIter - 1 */
-//             iExtIter--;
-//             app->config_container[ZONE_0]->SetExtIter(iExtIter);
-
-//             /* Trick SU2 with the current solution for output */
-//             for (int iPoint = 0; iPoint < nPoint; iPoint++){
-//   //            app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n1[iPoint]);
-//             }
-
-//             /* Compute the primitive Variables from the conservative ones */
-//             app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
-
-//             /* Call the SU2 output routine */
-//             if (app->rank_x==MASTER_NODE) cout << "rank_t " << app->rank_t << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
-//             app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
-//                                              app->config_container, iExtIter, 1);
-//            /* Write history values at time n to the app stream */
-//            /* NOT WORKING RIGHT NOW....... */
-// //           if (app->rank_x == MASTER_NODE){
-// //              *app->history_stream << iExtIter
-// //                                   << " " << u->Solution->Total_CL_n
-// //                                   << " " << u->Solution->Total_CD_n << endl;
-// //           }
-
-//          }
-    //   }
+    delete [] cast;
 
     return 0;
 }

@@ -3219,17 +3219,6 @@ void CDriver::XBraidPreprocessing(){
     }
     app->initial_condition = initial_condition;
 
-//    /* Prepare history file for output of CDrag, CLift etc. */
-//    stringstream histstream;
-//    Prepare the stringstream with ADtoolbox/include/tools/io/FileIOBase::preparestream(ostream &out) before giving it to braid's app
-//    ParallelFileIO fileIO(app->rank_t, size, 42);
-//    fileIO.prepareStream(histstream);
-//    histstream.precision(8);
-//    app->history_stream = &histstream;
-//    if (app->rank_t == MASTER_NODE && app->rank_x == MASTER_NODE) *app->history_stream << "#Timestep,   CLift,   CDrag,   CSideForce,   CMx,   CMy,   CMz,   CFx,   CFy,   CFz,   CL/CD,   Res_Flow[0]\n";
-
-
-
     /* Initialize the xBraid core */
     braid_Init(SU2_MPI::GetGlobalComm(), SU2_MPI::GetTimeComm(), app->tstart, app->tstop, app->ntime, app,
             my_Step, my_Init, my_Clone, my_Free, my_Sum, my_SpatialNorm,
@@ -3255,7 +3244,7 @@ void CDriver::XBraidPreprocessing(){
     if (SU2_MPI::GetGlobalRank() == MASTER_NODE)
          cout<< "Processor splitting using " << app->size_t << " temporal times " << app->size_x << " spatial cores." << endl;
 
-#endif //HAVE_XBRAID
+#endif
 
 }
 

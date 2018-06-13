@@ -103,9 +103,6 @@ typedef struct _braid_App_struct
   /* Stores the initial condition */
   TwoStepSolution* initial_condition;
 
-  /* Output of history file */
-  stringstream* history_stream;
-
   /* Information for optimization */
   // double primal_norm    = 0.0;    // Norm of primal xBraid residual
   // double adjoint_norm   = 0.0;    // Norm of the adjoint xBraid residual
