@@ -8,8 +8,8 @@
 
 
 //#include <braid.hpp>
-#include <../include/util.hpp>
-#include <../include/braid_structure.hpp>
+#include "../include/util.hpp"
+#include "../include/braid_structure.hpp"
 #include "../../Common/include/ad_structure.hpp"
 
 
@@ -60,8 +60,6 @@ int my_Step( braid_App        app,
   iExtIter = (int) round( tstop  / app->initialDT ); 
   app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
   app->config_container[ZONE_0]->SetExtIter(iExtIter);
-
-  cout<< "Step: from " << tstart << " via " << deltat << " to " << tstop << " iExtIter "  << iExtIter << endl;
 
   /* Set the solution vectors (Solution, Solution_time_n and Solution_time_n1*/
   su2double *cast_n, *cast_n1;
@@ -144,7 +142,7 @@ int my_Step( braid_App        app,
   /* Check for SU2 convergence */
   if (!app->integration_container[ZONE_0][FLOW_SOL]->GetConvergence()) {
       cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetRes_RMS(0)));
-      exit(EXIT_FAILURE);
+      //exit(EXIT_FAILURE);
   }
 
   /* Update the Solution_n and solution_n1 for dual time stepping strategy */
@@ -283,64 +281,60 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
-    // /* --- Add drag and lift to objective function. ---*/
-    // app->Total_CD_avg += u->Solution->Total_CD_n;
-    // app->Total_CL_avg += u->Solution->Total_CL_n;
-    // if (app->BDF2) {
-    //     app->Total_CD_avg += u->Solution->Total_CD_n1;
-    //     app->Total_CL_avg += u->Solution->Total_CL_n1;
-    // }
+    /* Grab variables from the app */
+    int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
+    int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
 
 
-//     /* Grab variables from the app */
-//     int nPoint = app->geometry_container[ZONE_0][MESH_0]->GetnPoint();
-//     int nVar   = app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->GetnVar();
+    /* Get the current time-step number */
+    double t;
+    braid_AccessStatusGetT(astatus, &t);
+    int iExtIter = (int) round( t / app->initialDT ); 
+    app->config_container[ZONE_0]->SetExtIter(iExtIter);
 
-//     /* Write to history file */
-//     app->driver->Monitor(0);
+    /* Write to history file */
+    if (iExtIter > 0){
 
-//     /*--- Write solution output files only if XBraid has finished ---*/
 
-//       /* Retrieve xBraid information from status object */
-//       double t;
-//       braid_AccessStatusGetT(astatus, &t);
+    // /* Only continue if iExtIter > 0 !! Otherwise xbraid tries to write at timestep -1*/
+    // // if (iExtIter>0){
   
-//       /* Compute the time step iExtIter = (t - t0)/dt -1 which is used for naming the restart file */
-//       int iExtIter = (int) round( ( t - app->initialstart ) / app->initialDT) -1 ;
-//       app->config_container[ZONE_0]->SetExtIter(iExtIter);
+        /* --- Write Solution_time_n to restart file ---*/
   
-  
-//       /* Only continue if iExtIter > 0 !! Otherwise xbraid tries to write at timestep -1*/
-//       if (iExtIter>0){
-  
-//         /* --- Write Solution_time_n to restart file ---*/
-  
-//         /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
-//         for (int iPoint = 0; iPoint < nPoint; iPoint++){
-// //          app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
-//         }
-  
-//         /* Compute the primitive Variables from the conservative ones */
-//         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
-  
-//   //    /* Call the SU2 output routine */
-//         if (app->rank_x==MASTER_NODE)
-//             cout << "rank_t " << app->rank_t << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
-//         app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
-//                                    app->config_container, iExtIter, 1);
-  
-//         /* Write history values at time n to the app stream */
-//         /* NOT WORKING RIGHT NOW....... */
-// //        if (app->rank_x == MASTER_NODE){
-// //            *app->history_stream << iExtIter
-// //                                 << " " << u->Solution->Total_CL_n
-// //                                 << " " << u->Solution->Total_CD_n << endl;
-// //         }
+        /* Trick SU2 with the current solution for output (SU2 writes CVariable::Solution, not _time_n!) */
+        su2double *cast_n, *cast_n1;
+        cast_n = new su2double[nVar];
+        if(app->BDF2) cast_n1 = new su2double[nVar];
+        for (int iPoint = 0; iPoint < nPoint; iPoint++){
+           for (int iVar = 0; iVar < nVar; iVar++){
+               cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
+               if(app->BDF2) cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
+           }
+           app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
+        //    app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
+        //   if (app->BDF2) app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
+        }
+        delete [] cast_n;
+        if (app->BDF2) delete [] cast_n1;
 
+
+        app->driver->Monitor(iExtIter);
+        
+        /* Compute the primitive Variables from the conservative ones */
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
+  
+        /* Call the SU2 output routine */
+        app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
+                                   app->config_container, iExtIter, 1);
+    //     if (app->rank_x==MASTER_NODE)
+    //         cout << "rank_t " << app->rank_t << " writes SU2 restart file at iExtIter = " << iExtIter << endl;
+ //         }
+
+    }
 
   
 
-//          if (app->BDF2) {
+        //  if (app->BDF2) {
 //        /* --- Write Solution_time_n1 to restart file ---*/
 
 //             /* Trick SU2 with the correct iExtIter = iExtIter - 1 */
@@ -368,7 +362,7 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 // //           }
 
 //          }
-//       }
+    //   }
 
     return 0;
 }

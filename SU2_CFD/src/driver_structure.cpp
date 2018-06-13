@@ -521,7 +521,6 @@ void CDriver::Postprocessing() {
   /* Finalize Time-parallel XBraid */
   if (config_container[ZONE_0]->GetBraid_Run()) {
 
-      braid_PrintStats(xbraidcore);
       braid_Destroy(xbraidcore);
 
       delete app->initial_condition;
@@ -3172,22 +3171,14 @@ void CDriver::XBraidPreprocessing(){
 
     /* Set the SU2 containers for running a SU2_CFD simulation */
     app->driver                 = this;
-    // app->iteration_container    = iteration_container;
     app->output                 = output;
     app->integration_container  = integration_container;
     app->geometry_container     = geometry_container;
     app->solver_container       = solver_container;
-    // app->numerics_container     = numerics_container;
     app->config_container       = config_container;
-    // app->surface_movement       = surface_movement;
-    // app->grid_movement          = grid_movement;
-    // app->FFDBox                 = FFDBox;
-    // app->interpolator_container = interpolator_container;
-    // app->transfer_container     = transfer_container;
-
-    app->tstart        = 0.0;
-    app->initialstart  = 0.0;
-    app->initialDT     = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDelta_UnstTimeND());
+    app->tstart                 = 0.0;
+    app->initialstart           = 0.0;
+    app->initialDT              = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDelta_UnstTimeND());
 
     /* Check for BDF time-stepping of first or second order */
     if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){
