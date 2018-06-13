@@ -94,18 +94,11 @@ typedef struct _braid_App_struct
   /* Add the SU2 containers for SU2_CFD computations */
   /* TODO: Add only ZONE_0 ! (*_container[ZONE_0]) */
   CDriver *driver;
-  // CIteration **iteration_container;
   COutput *output;
   CIntegration ***integration_container;
   CGeometry ***geometry_container;
   CSolver ****solver_container;
-  // CNumerics *****numerics_container;
   CConfig **config_container;
-  // CSurfaceMovement **surface_movement;
-  // CVolumetricMovement **grid_movement;
-  // CFreeFormDefBox*** FFDBox;
-  // CInterpolator ***interpolator_container;
-  // CTransfer ***transfer_container;
 
   /* Stores the initial condition */
   TwoStepSolution* initial_condition;

@@ -456,7 +456,7 @@ CDriver::CDriver(char* confFile,
   if (rank == MASTER_NODE){
     ConvHist_file = new ofstream[nZone];
     for (iZone = 0; iZone < nZone; iZone++) {
-      output->SetConvHistory_Header(&ConvHist_file[iZone], config_container[iZone], iZone, SU2_MPI::GetGlobalRank());
+      output->SetConvHistory_Header(&ConvHist_file[iZone], config_container[iZone], iZone);
       config_container[iZone]->SetHistFile(&ConvHist_file[iZone]);
     }
   }
@@ -6837,7 +6837,7 @@ void CDiscAdjFSIDriver::ConvergenceHistory(unsigned long IntIter,
 
   ofstream ConvHist_file;
   if (rank == MASTER_NODE)
-    output->SetConvHistory_Header(&ConvHist_file, config_container[ZONE_0], ZONE_0, 1);
+    output->SetConvHistory_Header(&ConvHist_file, config_container[ZONE_0], ZONE_0);
 
 
   if (kind_recording == FLOW_CONS_VARS) {

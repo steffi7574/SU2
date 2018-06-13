@@ -4273,7 +4273,7 @@ void COutput::DeallocateSolution(CConfig *config, CGeometry *geometry) {
   }
 }
 
-void COutput::SetConvHistory_Header(ofstream *ConvHist_file, CConfig *config, unsigned short val_iZone, int rank_t) {
+void COutput::SetConvHistory_Header(ofstream *ConvHist_file, CConfig *config, unsigned short val_iZone) {
   char cstr[200], buffer[50], turb_resid[1000], adj_turb_resid[1000];
   unsigned short iMarker_Monitoring;
   string Monitoring_Tag, monitoring_coeff, aeroelastic_coeff, turbo_coeff;
@@ -4323,13 +4323,16 @@ void COutput::SetConvHistory_Header(ofstream *ConvHist_file, CConfig *config, un
     if (SU2_TYPE::Int(iExtIter) >= 10000) SPRINTF (buffer, "_%d", SU2_TYPE::Int(iExtIter));
     strcat(cstr, buffer);
   }
-  // If time-parallel run, write one history file for each processor //
+
+  /* If time-parallel run, write one history file for each processor */
   if (config->GetBraid_Run()){
+    int rank_t = 0;
+    SU2_MPI::Comm_rank(SU2_MPI::GetTimeComm(), &rank_t);
     if (rank_t < 10) SPRINTF (buffer, "_0000%d", rank_t);
     if ((rank_t >= 10) && (rank_t < 100)) SPRINTF (buffer, "_000%d", rank_t);
-    if ((rank_t >= 100) && (rank_t < 1000)) SPRINTF (buffer, "_000%d", rank_t);
-    if ((rank_t >= 1000) && (rank_t < 10000)) SPRINTF (buffer, "_000%d", rank_t);
-    if ((rank_t >= 10000) && (rank_t < 100000)) SPRINTF (buffer, "_000%d", rank_t);
+    if ((rank_t >= 100) && (rank_t < 1000)) SPRINTF (buffer, "_00%d", rank_t);
+    if ((rank_t >= 1000) && (rank_t < 10000)) SPRINTF (buffer, "_0%d", rank_t);
+    if (rank_t >= 10000) SPRINTF (buffer, "_%d", rank_t);
     strcat(cstr, buffer);
   }
   

@@ -626,7 +626,7 @@ public:
    * \param[in] ConvHist_file - Pointer to the convergence history file (which is defined in the main subroutine).
    * \param[in] config - Definition of the particular problem.
    */
-  void SetConvHistory_Header(ofstream *ConvHist_file, CConfig *config, unsigned short val_iZone, int rank_t);
+  void SetConvHistory_Header(ofstream *ConvHist_file, CConfig *config, unsigned short val_iZone);
 
   /*! 
    * \brief Write the history file and the convergence on the screen for serial computations.
