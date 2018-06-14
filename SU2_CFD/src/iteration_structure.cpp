@@ -532,8 +532,8 @@ void CFluidIteration::Iterate(COutput *output,
   
   /*--- Write the convergence history ---*/
 
-  if ( unsteady && !config_container[val_iZone]->GetDiscrete_Adjoint() ) {
-                // && !config_container[val_iZone]->GetBraid_Run() ) {
+  if ( unsteady && !config_container[val_iZone]->GetDiscrete_Adjoint()
+                 && !config_container[val_iZone]->GetBraid_Run() ) {
     
     output->SetConvHistory_Body(NULL, geometry_container, solver_container, config_container, integration_container, true, 0.0, val_iZone);
     
