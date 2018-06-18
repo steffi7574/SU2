@@ -10,9 +10,11 @@ in SU2/:
 clean distribution, if configure has been executed before. 
 >make distclean
 
+
 in SU2/:
->./preconfigure.py --prefix=$PWD --enable-mpi --with-cxx=mpicxx --with-cc=mpicc --with-xbraid-lib=/home/sguenther/Software/braid_warm_restart_export/ --with-xbraid-include=/home/sguenther/Software/braid_warm_restart_export --enable-autodiff
-// erstellt SU2_BASE und SU2_AD Ordner und macht dann configure in beiden:
+>./preconfigure.py --prefix=$PWD --enable-mpi --with-cxx=mpicxx --with-cc=mpicc --with-xbraid-lib=/home/sguenther/Software/braid_llnl/ --with-xbraid-include=/home/sguenther/Software/braid_llnl --enable-autodiff -u
+// erstellt SU2_BASE und SU2_AD Ordner und macht dann configure in beiden
+// -u option checkt neue CoDiPack version aus. 
 
 
 >make -j install 
