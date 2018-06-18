@@ -304,8 +304,15 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
             app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
         }
 
+
         /* Compute the primitive Variables from the conservative ones */
         app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
+
+        /*--- Calculate the inviscid and viscous forces ---*/
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->Pressure_Forces(app->geometry_container[ZONE_0][MESH_0], app->config_container[ZONE_0]);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->Momentum_Forces(app->geometry_container[ZONE_0][MESH_0], app->config_container[ZONE_0]);
+        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->Friction_Forces(app->geometry_container[ZONE_0][MESH_0], app->config_container[ZONE_0]);
+
 
         /* Write to the history file */
         app->driver->Monitor(iExtIter);
