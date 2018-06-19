@@ -5609,9 +5609,9 @@ void CIncEulerSolver::BC_Inlet_Unst(CGeometry *geometry, CSolver **solver_contai
       Flow_Dir_Unst[0]= cos(Beta*PI_NUMBER/180)*UnitNormal[0]+sin(Beta*PI_NUMBER/180)*UnitNormal[1];
       Flow_Dir_Unst[1]=-sin(Beta*PI_NUMBER/180)*UnitNormal[0]+cos(Beta*PI_NUMBER/180)*UnitNormal[1];
 
-      /*--- Velocity magnitude ---*/
+      /*--- Velocity magnitude, pulsed actuation ---*/
 
-      Vel_Mag = V_amp*sin(Freq*Physical_t+Phi);
+      Vel_Mag = V_amp*sin(Freq*Physical_t+Phi) - V_amp;
 
       /*--- Build the fictitious intlet state based on characteristics ---*/
 
