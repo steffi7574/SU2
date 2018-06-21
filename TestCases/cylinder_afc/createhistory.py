@@ -3,9 +3,7 @@
 # Script for putting together the history.dat file, collecting data from all temporal processors. 
 # USAGE: python3 createhistory.py <FileNameWithoutLast"_000*.dat"> <NumberOfTemporalProcessors>
 #
-
 import sys
-from numpy import *
 
 # parse command line arguments
 args = sys.argv
@@ -26,7 +24,7 @@ for inpt in range(npt):
     # Open the local history file and read it
     currfile = open(filename + '_%05i'%(inpt) + '.dat','r') 
     currfilelines = currfile.readlines()
-    currfilesize  = size(currfilelines)
+    currfilesize  = len(currfilelines)
 
     # Sort the data with respect to first column
     currfilelines.sort()
@@ -48,3 +46,5 @@ for inpt in range(npt):
 # Close the global history file
 outfile.close()
 
+# Report success
+print("History file created: ", filename+'.dat')

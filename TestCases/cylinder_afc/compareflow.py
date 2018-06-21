@@ -41,8 +41,8 @@ else:
   stop
 
 # Get the file names
-filenameref = refdir + '/restart_flow_' + '%05i'%(IterRef) + '.dat'
-filenamecur = 'restart_flow_' + '%05i'%(IterComp)  + '.dat'
+filenameref = refdir + '/flow_' + '%05i'%(IterRef) + '.dat'
+filenamecur = 'flow_' + '%05i'%(IterComp)  + '.dat'
  
 # open the files for read only
 ufileref=open(filenameref,'r')
@@ -51,23 +51,23 @@ ufilecur=open(filenamecur,'r')
 # define some constants
 EPS = 1E-14
 
-# initialize
-avgerr  = 0.0
-maxerr  = -1.0
+err = 0.0
+nenner = 0.0
+maxdiff = 0.0
 
 # compute the rel. error for each line
-#for linenumber in range(201,203):
 for linenumber, line in enumerate(ufileref):
 
     # skip the first lines since they contain identifiers
-    if (linenumber==0):
+    if (linenumber==0 or linenumber == 1 or linenumber == 2):
         ufilecurline = ufilecur.readline()   # skip the line
         continue
 
     # parse the line of the reference file
     linelistref  = line.split()  # split the string by separator " "
-    if (linelistref[0] == 'EXT_ITER='):
+    if (len(linelistref) < 5):
         break
+
     # get data of that line
     dataref=[]
     for datastring in linelistref:
@@ -82,49 +82,28 @@ for linenumber, line in enumerate(ufileref):
         datacur.append(float(datastring))  
 
 
-    # read data from reference and current file
-    #dataref     = getdata(ufileref, linenumber)
-    #datacur     = getdata(ufilecur, linenumber)
-    
-    # compute the relative error and its norm
-    relerr = []
-    relerrnorm = 0.0
-    #print(" Reference           Current             rel. ERROR ")
-    for i in range(len(dataref)):
-
-          # compute the relative error
-          if ( abs(dataref[i]) > EPS ):
-            relerr.append( ( datacur[i] - dataref[i] ) / dataref[i] )
-          else:
-            relerr.append( datacur[i] - dataref[i] )
+    # add to the error //Pressure!
+    for i in range(2,3):
+        #print(datacur, dataref, i)
+        diff    = abs(datacur[i] - dataref[i])
+        test   = abs(diff/dataref[i])
+        err    += diff**2
+        nenner += dataref[i]**2
+        if (test > maxdiff):
+            maxdiff = test
+            maxline = linenumber
+            print(datacur[i], dataref[i], maxdiff, linenumber)
           
-          # print the relative error and the values
-          #print( "% 1.12E % 1.12E % 1.12E " %(dataref[i], datacur[i], relerr[i]) )
-        
-          # add to the error norm
-          relerrnorm += relerr[i]**2
-
-          if (relerr[i] > maxerr):
-              maxerr  = relerr[i]
-              maxts   = dataref[0]
-              print(" LINE %06d % 1.12E % 1.12E % 1.12E " %(linenumber, dataref[i], datacur[i], relerr[i])  )
-
-    relerrnorm = sqrt(relerrnorm)
-    avgerr += relerrnorm
-    #if (relerrnorm > maxerr):
-    #    maxerr  = relerrnorm
-    #    maxts   = dataref[0]
-    #    print(" LINE ", linenumber, ", Rel. error norm: %1.12E" %(relerrnorm) )
-
-    # print the norm of the relative error
-    #print(" LINE ", linenumber, ", Rel. error norm: %1.12E" %(relerrnorm) )
+# relative errornorm
+relerrnorm = sqrt(err / nenner)
 
 #OUTPUT
 print("\nComparing reference ", filenameref, " with ", filenamecur, "\n")
 print("Scanned lines: ", linenumber)
-print("TOTAL SUM REL. ERROR:  %1.12E " %(avgerr))
-print("AVERAGE REL. ERROR:    %1.12E \n" %(avgerr/linenumber))
-print("MAXIMUM REL. ERROR:    %1.12E " %(maxerr), " at line ", maxts, "\n")
+
+#print("TOTAL SUM REL. ERROR:  %1.12E " %(avgerr))
+print("MAX. REL. ERROR:    %1.12E at line " %(maxdiff), (maxline))
+print("\nREL. ERROR:         %1.12E \n" %(relerrnorm))
 
 ufileref.close()
 ufilecur.close()
