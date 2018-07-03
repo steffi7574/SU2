@@ -42,16 +42,20 @@ struct TwoStepSolution
     double **time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
 
     /* Flow solution coefficients for time n and time n1*/
-    double Total_CL_n  = 0.0;
-    double Total_CL_n1 = 0.0;
-    double Total_CD_n  = 0.0;
-    double Total_CD_n1 = 0.0;
+    double Total_CL_n;
+    double Total_CL_n1;
+    double Total_CD_n;
+    double Total_CD_n1;
 
     /* Constructor */
     TwoStepSolution(bool bdf2, int Point, int Var){
-      nPoint = Point;
-      nVar   = Var;
-      BDF2   = bdf2;
+      nPoint      = Point;
+      nVar        = Var;
+      BDF2        = bdf2;
+      Total_CL_n  = 0.0;
+      Total_CL_n1 = 0.0;
+      Total_CD_n  = 0.0;
+      Total_CD_n1 = 0.0;
       /* Allocate memory for the solution lists */
       time_n  = new double*[nPoint];
       if (BDF2) time_n1 = new double*[nPoint];
@@ -77,12 +81,12 @@ struct TwoStepSolution
  */
 typedef struct _braid_App_struct
 {
-  double tstart       = 0.0;    /* Begin of Time integration */
-  double tstop        = 0.0;    /* End of Time integration */
-  int    ntime        = 0;      /* Number of time steps */
-  double initialDT    = 0.0;    /* Initial DeltaT */
-  double initialstart = 0.0;    /* Initial starting time USED FOR TESTING ONLY */
-  bool BDF2           = false;  /* Boolean: 1 if 2nd order dual time-stepping,
+  double tstart;       /* Begin of Time integration */
+  double tstop;        /* End of Time integration */
+  int    ntime;        /* Number of time steps */
+  double initialDT;    /* Initial DeltaT */
+  double initialstart; /* Initial starting time USED FOR TESTING ONLY */
+  bool   BDF2;         /* Boolean: 1 if 2nd order dual time-stepping,
                                             0 if 1st order dual time-stepping */
 
 
