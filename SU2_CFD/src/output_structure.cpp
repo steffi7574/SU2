@@ -8313,7 +8313,7 @@ void COutput::SetResult_Files(CSolver *****solver_container, CGeometry ****geome
                 (config[iZone]->GetConsole_Output_Verb() == VERB_HIGH)) {
                   if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Writing Tecplot binary volume solution file." << endl;
             }
-            SetTecplotBinary_DomainSolution(config[iZone], geometry[iZone]INST_0][MESH_0], iZone);
+            SetTecplotBinary_DomainSolution(config[iZone], geometry[iZone][INST_0][MESH_0], iZone);
             break;
             
           case FIELDVIEW_BINARY:
@@ -17805,7 +17805,7 @@ void COutput::WriteRestart_Parallel_Binary(CConfig *config, CGeometry *geometry,
 #ifdef HAVE_MPI
   su2double my_file_size = file_size;
   SU2_MPI::Allreduce(&my_file_size, &file_size, 1,
-                     MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                     MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 #endif
   
   /*--- Compute and store the bandwidth ---*/

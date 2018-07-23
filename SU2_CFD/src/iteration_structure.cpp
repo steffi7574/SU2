@@ -1832,7 +1832,7 @@ void CDiscAdjFluidIteration::Preprocess(COutput *output,
         LoadUnsteady_Solution(geometry_container, solver_container,config_container, val_iInst, val_iZone, Direct_Iter - 2);
 
       if (dual_time_1st)
-        LoadUnsteady_Solution(geometry_container, solver_container,config_container, val_iZone, Direct_Iter - 1);
+        LoadUnsteady_Solution(geometry_container, solver_container,config_container, val_iInst, val_iZone, Direct_Iter - 1);
         
       /*--- Temporarily store the loaded solution in the Solution_Old array ---*/
 

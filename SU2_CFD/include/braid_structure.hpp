@@ -99,9 +99,9 @@ typedef struct _braid_App_struct
   /* TODO: Add only ZONE_0 ! (*_container[ZONE_0]) */
   CDriver *driver;
   COutput *output;
-  CIntegration ***integration_container;
-  CGeometry ***geometry_container;
-  CSolver ****solver_container;
+  CIntegration ****integration_container;
+  CGeometry ****geometry_container;
+  CSolver *****solver_container;
   CConfig **config_container;
 
   /* Stores the initial condition */

@@ -366,16 +366,16 @@ int main(int argc, char *argv[]) {
           solver_container[iZone][iInst] = new CBaselineSolver(geometry_container[iZone][iInst], config_container[iZone]);
           solver_container[iZone][iInst]->LoadRestart(&geometry_container[iZone][iInst], &solver_container[iZone], config_container[iZone], SU2_TYPE::Int(MESH_0), true);
 
-        /*--- Print progress in solution writing to the screen. ---*/
-        if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
-          cout << "Storing the volume solution for time instance " << iInst << "." << endl;
+          /*--- Print progress in solution writing to the screen. ---*/
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE)  {
+            cout << "Storing the volume solution for time instance " << iInst << "." << endl;
+          }
+
         }
 
+        output->SetBaselineResult_Files(solver_container, geometry_container, config_container, iZone, nZone);
       }
-
-      output->SetBaselineResult_Files(solver_container, geometry_container, config_container, iZone, nZone);
     }
-
     else if (config_container[ZONE_0]->GetWrt_Dynamic()){
 
       /*--- Dynamic simulation: merge all unsteady time steps. First,

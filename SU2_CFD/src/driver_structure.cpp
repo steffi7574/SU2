@@ -863,7 +863,7 @@ void CDriver::Geometrical_Preprocessing() {
 
       /*--- Create the edge structure ---*/
 
-      if (rank == SU2_MPI::GetGlobalRank()) cout << "Identifying edges and vertices." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Identifying edges and vertices." << endl;
       geometry_container[iZone][iInst][MESH_0]->SetEdges();
       geometry_container[iZone][iInst][MESH_0]->SetVertex(config_container[iZone]);
 
@@ -2885,14 +2885,10 @@ void CDriver::Iteration_Preprocessing() {
 
   for (iInst = 0; iInst < nInst[iZone]; iInst++)  {
 
-<<<<<<< HEAD
-  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Zone " << iZone+1;
-=======
     /*--- Initial print to console for this zone. ---*/
->>>>>>> original/develop
 
-    if (rank == MASTER_NODE) cout << "Zone " << iZone+1;
-    if ((rank == MASTER_NODE) && (nInst[iZone] > 1)) cout << ", instance: " << iInst+1;
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Zone " << iZone+1;
+    if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (nInst[iZone] > 1)) cout << ", instance: " << iInst+1;
 
     /*--- Loop over all zones and instantiate the physics iteration. ---*/
 
@@ -3367,15 +3363,9 @@ void CDriver::TurbomachineryPreprocessing(){
   if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout<<endl<<"Initialize Turbo Vertex Structure." << endl;
   for (iZone = 0; iZone < nZone; iZone++) {
     if (config_container[iZone]->GetBoolTurbomachinery()){
-<<<<<<< HEAD
-      geometry_container[iZone][MESH_0]->ComputeNSpan(config_container[iZone], iZone, INFLOW, true);
-      geometry_container[iZone][MESH_0]->ComputeNSpan(config_container[iZone], iZone, OUTFLOW, true);
-      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout <<"Number of span-wise sections in Zone "<< iZone<<": "<< config_container[iZone]->GetnSpanWiseSections() <<"."<< endl;
-=======
       geometry_container[iZone][INST_0][MESH_0]->ComputeNSpan(config_container[iZone], iZone, INFLOW, true);
       geometry_container[iZone][INST_0][MESH_0]->ComputeNSpan(config_container[iZone], iZone, OUTFLOW, true);
-      if (rank == MASTER_NODE) cout <<"Number of span-wise sections in Zone "<< iZone<<": "<< config_container[iZone]->GetnSpanWiseSections() <<"."<< endl;
->>>>>>> original/develop
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout <<"Number of span-wise sections in Zone "<< iZone<<": "<< config_container[iZone]->GetnSpanWiseSections() <<"."<< endl;
       if (config_container[iZone]->GetnSpanWiseSections() > nSpanMax){
         nSpanMax = config_container[iZone]->GetnSpanWiseSections();
       }
@@ -3831,9 +3821,6 @@ void CDriver::Output(unsigned long ExtIter) {
   
   if (output_files) {
     
-<<<<<<< HEAD
-    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl << "-------------------------- File Output Summary --------------------------";
-=======
     /*--- Time the output for performance benchmarking. ---*/
 #ifndef HAVE_MPI
     StopTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
@@ -3847,8 +3834,7 @@ void CDriver::Output(unsigned long ExtIter) {
     StartTime = MPI_Wtime();
 #endif
     
-    if (rank == MASTER_NODE) cout << endl << "-------------------------- File Output Summary --------------------------";
->>>>>>> original/develop
+    if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl << "-------------------------- File Output Summary --------------------------";
     
     /*--- Execute the routine for writing restart, volume solution,
      surface solution, and surface comma-separated value files. ---*/

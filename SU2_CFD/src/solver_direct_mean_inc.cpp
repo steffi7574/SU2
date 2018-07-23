@@ -5734,27 +5734,33 @@ void CIncEulerSolver::BC_Inlet_Unst(CGeometry *geometry, CSolver **solver_contai
 
       /*--- Build the fictitious intlet state based on characteristics ---*/
 
-
-
-
         /*--- Store the velocity in the primitive variable vector ---*/
 
         for (iDim = 0; iDim < nDim; iDim++)
           V_inlet[iDim+1] = Vel_Mag*Flow_Dir_Unst[iDim];
 
-        /*--- Neumann condition for pressure ---*/
-
-        V_inlet[0] = node[iPoint]->GetPressure();
-
-        /*--- Constant value of density ---*/
-
-        V_inlet[nDim+1] = GetDensity_Inf();
-
-        /*--- Beta coefficient from the config file ---*/
-
-        V_inlet[nDim+2] = config->GetArtComp_Factor();
-
       
+      /*--- Neumann condition for dynamic pressure ---*/
+
+      V_inlet[0] = node[iPoint]->GetPressure();
+      
+      /*--- Dirichlet condition for temperature (if energy is active) ---*/
+      
+      V_inlet[nDim+1] = Inlet_Ttotal[val_marker][iVertex]/config->GetTemperature_Ref();
+
+      /*--- Access density at the node. This is either constant by
+        construction, or will be set fixed implicitly by the temperature
+        and equation of state. ---*/
+
+      V_inlet[nDim+2] = node[iPoint]->GetDensity();
+
+      /*--- Beta coefficient from the config file ---*/
+
+      V_inlet[nDim+3] = node[iPoint]->GetBetaInc2();
+
+      /*--- Cp is needed for Temperature equation. ---*/
+
+      V_inlet[nDim+7] = node[iPoint]->GetSpecificHeatCp();
 
       /*--- Set various quantities in the solver class ---*/
 
