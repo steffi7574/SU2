@@ -3514,6 +3514,8 @@ void CDriver::XBraidPreprocessing(){
     app->initialstart           = 0.0;
     app->initialDT              = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDelta_UnstTimeND());
     app->BDF2                   = false;
+    app->SU2_OrderMagResidual   = SU2_TYPE::GetValue(config_container[ZONE_0]->GetOrderMagResidual());
+    app->SU2_MinLogResidual     = SU2_TYPE::GetValue(config_container[ZONE_0]->GetMinLogResidual());
 
     /* Check for BDF time-stepping of first or second order */
     if (config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_1ST){

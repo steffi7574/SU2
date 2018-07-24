@@ -88,7 +88,8 @@ typedef struct _braid_App_struct
   double initialstart; /* Initial starting time USED FOR TESTING ONLY */
   bool   BDF2;         /* Boolean: 1 if 2nd order dual time-stepping,
                                             0 if 1st order dual time-stepping */
-
+  double SU2_OrderMagResidual; /* SU2 convergence criterion on finest level: Absolute stopping crit */
+  double SU2_MinLogResidual;   /* SU2 convergence criterion on finest level: Relative stopping crit */
 
   /* Information about temporal and spatial communicators */
   int rank_x, size_x;   /* Rank and size of spatial communicator*/

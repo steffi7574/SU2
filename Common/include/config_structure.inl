@@ -1510,6 +1510,10 @@ inline su2double CConfig::GetOrderMagResidual(void) { return OrderMagResidual; }
 
 inline su2double CConfig::GetMinLogResidual(void) { return MinLogResidual; }
 
+inline void CConfig::SetOrderMagResidual(su2double val) { OrderMagResidual = val; }
+
+inline void CConfig::SetMinLogResidual(su2double val) { MinLogResidual = val; }
+
 inline su2double CConfig::GetDamp_Engine_Inflow(void) { return Damp_Engine_Inflow; }
 
 inline su2double CConfig::GetDamp_Engine_Exhaust(void) { return Damp_Engine_Exhaust; }
@@ -1779,6 +1783,10 @@ inline unsigned short CConfig::GetBraid_Min_Coarse(void) { return Braid_Min_Coar
 inline long CConfig::GetBraid_NRelax(void) { return Braid_NRelax; }
 
 inline su2double CConfig::GetBraid_Tol(void) { return Braid_Tol; }
+
+inline su2double CConfig::GetBraid_CoarsegridAccur_abs(void) { return Braid_CoarsegridAccur_abs; }
+
+inline su2double CConfig::GetBraid_CoarsegridAccur_rel(void) { return Braid_CoarsegridAccur_rel; }
 
 inline unsigned short CConfig::GetBraid_TNorm(void) { return Braid_TNorm; }
 
