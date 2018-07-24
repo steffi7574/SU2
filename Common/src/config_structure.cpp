@@ -2162,6 +2162,12 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /* DESCRIPTION: Halting tolerance */
   addDoubleOption("BRAID_TOL", Braid_Tol, 1.0e-06);
 
+  /* DESCRIPTION: Absolute spacial accuracy on coarser time-grids. Set to 0 for using same accuracy as on fine time grids */
+  addDoubleOption("BRAID_COARSEGRIDACCUR_ABS", Braid_CoarsegridAccur_abs, 0);
+
+  /* DESCRIPTION: Relative Spacial accuracy on coarser time-grids. Set to 0 for using same accuracy as on fine time grids */
+  addDoubleOption("BRAID_COARSEGRIDACCUR_REL", Braid_CoarsegridAccur_rel, 0);
+
   /* DESCRIPTION: Halting norm to use (see docstring below) */
   addUnsignedShortOption("BRAID_TNORM", Braid_TNorm, 2);
 

@@ -753,6 +753,8 @@ private:
   unsigned short Braid_Min_Coarse; /*!< \brief Minimum possible coarse grid size  */
   long Braid_NRelax;               /*!< \brief Number of CF relaxation sweeps on all levels */
   su2double Braid_Tol;             /*!< \brief Halting tolerance */
+  su2double Braid_CoarsegridAccur_abs;   /*!< \brief Absolut spatial accuracy on coarser time-grid levels, overwrites RESIDUAL_MINVAL*/
+  su2double Braid_CoarsegridAccur_rel;   /*!< \brief Relative spatial accuracy on coarser time-grid levels, overwrites RESIDUAL_REDUCTION*/
   unsigned short Braid_TNorm;      /*!< \brief Temporal Norm */
   long Braid_CFactor;              /*!< \brief Coarsening factor */
   unsigned long Braid_Max_Iter;     /*!< \brief Maximum number of iterations */
@@ -5935,7 +5937,18 @@ public:
    * \return Value of the minimum residual value (log10 scale).
    */
   su2double GetMinLogResidual(void);
-  
+
+   /*!
+   * \brief Set the value of the order of magnitude reduction of the residual.
+   */
+  void SetOrderMagResidual(su2double val);
+
+  /*!
+   * \brief Set value of the minimum residual value (log10 scale).
+   * \return Value of the minimum residual value (log10 scale).
+   */
+  void SetMinLogResidual(su2double val);
+
   /*!
    * \brief Value of the order of magnitude reduction of the residual for FSI applications.
    * \return Value of the order of magnitude reduction of the residual.
@@ -8198,6 +8211,19 @@ public:
    * \return Halting tolerance
    */
   su2double GetBraid_Tol(void);
+
+  /*!
+   * \brief Get the absolute spatial accuracy on coarser time-grids
+   * \return Halting tolerance
+   */
+   su2double GetBraid_CoarsegridAccur_abs(void);
+
+  /*!
+   * \brief Get the relative spatial accuracy on coarser time-grids
+   * \return Halting tolerance
+   */
+   su2double GetBraid_CoarsegridAccur_rel(void);
+
 
   /*!
    * \brief Get the halting norm to use in XBRAID

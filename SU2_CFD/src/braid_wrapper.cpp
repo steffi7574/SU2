@@ -44,12 +44,26 @@ int my_Step( braid_App        app,
 
     double  tstart, tstop, deltat;
     int     nPoint, nVar;
-    int     iExtIter;
+    int     iExtIter, level;
+    double  abs_accuracy, rel_accuracy;
+
+    /* Set the SU2 accuracy */
+    app->config_container[ZONE_0]->SetOrderMagResidual(app->SU2_OrderMagResidual);
+    app->config_container[ZONE_0]->SetMinLogResidual(app->SU2_MinLogResidual);
+
+    /* Reduce accuracy on coarser grid levels */
+    braid_StepStatusGetLevel(status, &level);
+    if (level > 0 ){
+        rel_accuracy = app->config_container[ZONE_0]->GetBraid_CoarsegridAccur_rel();
+        if (rel_accuracy > 0) app->config_container[ZONE_0]->SetOrderMagResidual(rel_accuracy);
+        abs_accuracy = app->config_container[ZONE_0]->GetBraid_CoarsegridAccur_abs();
+        if (abs_accuracy < 0) app->config_container[ZONE_0]->SetMinLogResidual(abs_accuracy);
+    }
 
     /* Grab variables from the app */
     nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
     nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
-  
+
     /* Set the time-step size and time-step index */
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
     if (app->BDF2) {
@@ -136,7 +150,8 @@ int my_Step( braid_App        app,
 
 
     /* Take the next time step to tstop */
-    if (app->rank_x == MASTER_NODE) cout << app->rank_t << ": STEP to " << tstop << ", dt = " << deltat <<  endl;
+    if (app->rank_x == MASTER_NODE) cout << app->rank_t << ": STEP to " << tstop << ", dt = " << deltat
+                                         << " accur " << app->config_container[ZONE_0]->GetOrderMagResidual() << " " << app->config_container[ZONE_0]->GetMinLogResidual() << endl;
     app->driver->Run();
 
     /* Check for SU2 convergence */
@@ -306,12 +321,6 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
         app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->Preprocessing(app->geometry_container[ZONE_0][INST_0][MESH_0], app->solver_container[ZONE_0][INST_0][MESH_0], app->config_container[ZONE_0], MESH_0, 0,0,false);
 
-//        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->Set_MPI_Solution(app->geometry_container[ZONE_0][MESH_0],app->config_container[ZONE_0]);
-
-
-
-        /* Compute the primitive Variables from the conservative ones */
-//        app->solver_container[ZONE_0][MESH_0][FLOW_SOL]->SetPrimitive_Variables(app->solver_container[ZONE_0][MESH_0], app->config_container[ZONE_0], false);
 
         /*--- Calculate the inviscid and viscous forces ---*/
         app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->Pressure_Forces(app->geometry_container[ZONE_0][INST_0][MESH_0], app->config_container[ZONE_0]);
