@@ -1176,3 +1176,45 @@ def restart2solution(config,state={}):
     else:
         raise Exception('unknown math problem')
 
+
+def merge_history(config):
+
+    if (config.get('OUTPUT_FORMAT', 'TECPLOT') == 'TECPLOT'):
+        fileformat = '.dat'
+    if (config.get('OUTPUT_FORMAT', 'TECPLOT') == 'TECPLOT_BINARY'):
+        fileformat = '.plt'
+
+    filename = config.get('HISTORY_FILENAME','history')
+
+    npt = int(config.get('BRAID_NPROC_TIME', 2))
+
+    # Open the output filename
+    outfile = open(filename + fileformat, 'w')
+
+    # Iterate over all local history files
+    for inpt in range(npt):
+        
+        # Open the local history file and read it
+        currfile = open(filename + '_%05i'%(inpt) + fileformat,'r') 
+        currfilelines = currfile.readlines()
+        currfilesize  = len(currfilelines)
+
+        # Sort the data with respect to first column
+        currfilelines.sort()
+
+        # If first local file: copy the header
+        if (inpt == 0):
+            for lineid in range(currfilesize - 3, currfilesize):
+                header = currfilelines[lineid]
+                outfile.write(header)
+        
+        # Copy the rest to the global history file
+        for lineid in range(currfilesize - 3):
+            outfile.write(currfilelines[lineid])
+
+        # close local history file
+        currfile.close()
+
+
+    # Close the global history file
+    outfile.close()

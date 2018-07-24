@@ -416,7 +416,25 @@ def read_config(filename):
                 data_dict[this_param] = int(this_value)
                 break                
             
-            
+            if case("BRAID_RUN") or \
+               case("BRAID_NPROC_TIME") or \
+               case("BRAID_MAX_LEVEL") or \
+               case("BRAID_MIN_COARSE") or \
+               case("BRAID_NRELAX") or \
+               case("BRAID_TNORM") or\
+               case("BRAID_CFACTOR") or \
+               case("BRAID_MAX_ITER") or \
+               case("BRAID_FMG") or \
+               case("BRAID_SKIP") or \
+               case("BRAID_PRINT_LEVEL") or \
+               case("BRAID_ACCESS_LEVEL") :
+                data_dict[this_param] = int(this_value)
+                break
+
+            if case("BRAID_TOL"):
+                data_dict[this_param] = float(this_value)
+                break
+
             # unitary design variable definition
             if case("DEFINITION_DV"):
                 # remove white space

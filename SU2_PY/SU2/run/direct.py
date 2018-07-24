@@ -104,6 +104,9 @@ def direct ( config ):
     # averaging final iterations
     final_avg = config.get('ITER_AVERAGE_OBJ',0)
 
+    if (config.get('BRAID_RUN', 0) == 1):
+        su2io.merge_history(config)
+
     # get history and objectives
     history      = su2io.read_history( history_filename , config.NZONES)
     aerodynamics = su2io.read_aerodynamics( history_filename , config.NZONES, special_cases, final_avg )
