@@ -140,7 +140,7 @@ def function( func_name, config, state=None ):
 #  Aerodynamic Functions
 # ----------------------------------------------------------------------
 
-def aerodynamics( config, state=None ):
+def aerodynamics( config, state=None, folder="DIRECT" ):
     """ vals = SU2.eval.aerodynamics(config,state=None)
     
         Evaluates aerodynamics with the following:
@@ -246,7 +246,7 @@ def aerodynamics( config, state=None ):
         pull.append( files['TARGET_HEATFLUX'] )
 
     # output redirection
-    with redirect_folder( 'DIRECT', pull, link ) as push:
+    with redirect_folder( folder, pull, link ) as push:
         with redirect_output(log_direct):     
             
             # # RUN DIRECT SOLUTION # #
