@@ -40,6 +40,38 @@ from optparse import OptionParser
 sys.path.append(os.environ['SU2_RUN'])
 import SU2
 
+batch_base_command = "sbatch"
+
+batch_args_mapping_slurm = {"NODES" : "--nodes",
+                            "NAME"  : "--job-name",
+                            "ERROR" : "--error",
+                            "OUTPUT" : "--output",
+                            "TIME"  : "--time", 
+                            "CONSTRAINT" : "--constraint",
+                            "TASKS_PER_NODE" : "--ntasks-per-node",
+                            "MEMORY": "--mem",
+                            "PARTITION" : "--partition"}
+
+# use slurm argument names
+batch_args_mapping = batch_args_mapping_slurm 
+
+default_batch_args = {batch_args_mapping["NODES"]         : 1,
+                      batch_args_mapping["NAME"]          : "default",
+                      batch_args_mapping["OUTPUT"]        : "default-%j.out",
+                      batch_args_mapping["ERROR"]         : "default-%j.err",
+                      batch_args_mapping["TASKS_PER_NODE"]: 16,
+                      batch_args_mapping["MEMORY"]        : 30000,
+                      batch_args_mapping["TIME"]          : "01:00:00",
+                      batch_args_mapping["CONSTRAINT"]    : "XEON_E5_2670",
+                      batch_args_mapping["PARTITION"]     : "normal"}
+
+run_base_command = "parallel_time_computation.py"
+
+default_run_args    = {"-f"  : "default.cfg",
+                        "-o"  : "TEST", 
+                        "-x": 8,
+                        "-t": 10}
+
 # -------------------------------------------------------------------
 #  Main 
 # -------------------------------------------------------------------
@@ -61,35 +93,6 @@ def main():
 #: def main()
 
 
-batch_base_command = "sbatch"
-
-batch_args_mapping_slurm = {"NODES" : "--nodes",
-                            "NAME"  : "--job-name",
-                            "ERROR" : "--error",
-                            "OUTPUT" : "--output",
-                            "TIME"  : "--time", 
-                            "CONSTRAINT" : "--constraint",
-                            "TASKS_PER_NODE" : "--ntasks-per-node",
-                            "MEMORY": "--mem"}
-
-# use slurm argument names
-batch_args_mapping = batch_args_mapping_slurm 
-
-default_batch_args = {batch_args_mapping["NODES"]         : 1,
-                      batch_args_mapping["NAME"]          : "default",
-                      batch_args_mapping["OUTPUT"]        : "default-%j.out",
-                      batch_args_mapping["ERROR"]         : "default-%j.err",
-                      batch_args_mapping["TASKS_PER_NODE"]: 16,
-                      batch_args_mapping["MEMORY"]        : 30000,
-                      batch_args_mapping["TIME"]          : "01:00:00",
-                      batch_args_mapping["CONSTRAINT"]    : "XEON_E5_2670"}
-
-run_base_command = "python ../SU2_xbraid/SU2_PY/parallel_time_computation.py"
-
-default_run_args    = {"-f"  : "default.cfg",
-                        "-o"  : "TEST", 
-                        "-x": 8,
-                        "-t": 10}
 
 # -------------------------------------------------------------------
 #  CFD Solution
@@ -97,76 +100,50 @@ default_run_args    = {"-f"  : "default.cfg",
 
 def batch_job( filename ):
 
-    # Read the base config file
     config = SU2.io.Config(filename)
-
-    # Total number of processes
-    config.NUMBER_PART      = 16
-
-    # number of time processes
-    config.BRAID_NPROC_TIME = 2
-
-    # modify more config options here
-
-    # assemble a jobname
-    jobname = "npx" + str(config.NUMBER_PART/config.BRAID_NPROC_TIME) + "npt" + str(config.BRAID_NPROC_TIME)
-
-    # submit the job
-    submit_job(config, jobname, "02:00:00")
-
-
-def submit_job(config, jobname, time_limit):
-
-    config.dump(jobname+".cfg")
 
     run_args   = copy.deepcopy(default_run_args)
     batch_args = copy.deepcopy(default_batch_args)
 
-    # set number of space processes
-    run_args["-x"] = config.NUMBER_PART/config.BRAID_NPROC_TIME
+    # Read the base config file
+    config = SU2.io.Config(filename)
 
-    # set number of time processes
-    run_args["-t"] = config.BRAID_NPROC_TIME
+    # Total number of processes
+    config.NUMBER_PART      = 256
 
-    # set the folder to execute
-    run_args["-o"] = jobname
+    # number of time processes
+    config.BRAID_NPROC_TIME = 8
 
-    # set the config file
-    run_args["-f"] = jobname+".cfg"
-    
-    batch_args[batch_args_mapping["NODES"]]           = config.NUMBER_PART/batch_args[batch_args_mapping["TASKS_PER_NODE"]]
-    batch_args[batch_args_mapping["NAME"]]            = jobname
-    batch_args[batch_args_mapping["ERROR"]]           = jobname+"%j.err"
-    batch_args[batch_args_mapping["OUTPUT"]]          = jobname+"%j.out"
-    batch_args[batch_args_mapping["TIME"]]            = time_limit
-    
+    cfactor    = [2,4,8]
 
-    command =  assemble_command(run_base_command, run_args, " ")
-    assemble_batch_script(jobname+".batch", command, batch_args)
+    max_levels = [3,4,5]
 
-    subprocess.call("sbatch " + jobname + ".batch", shell=True)
+    for i in range(3):
 
-def assemble_command(command, args, sep):
+        konfig = copy.deepcopy(config)
 
-    ex_command = command
+        konfig.BRAID_CFACTOR    = cfactor[i]
 
-    for arg, value in args.iteritems():
-        ex_command = ex_command + str(" ") + arg + sep + str(value)
+        konfig.BRAID_MAX_LEVELS = max_levels[i]
 
-    return ex_command
+        # assemble a jobname
+        jobname = "cf" + str(cfactor[i]) + "ml" + str(max_levels[i]) + "rel"
 
-def assemble_batch_script(name, run_command, args):
-    
-    outfile = open(name, 'w')
+        # set number of space processes
+        run_args["-x"] = konfig.NUMBER_PART/config.BRAID_NPROC_TIME
 
-    outfile.write("#!/usr/bin/bash\n")
+        # set number of time processes
+        run_args["-t"] = konfig.BRAID_NPROC_TIME
 
-    for arg,value in args.iteritems():
-        outfile.write("#SBATCH " + arg + "=" + str(value) + "\n")
+        # set the folder to execute
+        run_args["-o"] = jobname
 
-    outfile.write("export SU2_MPI_COMMAND=\"mpirun -n %i %s\"\n")
-    outfile.write(run_command)
-    outfile.close()
+        # set the config file
+        run_args["-f"] = jobname+".cfg"
+
+        # submit the job
+        SU2.run.submit_job(konfig, jobname, "04:00:00", run_base_command, run_args, batch_base_command, batch_args, batch_args_mapping_slurm)
+
 
 
 

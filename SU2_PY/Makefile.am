@@ -89,6 +89,7 @@ nobase_dist_mypkg_DATA= \
     SU2/run/geometry.py \
     SU2/run/projection.py \
     SU2/run/__init__.py \
+    SU2/run/batch_job.py \
     SU2/util/bunch.py \
     SU2/util/filter_adjoint.py \
     SU2/util/lhc_unif.py \
