@@ -76,20 +76,23 @@ int my_Step( braid_App        app,
     app->config_container[ZONE_0]->SetExtIter(iExtIter); //TODO: Check if BDF2
 
     /* Set the solution vectors (Solution, Solution_time_n and Solution_time_n1*/
-    su2double *cast_n, *cast_n1;
-    cast_n = new su2double[nVar];
-    if(app->BDF2) cast_n1 = new su2double[nVar];
+    //su2double *cast_n, *cast_n1;
+    //cast_n = new su2double[nVar];
+    //if(app->BDF2) cast_n1 = new su2double[nVar];
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
-            cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
-            if(app->BDF2) cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
-        }
-        app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
-        app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
-        if (app->BDF2) app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
+        //for (int iVar = 0; iVar < nVar; iVar++){
+        //    cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
+        //    if(app->BDF2) cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
+        //}
+       //app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
+       //app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
+       //if (app->BDF2) app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
+       app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
+       app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
+       if (app->BDF2) app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
     }
-    delete [] cast_n;
-    if(app->BDF2) delete [] cast_n1;
+    //delete [] cast_n;
+    //if(app->BDF2) delete [] cast_n1;
 
     /* Interpolate the solution_rime_n and solution_time_n1 to all meshes */
     su2double *Solution_n, *Solution_Fine_n, *Solution_n1, *Solution_Fine_n1, Area_Parent, Area_Children;
@@ -334,8 +337,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
         unsigned short nInst[] = {1};
 
         /* Write the solution files */
-        app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
+        if (iExtIter != 0){
+            app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
                                               app->config_container, iExtIter, 1, nInst);
+        }
 
         /* TODO: Also write time_n1 if BDF2!!  */
     }
