@@ -438,7 +438,7 @@ CDriver::CDriver(char* confFile,
       surface_movement[iZone]->CopyBoundary(geometry_container[iZone][INST_0][MESH_0], config_container[iZone]);
       if (config_container[iZone]->GetUnsteady_Simulation() == HARMONIC_BALANCE){
         for (iInst = 0; iInst < nInst[iZone]; iInst++){
-          if (rank == MASTER_NODE) cout << endl <<  "Instance "<< iInst + 1 <<":" << endl;
+          if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << endl <<  "Instance "<< iInst + 1 <<":" << endl;
           iteration_container[ZONE_0][iInst]->SetGrid_Movement(geometry_container, surface_movement, grid_movement, FFDBox, solver_container, config_container, ZONE_0, iInst, 0, 0);
         }
       }
@@ -603,9 +603,9 @@ void CDriver::Postprocessing() {
     /*--- Print out the number of non-physical points and reconstructions ---*/
 
     if (config_container[ZONE_0]->GetNonphysical_Points() > 0)
-      cout << "Warning: there are " << config_container[ZONE_0]->GetNonphysical_Points() << " non-physical points in the solution." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Warning: there are " << config_container[ZONE_0]->GetNonphysical_Points() << " non-physical points in the solution." << endl;
     if (config_container[ZONE_0]->GetNonphysical_Reconstr() > 0)
-      cout << "Warning: " << config_container[ZONE_0]->GetNonphysical_Reconstr() << " reconstructed states for upwinding are non-physical." << endl;
+      if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Warning: " << config_container[ZONE_0]->GetNonphysical_Reconstr() << " reconstructed states for upwinding are non-physical." << endl;
 
     /*--- Close the convergence history file. ---*/
     for (iZone = 0; iZone < nZone; iZone++) {
@@ -751,7 +751,7 @@ void CDriver::Postprocessing() {
   if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted CConfig container." << endl;
 
   if (nInst != NULL) delete [] nInst;
-  if (rank == MASTER_NODE) cout << "Deleted nInst container." << endl;
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Deleted nInst container." << endl;
   
   /*--- Deallocate output container ---*/
   if (output!= NULL) delete output;
@@ -770,7 +770,7 @@ void CDriver::Postprocessing() {
   UsedTime = StopTime-StartTime;
   UsedTimeCompute += UsedTime;
   
-  if ((rank == MASTER_NODE) && (wrt_perf)) {
+  if ((SU2_MPI::GetGlobalRank() == MASTER_NODE) && (wrt_perf)) {
     su2double TotalTime = UsedTimePreproc + UsedTimeCompute + UsedTimeOutput;
     cout.precision(6);
     cout << endl << endl <<"-------------------------- Performance Summary --------------------------" << endl;
@@ -904,7 +904,7 @@ void CDriver::Geometrical_Preprocessing() {
       if (SU2_MPI::GetGlobalRank() == MASTER_NODE) cout << "Checking for periodicity." << endl;
       geometry_container[iZone][iInst][MESH_0]->Check_Periodicity(config_container[iZone]);
 
-      if ((config_container[iZone]->GetnMGLevels() != 0) && (rank == MASTER_NODE))
+      if ((config_container[iZone]->GetnMGLevels() != 0) && (SU2_MPI::GetGlobalRank() == MASTER_NODE))
         cout << "Setting the multigrid structure." << endl;
 
     }
