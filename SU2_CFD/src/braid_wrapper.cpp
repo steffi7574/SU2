@@ -95,27 +95,32 @@ int my_Step( braid_App        app,
     //if(app->BDF2) delete [] cast_n1;
 
     /* Interpolate the solution_rime_n and solution_time_n1 to all meshes */
-    su2double *Solution_n, *Solution_Fine_n, *Solution_n1, *Solution_Fine_n1, Area_Parent, Area_Children;
+    su2double *Solution,*Solution_Fine, *Solution_n, *Solution_Fine_n, *Solution_n1, *Solution_Fine_n1, Area_Parent, Area_Children;
     unsigned Point_Fine;
     Solution_n = new su2double[nVar];
     Solution_n1 = new su2double[nVar];
+    Solution = new su2double[nVar];
     for (unsigned short iMesh = 1; iMesh <= app->config_container[ZONE_0]->GetnMGLevels(); iMesh++) {
         for (int iPoint = 0; iPoint < app->geometry_container[ZONE_0][INST_0][iMesh]->GetnPoint(); iPoint++) {
             Area_Parent = app->geometry_container[ZONE_0][INST_0][iMesh]->node[iPoint]->GetVolume();
             for (int iVar = 0; iVar < nVar; iVar++) {
                 Solution_n[iVar]  = 0.0;
                 Solution_n1[iVar] = 0.0;
+                Solution[iVar] = 0.0;
             }
             for (int iChildren = 0; iChildren < app->geometry_container[ZONE_0][INST_0][iMesh]->node[iPoint]->GetnChildren_CV(); iChildren++) {
                 Point_Fine = app->geometry_container[ZONE_0][INST_0][iMesh]->node[iPoint]->GetChildren_CV(iChildren);
                 Area_Children = app->geometry_container[ZONE_0][INST_0][iMesh-1]->node[Point_Fine]->GetVolume();
+                Solution_Fine  = app->solver_container[ZONE_0][INST_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution();
                 Solution_Fine_n  = app->solver_container[ZONE_0][INST_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution_time_n();
                 Solution_Fine_n1 = app->solver_container[ZONE_0][INST_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution_time_n1();
                 for (int iVar = 0; iVar < nVar; iVar++) {
+                    Solution[iVar]  += Solution_Fine[iVar]*Area_Children/Area_Parent;
                     Solution_n[iVar]  += Solution_Fine_n[iVar]*Area_Children/Area_Parent;
                     Solution_n1[iVar] += Solution_Fine_n1[iVar]*Area_Children/Area_Parent;
                 }
             }
+            app->solver_container[ZONE_0][INST_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution(Solution);
             app->solver_container[ZONE_0][INST_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution_time_n(Solution_n);
             app->solver_container[ZONE_0][INST_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution_time_n1(Solution_n1);
         }
@@ -123,7 +128,7 @@ int my_Step( braid_App        app,
     }
     delete [] Solution_n;
     delete [] Solution_n1;
-
+    delete [] Solution;
 
     if (app->BDF2){
 
