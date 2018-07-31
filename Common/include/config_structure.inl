@@ -1802,6 +1802,8 @@ inline unsigned short CConfig::GetBraid_Print_Level(void) { return Braid_Print_L
 
 inline unsigned short CConfig::GetBraid_Access_Level(void) { return Braid_Access_Level; }
 
+inline unsigned short CConfig::GetBraid_CoarseGrid_Space(void) { return Braid_CoarseGrid_Space; }
+
 inline unsigned short CConfig::GetnIterFSI(void) { return nIterFSI; }
 
 inline unsigned short CConfig::GetnIterFSI_Ramp(void) { return nIterFSI_Ramp; }

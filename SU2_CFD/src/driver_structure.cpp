@@ -3484,15 +3484,7 @@ void CDriver::XBraidPreprocessing(){
 #ifdef HAVE_XBRAID
 
     int nPoint              = geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nDim                = geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
     int nVar                = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
-    double Density_Inf   = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDensity_FreeStreamND());
-    su2double *Velocity_Inf = config_container[ZONE_0]->GetVelocity_FreeStreamND();
-    double Energy_Inf    = SU2_TYPE::GetValue(config_container[ZONE_0]->GetEnergy_FreeStreamND());
-    double Pressure_Inf  = SU2_TYPE::GetValue(config_container[ZONE_0]->GetPressure_FreeStreamND());
-    bool compressible = (config_container[ZONE_0]->GetKind_Regime() == COMPRESSIBLE);
-    bool incompressible = (config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
-
 
     /* --- Set up the application structure for xBraid --- */
     app = new my_App;
@@ -3506,10 +3498,10 @@ void CDriver::XBraidPreprocessing(){
     /* Set the SU2 containers for running a SU2_CFD simulation */
     app->driver                 = this;
     app->output                 = output;
-    app->integration_container  = integration_container;
-    app->geometry_container     = geometry_container;
-    app->solver_container       = solver_container;
-    app->config_container       = config_container;
+    app->integration  = integration_container[ZONE_0][INST_0];
+    app->geometry     = geometry_container[ZONE_0][INST_0];
+    app->solver       = solver_container[ZONE_0][INST_0];
+    app->config       = config_container[ZONE_0];
     app->tstart                 = 0.0;
     app->initialstart           = 0.0;
     app->initialDT              = SU2_TYPE::GetValue(config_container[ZONE_0]->GetDelta_UnstTimeND());

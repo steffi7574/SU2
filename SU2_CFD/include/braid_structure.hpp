@@ -100,10 +100,10 @@ typedef struct _braid_App_struct
   /* TODO: Add only ZONE_0 ! (*_container[ZONE_0]) */
   CDriver *driver;
   COutput *output;
-  CIntegration ****integration_container;
-  CGeometry ****geometry_container;
-  CSolver *****solver_container;
-  CConfig **config_container;
+  CIntegration **integration;
+  CGeometry **geometry;
+  CSolver ***solver;
+  CConfig *config;
 
   /* Stores the initial condition */
   TwoStepSolution* initial_condition;

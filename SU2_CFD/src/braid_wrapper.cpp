@@ -17,8 +17,8 @@
 braid_Vector deep_copy( braid_App app, braid_Vector u ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint = app->geometry[MESH_0]->GetnPoint();
+    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Allocate memory for the new copy v */
     my_Vector* v = new my_Vector;
@@ -46,23 +46,28 @@ int my_Step( braid_App        app,
     int     nPoint, nVar;
     int     iExtIter, level;
     double  abs_accuracy, rel_accuracy;
+    int     FinestMesh = app->config->GetFinestMesh();
 
     /* Set the SU2 accuracy */
-    app->config_container[ZONE_0]->SetOrderMagResidual(app->SU2_OrderMagResidual);
-    app->config_container[ZONE_0]->SetMinLogResidual(app->SU2_MinLogResidual);
+    app->config->SetOrderMagResidual(app->SU2_OrderMagResidual);
+    app->config->SetMinLogResidual(app->SU2_MinLogResidual);
 
     /* Reduce accuracy on coarser grid levels */
     braid_StepStatusGetLevel(status, &level);
     if (level > 0 ){
-        rel_accuracy = app->config_container[ZONE_0]->GetBraid_CoarsegridAccur_rel();
-        if (rel_accuracy > 0) app->config_container[ZONE_0]->SetOrderMagResidual(rel_accuracy);
-        abs_accuracy = app->config_container[ZONE_0]->GetBraid_CoarsegridAccur_abs();
-        if (abs_accuracy < 0) app->config_container[ZONE_0]->SetMinLogResidual(abs_accuracy);
+        rel_accuracy = app->config->GetBraid_CoarsegridAccur_rel();
+        if (rel_accuracy > 0) app->config->SetOrderMagResidual(rel_accuracy);
+        abs_accuracy = app->config->GetBraid_CoarsegridAccur_abs();
+        if (abs_accuracy < 0) app->config->SetMinLogResidual(abs_accuracy);
+        
+        if (app->config->GetBraid_CoarseGrid_Space()){ 
+          app->config->SetFinestMesh(MESH_0+1);
+        }
     }
 
     /* Grab variables from the app */
-    nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    nPoint = app->geometry[MESH_0]->GetnPoint();
+    nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Set the time-step size and time-step index */
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
@@ -72,63 +77,24 @@ int my_Step( braid_App        app,
         deltat = (tstop - tstart);
     }
     iExtIter = (int) round( tstop  / app->initialDT );
-    app->config_container[ZONE_0]->SetDelta_UnstTimeND( deltat );
-    app->config_container[ZONE_0]->SetExtIter(iExtIter); //TODO: Check if BDF2
+    app->config->SetDelta_UnstTimeND( deltat );
+    app->config->SetExtIter(iExtIter); //TODO: Check if BDF2
 
-    /* Set the solution vectors (Solution, Solution_time_n and Solution_time_n1*/
-    //su2double *cast_n, *cast_n1;
-    //cast_n = new su2double[nVar];
-    //if(app->BDF2) cast_n1 = new su2double[nVar];
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        //for (int iVar = 0; iVar < nVar; iVar++){
-        //    cast_n[iVar]  = u->Solution->time_n[iPoint][iVar];
-        //    if(app->BDF2) cast_n1[iVar] = u->Solution->time_n1[iPoint][iVar];
-        //}
-       //app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast_n);
-       //app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(cast_n);
-       //if (app->BDF2) app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(cast_n1);
-       app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
-       app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
-       if (app->BDF2) app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
-    }
-    //delete [] cast_n;
-    //if(app->BDF2) delete [] cast_n1;
 
-    /* Interpolate the solution_rime_n and solution_time_n1 to all meshes */
-    su2double *Solution,*Solution_Fine, *Solution_n, *Solution_Fine_n, *Solution_n1, *Solution_Fine_n1, Area_Parent, Area_Children;
-    unsigned Point_Fine;
-    Solution_n = new su2double[nVar];
-    Solution_n1 = new su2double[nVar];
-    Solution = new su2double[nVar];
-    for (unsigned short iMesh = 1; iMesh <= app->config_container[ZONE_0]->GetnMGLevels(); iMesh++) {
-        for (int iPoint = 0; iPoint < app->geometry_container[ZONE_0][INST_0][iMesh]->GetnPoint(); iPoint++) {
-            Area_Parent = app->geometry_container[ZONE_0][INST_0][iMesh]->node[iPoint]->GetVolume();
-            for (int iVar = 0; iVar < nVar; iVar++) {
-                Solution_n[iVar]  = 0.0;
-                Solution_n1[iVar] = 0.0;
-                Solution[iVar] = 0.0;
-            }
-            for (int iChildren = 0; iChildren < app->geometry_container[ZONE_0][INST_0][iMesh]->node[iPoint]->GetnChildren_CV(); iChildren++) {
-                Point_Fine = app->geometry_container[ZONE_0][INST_0][iMesh]->node[iPoint]->GetChildren_CV(iChildren);
-                Area_Children = app->geometry_container[ZONE_0][INST_0][iMesh-1]->node[Point_Fine]->GetVolume();
-                Solution_Fine  = app->solver_container[ZONE_0][INST_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution();
-                Solution_Fine_n  = app->solver_container[ZONE_0][INST_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution_time_n();
-                Solution_Fine_n1 = app->solver_container[ZONE_0][INST_0][iMesh-1][FLOW_SOL]->node[Point_Fine]->GetSolution_time_n1();
-                for (int iVar = 0; iVar < nVar; iVar++) {
-                    Solution[iVar]  += Solution_Fine[iVar]*Area_Children/Area_Parent;
-                    Solution_n[iVar]  += Solution_Fine_n[iVar]*Area_Children/Area_Parent;
-                    Solution_n1[iVar] += Solution_Fine_n1[iVar]*Area_Children/Area_Parent;
-                }
-            }
-            app->solver_container[ZONE_0][INST_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution(Solution);
-            app->solver_container[ZONE_0][INST_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution_time_n(Solution_n);
-            app->solver_container[ZONE_0][INST_0][iMesh][FLOW_SOL]->node[iPoint]->SetSolution_time_n1(Solution_n1);
-        }
-        app->solver_container[ZONE_0][INST_0][iMesh][FLOW_SOL]->Set_MPI_Solution(app->geometry_container[ZONE_0][INST_0][iMesh], app->config_container[ZONE_0]);
+       app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
+       app->solver[MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
+       if (app->BDF2) app->solver[MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
     }
-    delete [] Solution_n;
-    delete [] Solution_n1;
-    delete [] Solution;
+    
+    /* Restrict solution to coarser meshes */
+    for (unsigned short iMGLevel = 0; iMGLevel < app->config->GetnMGLevels(); iMGLevel++) {
+      
+      app->integration[FLOW_SOL]->SetRestricted_Solution(RUNTIME_FLOW_SYS, app->solver[iMGLevel][FLOW_SOL],
+                             app->solver[iMGLevel+1][FLOW_SOL],
+                             app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
+
+    }
 
     if (app->BDF2){
 
@@ -137,8 +103,8 @@ int my_Step( braid_App        app,
         app->driver->Run();
 
         /* Check for SU2 convergence */
-        if (!app->integration_container[ZONE_0][INST_0][FLOW_SOL]->GetConvergence()) {
-            cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0)));
+        if (!app->integration[FLOW_SOL]->GetConvergence()) {
+            cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetRes_RMS(0)));
             exit(EXIT_FAILURE);
         }
 
@@ -147,24 +113,36 @@ int my_Step( braid_App        app,
 
         /* Grab drag and lift coefficient from SU2's master node. */
         if (app->rank_x == MASTER_NODE){
-            u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetTotal_CD());
-            u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetTotal_CL());
+            u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetTotal_CD());
+            u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetTotal_CL());
         }
 
         /* Set the next iExtIter */
         iExtIter++;
-        app->config_container[ZONE_0]->SetExtIter(iExtIter);
+        app->config->SetExtIter(iExtIter);
     }
 
 
     /* Take the next time step to tstop */
     if (app->rank_x == MASTER_NODE) cout << app->rank_t << ": STEP to " << tstop << ", dt = " << deltat
-                                         << " accur " << app->config_container[ZONE_0]->GetOrderMagResidual() << " " << app->config_container[ZONE_0]->GetMinLogResidual() << endl;
+                                         << " accur " << app->config->GetOrderMagResidual() << " " << app->config->GetMinLogResidual() << endl;
     app->driver->Run();
+    
+    
+    if (app->config->GetBraid_CoarseGrid_Space()){ 
+      if (level > 0){
+        app->integration[FLOW_SOL]->SetProlongated_Solution(RUNTIME_FLOW_SYS, app->solver[app->config->GetFinestMesh()-1][FLOW_SOL],
+            app->solver[app->config->GetFinestMesh()][FLOW_SOL],
+            app->geometry[app->config->GetFinestMesh()-1], app->geometry[app->config->GetFinestMesh()],
+            app->config);
+        app->config->SetFinestMesh(FinestMesh);
+        
+      }
+    }
 
     /* Check for SU2 convergence */
-    if (!app->integration_container[ZONE_0][INST_0][FLOW_SOL]->GetConvergence()) {
-        cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetRes_RMS(0)));
+    if (!app->integration[FLOW_SOL]->GetConvergence()) {
+        cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetRes_RMS(0)));
         //exit(EXIT_FAILURE);
     }
 
@@ -173,15 +151,15 @@ int my_Step( braid_App        app,
 
     /* Grab the history values from SU2's master node. */
     if (app->rank_x == MASTER_NODE){
-        u->Solution->Total_CD_n = SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetTotal_CD());
-        u->Solution->Total_CL_n = SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetTotal_CL());
+        u->Solution->Total_CD_n = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetTotal_CD());
+        u->Solution->Total_CL_n = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetTotal_CL());
     }
 
     /* Grab the solution vectors from su2 for both time steps */
     for (int iPoint = 0; iPoint < nPoint; iPoint++){
         for (int iVar = 0; iVar < nVar; iVar++){
-            u->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar]);
-            if (app->BDF2) u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
+            u->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar]);
+            if (app->BDF2) u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
         }
     }
 
@@ -192,9 +170,9 @@ int my_Step( braid_App        app,
 int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nDim   = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
-    int nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint = app->geometry[MESH_0]->GetnPoint();
+    int nDim   = app->geometry[MESH_0]->GetnDim();
+    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Allocate memory for the primal braid vector */
     my_Vector* u = new my_Vector;
@@ -218,9 +196,9 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nDim   = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
-    int nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint = app->geometry[MESH_0]->GetnPoint();
+    int nDim   = app->geometry[MESH_0]->GetnDim();
+    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
 
     /* Allocate memory for the new copy v */
@@ -258,8 +236,8 @@ int my_Free( braid_App app, braid_Vector u ){
 int my_Sum( braid_App app, double alpha, braid_Vector x, double beta, braid_Vector y ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint = app->geometry[MESH_0]->GetnPoint();
+    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
 
     /* Compute the sum y = alpha x + beta y at time n and time n-1 */
@@ -279,8 +257,8 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta, braid_Vect
 int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint = app->geometry[MESH_0]->GetnPoint();
+    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Compute l2norm of the solution list at time n and n1 */
     double norm = 0.0;
@@ -304,8 +282,8 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
-    int nPoint      = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nVar        = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint      = app->geometry[MESH_0]->GetnPoint();
+    int nVar        = app->solver[MESH_0][FLOW_SOL]->GetnVar();
     su2double* cast = new su2double[nVar];
 
     /* Get the current time-step number */
@@ -317,23 +295,23 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
         /* --- Write history and solution at time n ---*/
 
-        app->config_container[ZONE_0]->SetExtIter(iExtIter);
+        app->config->SetExtIter(iExtIter);
 
         /* Trick SU2 with the current solution */
         for (int iPoint = 0; iPoint < nPoint; iPoint++){
             for (int iVar = 0; iVar < nVar; iVar++){
                 cast[iVar]  = u->Solution->time_n[iPoint][iVar];
             }
-            app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
+            app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
         }
 
-        app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->Preprocessing(app->geometry_container[ZONE_0][INST_0][MESH_0], app->solver_container[ZONE_0][INST_0][MESH_0], app->config_container[ZONE_0], MESH_0, 0,0,false);
+        app->solver[MESH_0][FLOW_SOL]->Preprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0, 0,0,false);
 
 
         /*--- Calculate the inviscid and viscous forces ---*/
-        app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->Pressure_Forces(app->geometry_container[ZONE_0][INST_0][MESH_0], app->config_container[ZONE_0]);
-        app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->Momentum_Forces(app->geometry_container[ZONE_0][INST_0][MESH_0], app->config_container[ZONE_0]);
-        app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->Friction_Forces(app->geometry_container[ZONE_0][INST_0][MESH_0], app->config_container[ZONE_0]);
+        app->solver[MESH_0][FLOW_SOL]->Pressure_Forces(app->geometry[MESH_0], app->config);
+        app->solver[MESH_0][FLOW_SOL]->Momentum_Forces(app->geometry[MESH_0], app->config);
+        app->solver[MESH_0][FLOW_SOL]->Friction_Forces(app->geometry[MESH_0], app->config);
 
 
         /* Write to the history file */
@@ -342,10 +320,10 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
         unsigned short nInst[] = {1};
 
         /* Write the solution files */
-        if (iExtIter != 0){
-            app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
-                                              app->config_container, iExtIter, 1, nInst);
-        }
+//        if (iExtIter != 0){
+//            app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
+//                                              app->config_container, iExtIter, 1, nInst);
+//        }
 
         /* TODO: Also write time_n1 if BDF2!!  */
     }
@@ -358,8 +336,8 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint = app->geometry[MESH_0]->GetnPoint();
+    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Compute size of buffer */
     *size_ptr = nPoint * nVar * sizeof(double);
@@ -374,8 +352,8 @@ int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
 int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nVar   = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint = app->geometry[MESH_0]->GetnPoint();
+    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
 
     /* Pack the buffer with current and previous time */
@@ -406,8 +384,8 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
-    int nPoint  = app->geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
-    int nVar    = app->solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
+    int nPoint  = app->geometry[MESH_0]->GetnPoint();
+    int nVar    = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Get the buffer */
     double *dbuffer = (double*)buffer;

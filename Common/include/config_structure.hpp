@@ -762,6 +762,7 @@ private:
   unsigned short Braid_Print_Level; /*!< \brief Level of XBraid printing to the screen */
   unsigned short Braid_Access_Level; /*!< \brief Frequency of calls to access routine: 1 is for only after simulation */
   unsigned short Braid_Skip; /*!< \brief Boolean, whether to skip all work on first down cycle */
+  unsigned short Braid_CoarseGrid_Space;
 su2double Gamma,			/*!< \brief Ratio of specific heats of the gas. */
   Bulk_Modulus,			/*!< \brief Value of the bulk modulus for incompressible flows. */
   Beta_Factor,			/*!< \brief Value of the epsilon^2 multiplier for Beta for the incompressible preconditioner. */
@@ -8267,6 +8268,11 @@ public:
    */
   unsigned short GetBraid_Access_Level(void);
 
+  /*!
+   * \brief Get indicator whether a coarse space grid should be used on the coarser time level.
+   * \return Frequency of calls to access routine
+   */
+  unsigned short GetBraid_CoarseGrid_Space(void);
 
   /*!
    *
