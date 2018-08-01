@@ -115,12 +115,13 @@ void CMultiGridIntegration::MultiGrid_Iteration(CGeometry ****geometry,
                                                                          solver_container[iZone][iInst][MESH_0], config[iZone],
                                                                          MESH_0, NO_RK_ITER, RunTime_EqSystem, true);
   
-  /*--- Compute non-dimensional parameters and the convergence monitor ---*/
-  
-  NonDimensional_Parameters(geometry[iZone][iInst], solver_container[iZone][iInst],
-                            numerics_container[iZone][iInst], config[iZone],
-                            FinestMesh, RunTime_EqSystem, Iteration, &monitor);
-  
+   if (FinestMesh == MESH_0){
+     /*--- Compute non-dimensional parameters and the convergence monitor ---*/
+     
+     NonDimensional_Parameters(geometry[iZone][iInst], solver_container[iZone][iInst],
+                               numerics_container[iZone][iInst], config[iZone],
+                               FinestMesh, RunTime_EqSystem, Iteration, &monitor);
+   }
   /*--- Convergence strategy ---*/
   
   Convergence_Monitoring(geometry[iZone][iInst][FinestMesh], config[iZone], Iteration, monitor, FinestMesh);
