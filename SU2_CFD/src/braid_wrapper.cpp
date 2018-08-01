@@ -315,14 +315,8 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
         /* Write to the history file */
         app->driver->Monitor(iExtIter);
-  
-        unsigned short nInst[] = {1};
-
-        /* Write the solution files */
-//        if (iExtIter != 0){
-//            app->output->SetResult_Files_Parallel(app->solver_container, app->geometry_container,
-//                                              app->config_container, iExtIter, 1, nInst);
-//        }
+        
+        app->driver->Output(iExtIter);
 
         /* TODO: Also write time_n1 if BDF2!!  */
     }
