@@ -122,7 +122,7 @@ int my_Step( braid_App        app,
     }
 
     /* Check for SU2 convergence */
-    if (!app->integration[FLOW_SOL]->GetConvergence()) {
+    if (!app->integration[FLOW_SOL]->GetConvergence() && (app->rank_x == MASTER_NODE)) {
         cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetRes_RMS(0)));
         //exit(EXIT_FAILURE);
     }
