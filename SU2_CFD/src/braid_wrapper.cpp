@@ -17,17 +17,17 @@
 braid_Vector deep_copy( braid_App app, braid_Vector u ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry[MESH_0]->GetnPoint();
-    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Allocate memory for the new copy v */
     my_Vector* v = new my_Vector;
     v->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
 
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
         /* Copy the values from u to v */
         /* TODO: Set the values with the SetSolution(...), Set_solution_time_n(...) and Set_Solution_timen1(...) */
-        for (int iVar = 0; iVar < nVar; iVar++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             v->Solution->time_n[iPoint][iVar]  = u->Solution->time_n[iPoint][iVar];
             if(app->BDF2) v->Solution->time_n1[iPoint][iVar] = u->Solution->time_n1[iPoint][iVar];
         }
@@ -43,11 +43,11 @@ int my_Step( braid_App        app,
              braid_StepStatus status){
 
     double  tstart, tstop, deltat;
-    int     nPoint, nVar;
-    int     iExtIter, level;
+    unsigned long nPoint;
+    unsigned long  iExtIter;
     double  abs_accuracy, rel_accuracy;
-    int     FinestMesh = app->config->GetFinestMesh();
-
+    unsigned short  FinestMesh = app->config->GetFinestMesh(),  nVar;
+    int level;
     /* Set the SU2 accuracy */
     app->config->SetOrderMagResidual(app->SU2_OrderMagResidual);
     app->config->SetMinLogResidual(app->SU2_MinLogResidual);
@@ -72,16 +72,17 @@ int my_Step( braid_App        app,
     /* Set the time-step size and time-step index */
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
     if (app->BDF2) {
-        deltat = (tstop - tstart) / 2.0;
+        deltat = (tstop - tstart) / 2.0; 
     } else {
         deltat = (tstop - tstart);
     }
     iExtIter = (int) round( tstop  / app->initialDT );
+
     app->config->SetDelta_UnstTimeND( deltat );
     app->config->SetExtIter(iExtIter); //TODO: Check if BDF2
 
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-
+    /* Trick SU2 with the correct solution values */ 
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
        app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
        app->solver[MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
        if (app->BDF2) app->solver[MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
@@ -156,8 +157,8 @@ int my_Step( braid_App        app,
     }
 
     /* Grab the solution vectors from su2 for both time steps */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             u->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar]);
             if (app->BDF2) u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
         }
@@ -170,17 +171,17 @@ int my_Step( braid_App        app,
 int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry[MESH_0]->GetnPoint();
-    int nDim   = app->geometry[MESH_0]->GetnDim();
-    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nDim   = app->geometry[MESH_0]->GetnDim();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Allocate memory for the primal braid vector */
     my_Vector* u = new my_Vector;
     u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
 
     /* Set the initial condition */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             u->Solution->time_n[iPoint][iVar]  = app->initial_condition->time_n[iPoint][iVar];
             if(app->BDF2) u->Solution->time_n1[iPoint][iVar] = app->initial_condition->time_n1[iPoint][iVar];
         }
@@ -196,18 +197,17 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
 int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry[MESH_0]->GetnPoint();
-    int nDim   = app->geometry[MESH_0]->GetnDim();
-    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
-
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nDim   = app->geometry[MESH_0]->GetnDim();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Allocate memory for the new copy v */
     my_Vector* v = new my_Vector;
     v->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
 
     /* Copy the values from u to v */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             v->Solution->time_n[iPoint][iVar]  = u->Solution->time_n[iPoint][iVar];
             if (app->BDF2) v->Solution->time_n1[iPoint][iVar] = u->Solution->time_n1[iPoint][iVar];
         }
@@ -236,13 +236,12 @@ int my_Free( braid_App app, braid_Vector u ){
 int my_Sum( braid_App app, double alpha, braid_Vector x, double beta, braid_Vector y ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry[MESH_0]->GetnPoint();
-    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
-
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Compute the sum y = alpha x + beta y at time n and time n-1 */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             y->Solution->time_n[iPoint][iVar]  = alpha * x->Solution->time_n[iPoint][iVar]
                                                + beta  * y->Solution->time_n[iPoint][iVar];
             if (app->BDF2) y->Solution->time_n1[iPoint][iVar] = alpha * x->Solution->time_n1[iPoint][iVar]
@@ -257,13 +256,13 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta, braid_Vect
 int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry[MESH_0]->GetnPoint();
-    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
-
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    
     /* Compute l2norm of the solution list at time n and n1 */
     double norm = 0.0;
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             norm += pow(u->Solution->time_n[iPoint][iVar], 2);
             if (app->BDF2) norm += pow(u->Solution->time_n1[iPoint][iVar], 2);
         }
@@ -282,8 +281,8 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
 int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
-    int nPoint      = app->geometry[MESH_0]->GetnPoint();
-    int nVar        = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
     su2double* cast = new su2double[nVar];
 
     /* Get the current time-step number */
@@ -298,8 +297,8 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
         app->config->SetExtIter(iExtIter);
 
         /* Trick SU2 with the current solution */
-        for (int iPoint = 0; iPoint < nPoint; iPoint++){
-            for (int iVar = 0; iVar < nVar; iVar++){
+        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+            for (unsigned short iVar = 0; iVar < nVar; iVar++){
                 cast[iVar]  = u->Solution->time_n[iPoint][iVar];
             }
             app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
@@ -336,8 +335,8 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry[MESH_0]->GetnPoint();
-    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Compute size of buffer */
     *size_ptr = nPoint * nVar * sizeof(double);
@@ -352,15 +351,15 @@ int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
 int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
-    int nPoint = app->geometry[MESH_0]->GetnPoint();
-    int nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
 
     /* Pack the buffer with current and previous time */
     double *dbuffer = (double*)buffer;
     int ibuffer = 0;
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             /* Write Solution at current time to the buffer */
             dbuffer[ibuffer] = u->Solution->time_n[iPoint][iVar];
             ibuffer++;
@@ -384,8 +383,8 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
 int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_BufferStatus bstatus  ){
 
     /* Grab variables from the app */
-    int nPoint  = app->geometry[MESH_0]->GetnPoint();
-    int nVar    = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned long nPoint  = app->geometry[MESH_0]->GetnPoint();
+    unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
 
     /* Get the buffer */
     double *dbuffer = (double*)buffer;
@@ -396,8 +395,8 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
 
     /* Unpack the buffer and write solution at current and previous time */
-    for (int iPoint = 0; iPoint < nPoint; iPoint++){
-        for (int iVar = 0; iVar < nVar; iVar++){
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned short iVar = 0; iVar < nVar; iVar++){
             u->Solution->time_n[iPoint][iVar] = dbuffer[ibuffer];
             ibuffer++;
             if (app->BDF2){

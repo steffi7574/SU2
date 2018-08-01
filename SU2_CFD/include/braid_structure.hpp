@@ -35,8 +35,8 @@ struct TwoStepSolution
     /* Choose between 1st and 2nd order BDF time-stepping */
     bool BDF2;
     /* Dimensions of the solution lists */
-    int nPoint;
-    int nVar;
+    unsigned long nPoint;
+    unsigned short nVar;
     /* Solution lists for all grid points and for all nVars*/
     double **time_n;    /*!<\brief List of solutions at time n for each point in space. */
     double **time_n1;   /*!<\brief List of solutions at time n-1 for each point in space. */
@@ -48,7 +48,7 @@ struct TwoStepSolution
     double Total_CD_n1;
 
     /* Constructor */
-    TwoStepSolution(bool bdf2, int Point, int Var){
+    TwoStepSolution(bool bdf2, unsigned long Point, unsigned short Var){
       nPoint      = Point;
       nVar        = Var;
       BDF2        = bdf2;
@@ -59,7 +59,7 @@ struct TwoStepSolution
       /* Allocate memory for the solution lists */
       time_n  = new double*[nPoint];
       if (BDF2) time_n1 = new double*[nPoint];
-      for (int iPoint = 0; iPoint < nPoint; iPoint++){
+      for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
           time_n[iPoint]  = new double[nVar];
           if(BDF2) time_n1[iPoint] = new double[nVar];
       }
@@ -67,7 +67,7 @@ struct TwoStepSolution
 
     /* Destructor */
     ~TwoStepSolution(){
-        for (int iPoint = 0; iPoint < nPoint; iPoint++){
+        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
           delete [] time_n[iPoint];
           if (BDF2) delete [] time_n1[iPoint];
         }
@@ -83,7 +83,7 @@ typedef struct _braid_App_struct
 {
   double tstart;       /* Begin of Time integration */
   double tstop;        /* End of Time integration */
-  int    ntime;        /* Number of time steps */
+  unsigned long  ntime;        /* Number of time steps */
   double initialDT;    /* Initial DeltaT */
   double initialstart; /* Initial starting time USED FOR TESTING ONLY */
   bool   BDF2;         /* Boolean: 1 if 2nd order dual time-stepping,
