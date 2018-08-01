@@ -96,31 +96,11 @@ int my_Step( braid_App        app,
                              app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
 
     }
-
-    if (app->BDF2){
-
-        /* Take the first time step to tstart + deltat */
-        // if (app->rank_x == MASTER_NODE) cout << app->rank_t << ": STEP from " << tstart << " to " << tstart + deltat <<  endl;
-        app->driver->Run();
-
-        /* Check for SU2 convergence */
-        if (!app->integration[FLOW_SOL]->GetConvergence()) {
-            cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetRes_RMS(0)));
-            exit(EXIT_FAILURE);
-        }
-
-        /* Update the Solution_n and solution_n1 for dual time stepping strategy */
-        app->driver->Update();
-
-        /* Grab drag and lift coefficient from SU2's master node. */
-        if (app->rank_x == MASTER_NODE){
-            u->Solution->Total_CD_n1 = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetTotal_CD());
-            u->Solution->Total_CL_n1 = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetTotal_CL());
-        }
-
-        /* Set the next iExtIter */
-        iExtIter++;
-        app->config->SetExtIter(iExtIter);
+    
+       
+    /* Set solution_time_n of coarser spatial grids */
+    for (unsigned short iMesh = 0; iMesh <= app->config->GetnMGLevels(); iMesh++) {
+      app->integration[FLOW_SOL]->SetDualTime_Solver(app->geometry[iMesh], app->solver[iMesh][FLOW_SOL], app->config, iMesh);
     }
 
 
