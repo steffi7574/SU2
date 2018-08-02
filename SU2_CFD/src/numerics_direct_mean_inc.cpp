@@ -59,6 +59,20 @@ CUpwFDSInc_Flow::CUpwFDSInc_Flow(unsigned short val_nDim, unsigned short val_nVa
   for (iVar = 0; iVar < nVar; iVar++) {
     Precon[iVar]      = new su2double[nVar];
     invPrecon_A[iVar] = new su2double[nVar];
+    Diff_V[iVar] = 0.0;
+    ProjFlux_j[iVar] = 0.0;
+    ProjFlux_i[iVar] = 0.0;
+    Lambda[iVar] = 0.0;
+    Epsilon[iVar] = 0.0;
+    for (unsigned short jVar = 0.0; jVar < nVar; jVar ++){
+      Precon[iVar][jVar] = 0.0;
+      invPrecon_A[iVar][jVar] = 0.0;
+    }
+  }
+  for (iDim = 0; iDim < nDim; iDim++){
+    Velocity_j[iDim] = 0.0;
+    Velocity_i[iDim] = 0.0;
+    MeanVelocity[iDim] = 0.0;
   }
   
 }

@@ -102,14 +102,25 @@ CNumerics::CNumerics(unsigned short val_nDim, unsigned short val_nVar,
 
   UnitNormal = new su2double [nDim];
   UnitNormald = new su2double [nDim];
-
+  for (iDim = 0; iDim < nDim; iDim++){
+    UnitNormal[iDim] = 0.0;
+    UnitNormald[iDim] = 0.0;
+  }
   Flux_Tensor = new su2double* [nVar];
-  for (iVar = 0; iVar < (nVar); iVar++)
+  for (iVar = 0; iVar < (nVar); iVar++){
     Flux_Tensor[iVar] = new su2double [nDim];
+
+    for (iDim = 0; iDim < nDim; iDim++){
+      Flux_Tensor[iVar][iDim] = 0.0;
+    }
+  }
 
   tau = new su2double* [nDim];
   for (iDim = 0; iDim < nDim; iDim++) {
     tau[iDim] = new su2double [nDim];
+    for (unsigned short jDim = 0; jDim < nDim; jDim++){
+      tau[iDim][jDim] = 0.0;
+    }
   }
 
   delta = new su2double* [nDim];
@@ -130,6 +141,13 @@ CNumerics::CNumerics(unsigned short val_nDim, unsigned short val_nVar,
 
   Proj_Flux_Tensor = new su2double [nVar];
 
+  for (iVar = 0;iVar < nVar; iVar++){
+    U_n[iVar] = 0.0;
+    U_nM1[iVar] = 0.0;
+    U_nP1[iVar] = 0.0;
+    Proj_Flux_Tensor[iVar] = 0.0;
+  }
+
   turb_ke_i = 0.0;
   turb_ke_j = 0.0;
   
@@ -137,6 +155,12 @@ CNumerics::CNumerics(unsigned short val_nDim, unsigned short val_nVar,
   
   l = new su2double [nDim];
   m = new su2double [nDim];
+ 
+  for (iDim = 0; iDim < nDim; iDim++){
+    Vector[iDim] = 0.0;
+    l[iDim] = 0.0;
+    m[iDim] = 0.0;
+  }
   
   Dissipation_ij = 1.0;
   
