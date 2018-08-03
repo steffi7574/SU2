@@ -42,11 +42,13 @@ int my_Step( braid_App        app,
              braid_Vector     u,
              braid_StepStatus status){
 
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    
     double  tstart, tstop, deltat;
     unsigned long nPoint;
     unsigned long  iExtIter;
     double  abs_accuracy, rel_accuracy;
-    unsigned short  FinestMesh = app->config->GetFinestMesh(),  nVar;
+    unsigned short  FinestMesh = app->config->GetFinestMesh(),  nVar, nVar_Turb = 0, iVar;
     int level;
     /* Set the SU2 accuracy */
     app->config->SetOrderMagResidual(app->SU2_OrderMagResidual);
@@ -68,6 +70,9 @@ int my_Step( braid_App        app,
     /* Grab variables from the app */
     nPoint = app->geometry[MESH_0]->GetnPoint();
     nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
 
     /* Set the time-step size and time-step index */
     braid_StepStatusGetTstartTstop(status, &tstart, &tstop);
@@ -83,9 +88,14 @@ int my_Step( braid_App        app,
 
     /* Trick SU2 with the correct solution values */ 
     for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
-       app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(u->Solution->time_n[iPoint]);
-       app->solver[MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n(u->Solution->time_n[iPoint]);
-       if (app->BDF2) app->solver[MESH_0][FLOW_SOL]->node[iPoint]->Set_Solution_time_n1(u->Solution->time_n1[iPoint]);
+      for (iVar = 0; iVar < nVar; iVar++){
+        app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iVar, u->Solution->time_n[iPoint][iVar]);
+      }
+      if (turbulent){
+        for (iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+          app->solver[MESH_0][TURB_SOL]->node[iPoint]->SetSolution(iVar-nVar, u->Solution->time_n[iPoint][iVar]);
+        }    
+      }
     }
     
     /* Restrict solution to coarser meshes */
@@ -102,7 +112,20 @@ int my_Step( braid_App        app,
     for (unsigned short iMesh = 0; iMesh <= app->config->GetnMGLevels(); iMesh++) {
       app->integration[FLOW_SOL]->SetDualTime_Solver(app->geometry[iMesh], app->solver[iMesh][FLOW_SOL], app->config, iMesh);
     }
-
+    if (turbulent){
+      app->integration[TURB_SOL]->SetDualTime_Solver(app->geometry[MESH_0], app->solver[MESH_0][TURB_SOL], app->config, MESH_0); 
+      app->solver[MESH_0][FLOW_SOL]->Preprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0, 0,0,false);
+      app->solver[MESH_0][TURB_SOL]->Postprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0);      
+    }
+    for (unsigned short iMGLevel = 0; iMGLevel < app->config->GetnMGLevels(); iMGLevel++) {
+      
+      if (turbulent){
+        app->integration[TURB_SOL]->SetRestricted_Solution(RUNTIME_TURB_SYS, app->solver[iMGLevel][TURB_SOL], app->solver[iMGLevel+1][TURB_SOL], app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
+        
+        app->integration[TURB_SOL]->SetRestricted_EddyVisc(RUNTIME_TURB_SYS, app->solver[iMGLevel][TURB_SOL], app->solver[iMGLevel+1][TURB_SOL], app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
+        
+      }
+    }
 
     /* Take the next time step to tstop */
     if (app->rank_x == MASTER_NODE) cout << app->rank_t << ": STEP to " << tstop << ", dt = " << deltat
@@ -123,7 +146,7 @@ int my_Step( braid_App        app,
 
     /* Check for SU2 convergence */
     if (!app->integration[FLOW_SOL]->GetConvergence() && (app->rank_x == MASTER_NODE)) {
-        cout<<format("ERROR: SU2 Solver didn't converge!? resid[0]: %1.14e\n", SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetRes_RMS(0)));
+        cout<<"ERROR: SU2 Solver didn't converge!? resid[0]: " << log10(SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->GetRes_RMS(0))) << endl;
         //exit(EXIT_FAILURE);
     }
 
@@ -141,6 +164,12 @@ int my_Step( braid_App        app,
         for (unsigned short iVar = 0; iVar < nVar; iVar++){
             u->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n()[iVar]);
             if (app->BDF2) u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver[MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
+      }
+      if (turbulent){
+        for (unsigned short iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+          u->Solution->time_n[iPoint][iVar]  = SU2_TYPE::GetValue(app->solver[MESH_0][TURB_SOL]->node[iPoint]->GetSolution_time_n()[iVar-nVar]);
+          if (app->BDF2) u->Solution->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(app->solver[MESH_0][TURB_SOL]->node[iPoint]->GetSolution_time_n1()[iVar-nVar]);
+        }
         }
     }
 
@@ -154,16 +183,30 @@ int my_Init( braid_App app, double t, braid_Vector *u_ptr ){
     unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
     unsigned short nDim   = app->geometry[MESH_0]->GetnDim();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
+    
 
     /* Allocate memory for the primal braid vector */
     my_Vector* u = new my_Vector;
-    u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
+    u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar+nVar_Turb);
 
     /* Set the initial condition */
     for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
         for (unsigned short iVar = 0; iVar < nVar; iVar++){
             u->Solution->time_n[iPoint][iVar]  = app->initial_condition->time_n[iPoint][iVar];
             if(app->BDF2) u->Solution->time_n1[iPoint][iVar] = app->initial_condition->time_n1[iPoint][iVar];
+        }
+        if (turbulent){
+          for (unsigned short iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+              u->Solution->time_n[iPoint][iVar]  = app->initial_condition->time_n[iPoint][iVar];
+              if(app->BDF2) u->Solution->time_n1[iPoint][iVar] = app->initial_condition->time_n1[iPoint][iVar];
+          }
+          
         }
     }
 
@@ -180,16 +223,27 @@ int my_Clone( braid_App app, braid_Vector u, braid_Vector *v_ptr ){
     unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
     unsigned short nDim   = app->geometry[MESH_0]->GetnDim();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
 
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
     /* Allocate memory for the new copy v */
     my_Vector* v = new my_Vector;
-    v->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
+    v->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar+nVar_Turb);
 
     /* Copy the values from u to v */
     for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
         for (unsigned short iVar = 0; iVar < nVar; iVar++){
             v->Solution->time_n[iPoint][iVar]  = u->Solution->time_n[iPoint][iVar];
             if (app->BDF2) v->Solution->time_n1[iPoint][iVar] = u->Solution->time_n1[iPoint][iVar];
+        }
+        if (turbulent){
+          for (unsigned short iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+              v->Solution->time_n[iPoint][iVar]  = u->Solution->time_n[iPoint][iVar];
+              if (app->BDF2) v->Solution->time_n1[iPoint][iVar] = u->Solution->time_n1[iPoint][iVar];
+          }
         }
     }
 
@@ -218,6 +272,12 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta, braid_Vect
     /* Grab variables from the app */
     unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
 
     /* Compute the sum y = alpha x + beta y at time n and time n-1 */
     for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
@@ -226,6 +286,14 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta, braid_Vect
                                                + beta  * y->Solution->time_n[iPoint][iVar];
             if (app->BDF2) y->Solution->time_n1[iPoint][iVar] = alpha * x->Solution->time_n1[iPoint][iVar]
                                                               + beta  * y->Solution->time_n1[iPoint][iVar];
+        }
+        if (turbulent){
+          for (unsigned short iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+              y->Solution->time_n[iPoint][iVar]  = alpha * x->Solution->time_n[iPoint][iVar]
+                                                 + beta  * y->Solution->time_n[iPoint][iVar];
+              if (app->BDF2) y->Solution->time_n1[iPoint][iVar] = alpha * x->Solution->time_n1[iPoint][iVar]
+                                                                + beta  * y->Solution->time_n1[iPoint][iVar];
+          }
         }
     }
 
@@ -238,6 +306,12 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     /* Grab variables from the app */
     unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
     
     /* Compute l2norm of the solution list at time n and n1 */
     double norm = 0.0;
@@ -246,6 +320,12 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
             norm += pow(u->Solution->time_n[iPoint][iVar], 2);
             if (app->BDF2) norm += pow(u->Solution->time_n1[iPoint][iVar], 2);
         }
+      if (turbulent){
+        for (unsigned short iVar = nVar; iVar < nVar+nVar+nVar_Turb; iVar++){
+          norm += pow(u->Solution->time_n[iPoint][iVar], 2);
+          if (app->BDF2) norm += pow(u->Solution->time_n1[iPoint][iVar], 2);
+        }
+      }
     }
 
     /* Sum the norm from all spatial processors */
@@ -263,8 +343,13 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
 
     unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
-    su2double* cast = new su2double[nVar];
 
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    su2double* cast = new su2double[nVar+nVar_Turb];
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
     /* Get the current time-step number */
     double t;
     braid_AccessStatusGetT(astatus, &t);
@@ -282,10 +367,19 @@ int my_Access( braid_App app, braid_Vector u, braid_AccessStatus astatus ){
                 cast[iVar]  = u->Solution->time_n[iPoint][iVar];
             }
             app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(cast);
+            if (turbulent){
+              for (unsigned short iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+                  cast[iVar-nVar]  = u->Solution->time_n[iPoint][iVar];
+              }
+              app->solver[MESH_0][TURB_SOL]->node[iPoint]->SetSolution(cast);
+            }
         }
 
         app->solver[MESH_0][FLOW_SOL]->Preprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0, 0,0,false);
-
+        if (turbulent){
+          app->solver[MESH_0][FLOW_SOL]->Postprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0);
+          
+        }
 
         /*--- Calculate the inviscid and viscous forces ---*/
         app->solver[MESH_0][FLOW_SOL]->Pressure_Forces(app->geometry[MESH_0], app->config);
@@ -311,11 +405,15 @@ int my_BufSize ( braid_App app, int *size_ptr, braid_BufferStatus bstatus  ){
     /* Grab variables from the app */
     unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
-
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
     /* Compute size of buffer */
-    *size_ptr = nPoint * nVar * sizeof(double);
+    *size_ptr = nPoint * (nVar+nVar_Turb) * sizeof(double);
     if (app->BDF2) {
-        *size_ptr = 2.0 * nPoint * nVar * sizeof(double);
+        *size_ptr = 2.0 * nPoint * (nVar+nVar_Turb) * sizeof(double);
     }
 
 
@@ -327,7 +425,11 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
     /* Grab variables from the app */
     unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
-
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
 
     /* Pack the buffer with current and previous time */
     double *dbuffer = (double*)buffer;
@@ -343,10 +445,22 @@ int my_BufPack( braid_App app, braid_Vector u, void *buffer, braid_BufferStatus 
                 ibuffer++;
             }
         }
+        if (turbulent){
+          for (unsigned short iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+              /* Write Solution at current time to the buffer */
+              dbuffer[ibuffer] = u->Solution->time_n[iPoint][iVar];
+              ibuffer++;
+              if (app->BDF2){
+                  /* Write Solution at previous time to the buffer */
+                  dbuffer[ibuffer] = u->Solution->time_n1[iPoint][iVar];
+                  ibuffer++;
+              }
+            }
+        }
     }
 
     /* Set the size of the buffer */
-    int size = nPoint * nVar * sizeof(double);
+    int size = nPoint * (nVar+nVar_Turb) * sizeof(double);
     if (app->BDF2) size = 2.0 * size;
     braid_BufferStatusSetSize( bstatus, size );
 
@@ -359,6 +473,11 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
     /* Grab variables from the app */
     unsigned long nPoint  = app->geometry[MESH_0]->GetnPoint();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
+    unsigned short nVar_Turb = 0;
+    bool turbulent = app->config->GetKind_Turb_Model() != NONE;
+    if (turbulent){
+      nVar_Turb = app->solver[MESH_0][TURB_SOL]->GetnVar();
+    }
 
     /* Get the buffer */
     double *dbuffer = (double*)buffer;
@@ -376,6 +495,16 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
             if (app->BDF2){
                 u->Solution->time_n1[iPoint][iVar] = dbuffer[ibuffer];
                 ibuffer++;
+            }
+        }
+        if (turbulent){
+          for (unsigned short iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+              u->Solution->time_n[iPoint][iVar] = dbuffer[ibuffer];
+              ibuffer++;
+              if (app->BDF2){
+                  u->Solution->time_n1[iPoint][iVar] = dbuffer[ibuffer];
+                  ibuffer++;
+              }
             }
         }
     }

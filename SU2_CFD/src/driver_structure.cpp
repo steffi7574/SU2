@@ -3486,6 +3486,13 @@ void CDriver::XBraidPreprocessing(){
     unsigned long nPoint              = geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
     int nVar                = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
 
+    bool turbulent = config_container[ZONE_0]->GetKind_Turb_Model() != NONE;
+    
+    int nVar_Turb = 0;
+    
+    if (turbulent){
+      nVar_Turb = solver_container[ZONE_0][INST_0][MESH_0][TURB_SOL]->GetnVar();
+    }
     /* --- Set up the application structure for xBraid --- */
     app = new my_App;
 
@@ -3539,11 +3546,17 @@ void CDriver::XBraidPreprocessing(){
     }
 
     /* --- Grab the initial condition from SU2 and store pointer in app --- */
-    TwoStepSolution *initial_condition  = new TwoStepSolution(app->BDF2, nPoint, nVar);
+    TwoStepSolution *initial_condition  = new TwoStepSolution(app->BDF2, nPoint, nVar+nVar_Turb);
     for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
       for (unsigned short iVar = 0; iVar < nVar; iVar++){
         initial_condition->time_n[iPoint][iVar] = SU2_TYPE::GetValue(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution(iVar));
         if(app->BDF2) initial_condition->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1()[iVar]);
+      }
+      if (turbulent){
+        for (unsigned short iVar = nVar; iVar < nVar_Turb+nVar; iVar++){
+          initial_condition->time_n[iPoint][iVar] = SU2_TYPE::GetValue(solver_container[ZONE_0][INST_0][MESH_0][TURB_SOL]->node[iPoint]->GetSolution(iVar-nVar));
+          if(app->BDF2) initial_condition->time_n1[iPoint][iVar] = SU2_TYPE::GetValue(solver_container[ZONE_0][INST_0][MESH_0][TURB_SOL]->node[iPoint]->GetSolution_time_n1()[iVar-nVar]);
+        }
       }
     }
     app->initial_condition = initial_condition;
