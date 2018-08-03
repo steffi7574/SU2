@@ -98,33 +98,46 @@ int my_Step( braid_App        app,
       }
     }
     
-    /* Restrict solution to coarser meshes */
+
+    if (turbulent){
+     
+      /* Compute primitive variables (needed for turbulent post-processing) */
+      
+      app->solver[MESH_0][FLOW_SOL]->Preprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0, 0,0,false);
+      
+      /* Compute eddy viscosity (needed by the flow solver) */
+      
+      app->solver[MESH_0][TURB_SOL]->Postprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0);      
+    }
+    
+    
+    /* Restrict flow and turb. solution to coarser meshes */
+    
     for (unsigned short iMGLevel = 0; iMGLevel < app->config->GetnMGLevels(); iMGLevel++) {
       
       app->integration[FLOW_SOL]->SetRestricted_Solution(RUNTIME_FLOW_SYS, app->solver[iMGLevel][FLOW_SOL],
                              app->solver[iMGLevel+1][FLOW_SOL],
                              app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
-
-    }
-    
-       
-    /* Set solution_time_n of coarser spatial grids */
-    for (unsigned short iMesh = 0; iMesh <= app->config->GetnMGLevels(); iMesh++) {
-      app->integration[FLOW_SOL]->SetDualTime_Solver(app->geometry[iMesh], app->solver[iMesh][FLOW_SOL], app->config, iMesh);
-    }
-    if (turbulent){
-      app->integration[TURB_SOL]->SetDualTime_Solver(app->geometry[MESH_0], app->solver[MESH_0][TURB_SOL], app->config, MESH_0); 
-      app->solver[MESH_0][FLOW_SOL]->Preprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0, 0,0,false);
-      app->solver[MESH_0][TURB_SOL]->Postprocessing(app->geometry[MESH_0], app->solver[MESH_0], app->config, MESH_0);      
-    }
-    for (unsigned short iMGLevel = 0; iMGLevel < app->config->GetnMGLevels(); iMGLevel++) {
-      
+        
       if (turbulent){
         app->integration[TURB_SOL]->SetRestricted_Solution(RUNTIME_TURB_SYS, app->solver[iMGLevel][TURB_SOL], app->solver[iMGLevel+1][TURB_SOL], app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
         
         app->integration[TURB_SOL]->SetRestricted_EddyVisc(RUNTIME_TURB_SYS, app->solver[iMGLevel][TURB_SOL], app->solver[iMGLevel+1][TURB_SOL], app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
         
       }
+    }
+    
+    
+    /* Set solution_time_n on all grids */
+    
+    for (unsigned short iMesh = 0; iMesh <= app->config->GetnMGLevels(); iMesh++) {
+      app->integration[FLOW_SOL]->SetDualTime_Solver(app->geometry[iMesh], app->solver[iMesh][FLOW_SOL], app->config, iMesh);
+    }
+    
+    if (turbulent){
+      
+      app->integration[TURB_SOL]->SetDualTime_Solver(app->geometry[MESH_0], app->solver[MESH_0][TURB_SOL], app->config, MESH_0);
+      
     }
 
     /* Take the next time step to tstop */
