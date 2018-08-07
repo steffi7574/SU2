@@ -334,7 +334,7 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
             if (app->BDF2) norm += pow(u->Solution->time_n1[iPoint][iVar], 2);
         }
       if (turbulent){
-        for (unsigned short iVar = nVar; iVar < nVar+nVar+nVar_Turb; iVar++){
+        for (unsigned short iVar = nVar; iVar <nVar+nVar_Turb; iVar++){
           norm += pow(u->Solution->time_n[iPoint][iVar], 2);
           if (app->BDF2) norm += pow(u->Solution->time_n1[iPoint][iVar], 2);
         }
@@ -498,7 +498,7 @@ int my_BufUnpack( braid_App app, void *buffer, braid_Vector *u_ptr, braid_Buffer
 
     /* Allocate memory for the new braid Vector */
     my_Vector* u = new my_Vector;
-    u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar);
+    u->Solution  = new TwoStepSolution(app->BDF2, nPoint, nVar+nVar_Turb);
 
     /* Unpack the buffer and write solution at current and previous time */
     for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
