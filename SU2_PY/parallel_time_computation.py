@@ -84,14 +84,17 @@ def parallel_time_computation( filename           ,
     config = SU2.io.Config(filename)
     config.NUMBER_PART      = npt*npx
     config.BRAID_NPROC_TIME = npt
+    config.NZONES = 1
     
     # State
     state = SU2.io.State()
-    
+    if config.RESTART_SOL == 'YES':
+        state.FILES.DIRECT= config.SOLUTION_FLOW_FILENAME
+
     state.FILES.MESH = config.MESH_FILENAME    
     
     funcs = SU2.eval.aerodynamics(config, state, folder )
-
+    
 #: parallel_computation()
 
 
