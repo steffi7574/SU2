@@ -98,7 +98,42 @@ int my_Step( braid_App        app,
       }
     }
     
+    for (unsigned short iMGLevel = 0; iMGLevel < app->config->GetnMGLevels(); iMGLevel++) {
+      
+      app->integration[FLOW_SOL]->SetRestricted_Solution(RUNTIME_FLOW_SYS, app->solver[iMGLevel][FLOW_SOL],
+                             app->solver[iMGLevel+1][FLOW_SOL],
+                             app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
+        
+      if (turbulent){
+        app->integration[TURB_SOL]->SetRestricted_Solution(RUNTIME_TURB_SYS, app->solver[iMGLevel][TURB_SOL], app->solver[iMGLevel+1][TURB_SOL], app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
+        
+        app->integration[TURB_SOL]->SetRestricted_EddyVisc(RUNTIME_TURB_SYS, app->solver[iMGLevel][TURB_SOL], app->solver[iMGLevel+1][TURB_SOL], app->geometry[iMGLevel], app->geometry[iMGLevel+1], app->config);
+        
+      }
+    }
+    /* Set solution_time_n on all grids */
+    
+    for (unsigned short iMesh = 0; iMesh <= app->config->GetnMGLevels(); iMesh++) {
+      app->integration[FLOW_SOL]->SetDualTime_Solver(app->geometry[iMesh], app->solver[iMesh][FLOW_SOL], app->config, iMesh);
+    }
+    
+    if (turbulent){
+      
+      app->integration[TURB_SOL]->SetDualTime_Solver(app->geometry[MESH_0], app->solver[MESH_0][TURB_SOL], app->config, MESH_0);
+      
+    }
 
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+      for (iVar = 0; iVar < nVar; iVar++){
+        app->solver[MESH_0][FLOW_SOL]->node[iPoint]->SetSolution(iVar, ustop->Solution->time_n[iPoint][iVar]);
+      }
+      if (turbulent){
+        for (iVar = nVar; iVar < nVar+nVar_Turb; iVar++){
+          app->solver[MESH_0][TURB_SOL]->node[iPoint]->SetSolution(iVar-nVar, ustop->Solution->time_n[iPoint][iVar]);
+        }    
+      }
+    }
+    
     if (turbulent){
      
       /* Compute primitive variables (needed for turbulent post-processing) */
@@ -127,18 +162,6 @@ int my_Step( braid_App        app,
       }
     }
     
-    
-    /* Set solution_time_n on all grids */
-    
-    for (unsigned short iMesh = 0; iMesh <= app->config->GetnMGLevels(); iMesh++) {
-      app->integration[FLOW_SOL]->SetDualTime_Solver(app->geometry[iMesh], app->solver[iMesh][FLOW_SOL], app->config, iMesh);
-    }
-    
-    if (turbulent){
-      
-      app->integration[TURB_SOL]->SetDualTime_Solver(app->geometry[MESH_0], app->solver[MESH_0][TURB_SOL], app->config, MESH_0);
-      
-    }
 
     /* Take the next time step to tstop */
     if (app->rank_x == MASTER_NODE) cout << app->rank_t << ": STEP to " << tstop << ", dt = " << deltat
