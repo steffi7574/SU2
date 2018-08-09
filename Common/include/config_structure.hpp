@@ -763,6 +763,7 @@ private:
   unsigned short Braid_Access_Level; /*!< \brief Frequency of calls to access routine: 1 is for only after simulation */
   unsigned short Braid_Skip; /*!< \brief Boolean, whether to skip all work on first down cycle */
   unsigned short Braid_CoarseGrid_Space;
+  unsigned short Braid_NFMGV;
 su2double Gamma,			/*!< \brief Ratio of specific heats of the gas. */
   Bulk_Modulus,			/*!< \brief Value of the bulk modulus for incompressible flows. */
   Beta_Factor,			/*!< \brief Value of the epsilon^2 multiplier for Beta for the incompressible preconditioner. */
@@ -8273,6 +8274,12 @@ public:
    * \return Frequency of calls to access routine
    */
   unsigned short GetBraid_CoarseGrid_Space(void);
+  
+  /*!
+   * \brief Get the number of V cycles within a FMG iteration.
+   * \return Number of V cycles.
+   */
+  unsigned short GetBraid_NFMGV(void);
 
   /*!
    *

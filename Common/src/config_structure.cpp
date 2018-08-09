@@ -2191,6 +2191,7 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   
   addUnsignedShortOption("BRAID_COARSEGRID_SPACE", Braid_CoarseGrid_Space, 0);
   
+   addUnsignedShortOption("BRAID_NFMGV", Braid_NFMGV, 1);
 
   /* END_CONFIG_OPTIONS */
 

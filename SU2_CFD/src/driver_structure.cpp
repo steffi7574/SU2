@@ -3580,6 +3580,7 @@ void CDriver::XBraidPreprocessing(){
     if (config_container[ZONE_0]->GetBraid_FMG())
     {
        braid_SetFMG(xbraidcore);
+       braid_SetNFMGVcyc(xbraidcore, config_container[ZONE_0]->GetBraid_NFMGV());
     }
 
     /* Report on the processor grid */
