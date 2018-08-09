@@ -2142,7 +2142,7 @@ CPhysicalGeometry::CPhysicalGeometry(CGeometry *geometry, CConfig *config) {
   
 #endif
   
-  if (rank == MASTER_NODE && size > SINGLE_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE && size > SINGLE_NODE)
     cout << "Communicating partition data and creating halo layers." << endl;
   
   /*--- Define buffer vectors for the interior points / elements ---*/
@@ -8075,7 +8075,7 @@ void CPhysicalGeometry::SetSendReceive(CConfig *config) {
 
   map<unsigned long, unsigned long>::const_iterator MI;
 
-  if (rank == MASTER_NODE && size > SINGLE_NODE)
+  if (SU2_MPI::GetGlobalRank() == MASTER_NODE && size > SINGLE_NODE)
     cout << "Establishing MPI communication patterns." << endl;
 
   nDomain = size;
@@ -9210,7 +9210,7 @@ void CPhysicalGeometry::Read_SU2_Format_Parallel(CConfig *config, string val_mes
         
         Global_nPoint = nPoint;
         Global_nPointDomain = nPointDomain;
-        if (rank == MASTER_NODE && size > SINGLE_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE && size > SINGLE_NODE) {
           cout << Global_nPointDomain << " points and " << Global_nPoint-Global_nPointDomain;
           cout << " ghost points before parallel partitioning." << endl;
         } else if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
@@ -9226,7 +9226,7 @@ void CPhysicalGeometry::Read_SU2_Format_Parallel(CConfig *config, string val_mes
         nPointDomain = nPoint;
         Global_nPointDomain = nPoint;
         Global_nPoint = nPoint;
-        if (rank == MASTER_NODE && size > SINGLE_NODE) {
+        if (SU2_MPI::GetGlobalRank() == MASTER_NODE && size > SINGLE_NODE) {
           cout << nPoint << " points before parallel partitioning." << endl;
         } else if (SU2_MPI::GetGlobalRank() == MASTER_NODE) {
           cout << nPoint << " points." << endl;
