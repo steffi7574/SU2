@@ -340,7 +340,7 @@ int my_Sum( braid_App app, double alpha, braid_Vector x, double beta, braid_Vect
 int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
 
     /* Grab variables from the app */
-    unsigned long nPoint = app->geometry[MESH_0]->GetnPoint();
+    unsigned long nPoint = app->geometry[MESH_0]->GetnPointDomain();
     unsigned short nVar   = app->solver[MESH_0][FLOW_SOL]->GetnVar();
     unsigned short nVar_Turb = 0;
     bool turbulent = app->config->GetKind_Turb_Model() != NONE;
@@ -370,7 +370,7 @@ int my_SpatialNorm( braid_App app, braid_Vector u, double *norm_ptr ){
     MPI_Allreduce(&mynorm, &norm, 1, MPI_DOUBLE, MPI_SUM, SU2_MPI::GetComm());
 
     /* Set the pointer */
-    *norm_ptr = sqrt(norm);
+    *norm_ptr = sqrt(norm)/app->geometry[MESH_0]->GetGlobal_nPoint();
 
     return 0;
 }
