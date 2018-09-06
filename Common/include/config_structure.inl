@@ -1482,6 +1482,8 @@ inline unsigned long CConfig::GetStartConv_Iter(void) { return StartConv_Iter; }
 
 inline su2double CConfig::GetCauchy_Eps(void) { return Cauchy_Eps; }
 
+inline void CConfig::SetCauchy_Eps(su2double eps) { Cauchy_Eps = eps; }
+
 inline su2double CConfig::GetDelta_UnstTimeND(void) { return Delta_UnstTimeND; }
 
 inline su2double CConfig::GetTotal_UnstTimeND(void) { return Total_UnstTimeND; }

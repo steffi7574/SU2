@@ -5363,6 +5363,12 @@ public:
   su2double GetCauchy_Eps(void);
   
   /*!
+   * \brief Get the value of convergence criteria for the Cauchy method in the direct,
+   *        adjoint or linearized problem.
+   * \return Value of the convergence criteria.
+   */
+  void SetCauchy_Eps(su2double eps);
+  /*!
    * \brief If we are prforming an unsteady simulation, there is only
    *        one value of the time step for the complete simulation.
    * \return Value of the time step in an unsteady simulation (non dimensional).

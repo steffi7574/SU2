@@ -44,7 +44,7 @@ int my_Step( braid_App        app,
 
     bool turbulent = app->config->GetKind_Turb_Model() != NONE;
     
-    double  tstart, tstop, deltat;
+    double  tstart, tstop, deltat, c_eps;
     unsigned long nPoint;
     unsigned long  iExtIter;
     double  abs_accuracy, rel_accuracy;
@@ -62,6 +62,10 @@ int my_Step( braid_App        app,
         abs_accuracy = app->config->GetBraid_CoarsegridAccur_abs();
         if (abs_accuracy < 0) app->config->SetMinLogResidual(abs_accuracy);
         
+        c_eps = app->config->GetCauchy_Eps();
+
+        app->config->SetCauchy_Eps(1e-03);
+
         if (app->config->GetBraid_CoarseGrid_Space()){ 
           app->config->SetFinestMesh(MESH_0+1);
         }
@@ -178,6 +182,10 @@ int my_Step( braid_App        app,
         app->config->SetFinestMesh(FinestMesh);
         
       }
+    }
+
+    if (level > 0 ){
+      app->config->SetCauchy_Eps(c_eps);
     }
 
     /* Check for SU2 convergence */
