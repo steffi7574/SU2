@@ -3572,7 +3572,7 @@ void CDriver::XBraidPreprocessing(){
     braid_SetMaxLevels(xbraidcore, config_container[ZONE_0]->GetBraid_Max_Level());
     braid_SetMinCoarse(xbraidcore, config_container[ZONE_0]->GetBraid_Min_Coarse());
     braid_SetNRelax(xbraidcore, -1, config_container[ZONE_0]->GetBraid_NRelax());
-    braid_SetAbsTol(xbraidcore, SU2_TYPE::GetValue(config_container[ZONE_0]->GetBraid_Tol()));
+    braid_SetRelTol(xbraidcore, SU2_TYPE::GetValue(config_container[ZONE_0]->GetBraid_Tol()));
     braid_SetTemporalNorm(xbraidcore, config_container[ZONE_0]->GetBraid_TNorm());
     braid_SetCFactor(xbraidcore, -1, config_container[ZONE_0]->GetBraid_CFactor());
     braid_SetMaxIter(xbraidcore, config_container[ZONE_0]->GetBraid_Max_Iter());

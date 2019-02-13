@@ -5,11 +5,11 @@ from ..io import Config
 def submit_job(config, jobname, time_limit, run_base_command, run_args, batch_base_command, batch_args, batch_args_mapping):
 
     config.dump(jobname+".cfg")
-    
+    batch_args[batch_args_mapping["NTASKS"]]            = config.NUMBER_PART    
     batch_args[batch_args_mapping["NODES"]]           = config.NUMBER_PART/batch_args[batch_args_mapping["TASKS_PER_NODE"]]
     batch_args[batch_args_mapping["NAME"]]            = jobname
-    batch_args[batch_args_mapping["ERROR"]]           = jobname+"%j.err"
-    batch_args[batch_args_mapping["OUTPUT"]]          = jobname+"%j.out"
+    batch_args[batch_args_mapping["ERROR"]]           = jobname+".err"
+    batch_args[batch_args_mapping["OUTPUT"]]          = jobname+".out"
     batch_args[batch_args_mapping["TIME"]]            = time_limit
     
 
